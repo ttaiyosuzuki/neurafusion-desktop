@@ -1,0 +1,14 @@
+{
+  "name": "@neurafusion/desktop-nf",
+  "private": true,
+  "type": "module",
+  "description": "NeuraFusion 独自機能（分身測定・砦画面・トス受信・サーバ接続・同意スコープ）。上流の内部に依存しないので、upstream の追随で壊れない。",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.1",
+    "typescript": "^5.9.2"
+  }
+}
