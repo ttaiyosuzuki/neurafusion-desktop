@@ -30,12 +30,14 @@ const hasJsonFlag = (argv: string[]) =>
 const hasVersionFlag = (argv: string[]) =>
   argv.some((arg) => arg === "--version" || arg === "-V") || hasRootVersionAlias(argv);
 
+// NeuraFusion は既定で一定の一文だけを出す。上流のランダム台詞は、設定で
+// 明示的に選んだときだけ出る（士業の実務で使う道具なので、既定はふざけない）。
 function resolveTaglineMode(options: BannerOptions): TaglineMode | undefined {
   const explicit = parseTaglineMode(options.mode);
   if (explicit) {
     return explicit;
   }
-  return undefined;
+  return "default";
 }
 
 function resolveEmojiOptions(options: BannerOptions): DecorativeEmojiOptions {
@@ -57,8 +59,8 @@ export function formatCliBannerLine(version: string, options: BannerOptions = {}
     emojiOptions,
   );
   const rich = options.richTty ?? isRich();
-  const title = decorativePrefix("🦞", "OpenClaw", emojiOptions);
-  const prefix = decorativeEmoji("🦞", emojiOptions);
+  const title = decorativePrefix("👁", "NeuraFusion", emojiOptions);
+  const prefix = decorativeEmoji("👁", emojiOptions);
   const indent = prefix ? `${prefix} ` : "";
   const columns = options.columns ?? process.stdout.columns ?? 120;
   const plainBaseLine = `${title} ${version} (${commitLabel})`;

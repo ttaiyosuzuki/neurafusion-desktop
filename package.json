@@ -20,7 +20,8 @@
     "url": "git+https://github.com/openclaw/openclaw.git"
   },
   "bin": {
-    "openclaw": "openclaw.mjs"
+    "openclaw": "openclaw.mjs",
+    "neurafusion": "openclaw.mjs"
   },
   "publishConfig": {
     "executableFiles": [
@@ -37,6 +38,8 @@
   "files": [
     "CHANGELOG.md",
     "LICENSE",
+    "NOTICE",
+    "THREAT_MODEL.md",
     "node-sqlite.mjs",
     "node-version.mjs",
     "node-runtime-update.mjs",
