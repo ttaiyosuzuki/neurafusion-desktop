@@ -432,7 +432,9 @@ function tryOutputLauncherVersion(argv) {
     }
     const version = resolveLauncherVersion();
     const commit = resolveLauncherCommit();
-    process.stdout.write(commit ? `OpenClaw ${version} (${commit})\n` : `OpenClaw ${version}\n`);
+    process.stdout.write(
+      commit ? `NeuraFusion ${version} (${commit})\n` : `NeuraFusion ${version}\n`,
+    );
     return true;
   } catch {
     return false;
