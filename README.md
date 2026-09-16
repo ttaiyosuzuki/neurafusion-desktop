@@ -5,7 +5,8 @@
 資格でも、経歴でも、フォロワー数でもなく。実際に何をしてきたかで、仕事が回るように。
 
 - サイト: https://neurafusion.jp/fork
-- 状態: **開発中。まだ配布していません**（配布ファイルは1つもありません）
+- 配布: **[v2026.9.4](https://github.com/ttaiyosuzuki/neurafusion-desktop/releases/tag/v2026.9.4)** — macOS / Windows / Linux
+- 状態: 開発中。署名と自動更新はまだありません
 
 ---
 
@@ -86,8 +87,22 @@ npm run typecheck
 
 | | |
 | --- | --- |
-| **できる** | 送信ペイロードの全数検査／分身測定の特徴量化／砦画面のロジック／トス受信／同意スコープと監査ログ／鍵をOS保管庫から読む |
-| **まだできない** | 3OSの配布ビルド（ビルド環境が未整備）／実際のローカル走査（OS別の実装がこれから）／サーバとの疎通（本番接続がこれから） |
+| **できる** | 3OSの配布（macOS / Windows / Linux）／送信ペイロードの全数検査／分身測定の特徴量化／砦画面のロジック／トス受信／同意スコープと監査ログ／鍵をOS保管庫から読む |
+| **まだできない** | 署名（Apple Developer Program と EV コード署名証明書が未取得）／自動更新／ネイティブアプリ（.app / .exe / .AppImage）／実際のローカル走査（OS別の実装がこれから）／サーバとの疎通（本番接続がこれから） |
 | **やらない** | DMの自動送信（各社の規約違反）／カメラ・位置情報の読み取り／同意していない人の生データ取得／鍵の預かり |
 
-配布ファイルが1つも無い状態です。`/fork` のダウンロードボタンは「準備中」のままです。
+## 入れかた
+
+**Node.js 24 以上が要ります**（[nodejs.org](https://nodejs.org/) の LTS）。
+
+Node がある方は、これだけです:
+
+```
+npm install -g https://github.com/ttaiyosuzuki/neurafusion-desktop/releases/download/v2026.9.4/neurafusion-desktop-2026.9.4.tgz
+neurafusion onboard
+```
+
+OS別のインストーラを使う場合は [リリースのページ](https://github.com/ttaiyosuzuki/neurafusion-desktop/releases/tag/v2026.9.4) から
+お使いのOSのファイルを取ってください。**署名がまだ無いので、macOS は右クリック →「開く」、
+Windows は「詳細情報」→「実行」が要ります。** 警告が出るのは正常です。
+各アーカイブの「はじめにお読みください」に同じことを書いてあります。
