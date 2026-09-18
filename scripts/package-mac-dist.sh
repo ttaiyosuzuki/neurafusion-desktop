@@ -4,9 +4,9 @@ set -euo pipefail
 # Build the mac app bundle, then create a zip (Sparkle) + styled DMG (humans).
 #
 # Output:
-# - dist/OpenClaw.app
-# - dist/OpenClaw-<version>.zip
-# - dist/OpenClaw-<version>.dmg
+# - dist/NeuraFusion.app
+# - dist/NeuraFusion-<version>.zip
+# - dist/NeuraFusion-<version>.dmg
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 source "$ROOT_DIR/scripts/lib/plistbuddy.sh"
@@ -177,7 +177,7 @@ if [[ "$RESUME_NOTARIZATION" == "0" && -z "${APP_BUILD:-}" && "$BUILD_CONFIG" ==
   export APP_BUILD="${APP_BUILD:-$CANONICAL_APP_BUILD}"
 fi
 
-APP="$ROOT_DIR/dist/OpenClaw.app"
+APP="$ROOT_DIR/dist/NeuraFusion.app"
 if [[ "$RESUME_NOTARIZATION" == "1" ]]; then
   python3 "$RECOVERY_HELPER" verify "$RECOVERY_DIR" "$(git -C "$ROOT_DIR" rev-parse HEAD)" "$APP_VERSION_INPUT" >/dev/null
   APP_BUILD="$(jq -r '.build' "$RECOVERY_DIR/manifest.json")"
@@ -185,7 +185,7 @@ if [[ "$RESUME_NOTARIZATION" == "1" ]]; then
   SKIP_DSYM="$(jq -r 'if .skipDsym then "1" else "0" end' "$RECOVERY_DIR/manifest.json")"
   RESTORED_APP_DIR="$(mktemp -d "$ROOT_DIR/dist/.notary-resume.XXXXXX")"
   ditto -x -k "$RECOVERY_DIR/app.zip" "$RESTORED_APP_DIR"
-  APP="$RESTORED_APP_DIR/OpenClaw.app"
+  APP="$RESTORED_APP_DIR/NeuraFusion.app"
   /usr/bin/codesign --verify --deep --strict "$APP"
   if [[ -n "${EXPECTED_DEVELOPER_TEAM_ID:-}" ]]; then
     /usr/bin/codesign --verify --strict -R="anchor apple generic and certificate leaf[subject.OU] = \"${EXPECTED_DEVELOPER_TEAM_ID}\"" "$APP"
@@ -202,10 +202,10 @@ VERSION="$(plist_print_required "$APP/Contents/Info.plist" CFBundleShortVersionS
 BUNDLE_VERSION="$(plist_print_required "$APP/Contents/Info.plist" CFBundleVersion)"
 ACTUAL_BUNDLE_ID="$(plist_print_required "$APP/Contents/Info.plist" CFBundleIdentifier)"
 ACTUAL_FEED_URL="$(plist_print_required "$APP/Contents/Info.plist" SUFeedURL)"
-ZIP="$ROOT_DIR/dist/OpenClaw-$VERSION.zip"
-DMG="$ROOT_DIR/dist/OpenClaw-$VERSION.dmg"
+ZIP="$ROOT_DIR/dist/NeuraFusion-$VERSION.zip"
+DMG="$ROOT_DIR/dist/NeuraFusion-$VERSION.dmg"
 NOTARY_ZIP="$RECOVERY_DIR/app.zip"
-DSYM_ZIP="$ROOT_DIR/dist/OpenClaw-$VERSION.dSYM.zip"
+DSYM_ZIP="$ROOT_DIR/dist/NeuraFusion-$VERSION.dSYM.zip"
 SKIP_NOTARIZE="${SKIP_NOTARIZE:-0}"
 NOTARIZE=1
 SKIP_DSYM="${SKIP_DSYM:-0}"
@@ -369,8 +369,8 @@ else
 fi
 
 if [[ -n "$RESTORED_APP_DIR" ]]; then
-  rm -rf "$ROOT_DIR/dist/OpenClaw.app"
-  mv "$APP" "$ROOT_DIR/dist/OpenClaw.app"
+  rm -rf "$ROOT_DIR/dist/NeuraFusion.app"
+  mv "$APP" "$ROOT_DIR/dist/NeuraFusion.app"
 fi
 
 if [[ "$RECOVERY_READY" == "1" ]]; then

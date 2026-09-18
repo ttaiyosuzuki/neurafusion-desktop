@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-APP_BUNDLE="dist/OpenClaw.app"
+APP_BUNDLE="dist/NeuraFusion.app"
 IDENTITY="${SIGN_IDENTITY:-}"
 SIGNING_VARIANT="${OPENCLAW_MAC_SIGNING_VARIANT:-standard}"
 ELEVATION_IDENTITY="Developer ID Application: OpenClaw Foundation (FWJYW4S8P8)"

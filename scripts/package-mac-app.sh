@@ -2,14 +2,14 @@
 set -euo pipefail
 
 # Build and bundle OpenClaw with its matching private worker runtime.
-# Outputs to dist/OpenClaw.app
+# Outputs to dist/NeuraFusion.app
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 source "$ROOT_DIR/scripts/lib/plistbuddy.sh"
 source "$ROOT_DIR/scripts/lib/swift-toolchain.sh"
 source "$ROOT_DIR/scripts/lib/build-metadata.sh"
 source "$ROOT_DIR/scripts/lib/mac-app-bundle.sh"
-DEFAULT_APP_ROOT="$ROOT_DIR/dist/OpenClaw.app"
+DEFAULT_APP_ROOT="$ROOT_DIR/dist/NeuraFusion.app"
 APP_ROOT="${OPENCLAW_PACKAGE_APP_ROOT:-$DEFAULT_APP_ROOT}"
 case "$APP_ROOT" in
   "$ROOT_DIR/dist/"*) ;;
@@ -81,9 +81,15 @@ if [[ "${BUILD_ARCHS_VALUE}" == "all" ]]; then
 fi
 IFS=' ' read -r -a BUILD_ARCHS <<< "$BUILD_ARCHS_VALUE"
 PRIMARY_ARCH="${BUILD_ARCHS[0]}"
-SPARKLE_PUBLIC_ED_KEY="${SPARKLE_PUBLIC_ED_KEY:-AGCY8w5vHirVfGGDGc8Szc5iuOqupZSh9pMj/Qs67XI=}"
-SPARKLE_FEED_URL="${SPARKLE_FEED_URL:-https://raw.githubusercontent.com/openclaw/openclaw/main/appcast.xml}"
+# ★NF: 自己更新は既定でオフ。以前の既定は上流 openclaw/openclaw の appcast と
+#   上流の公開鍵で、出荷物が**自己更新で上流 OpenClaw に化ける**。
+#   NF の appcast と鍵を持ってから、環境変数で明示的に与えること。
+SPARKLE_PUBLIC_ED_KEY="${SPARKLE_PUBLIC_ED_KEY:-}"
+SPARKLE_FEED_URL="${SPARKLE_FEED_URL:-}"
 AUTO_CHECKS=true
+if [[ -z "$SPARKLE_FEED_URL" ]]; then
+  AUTO_CHECKS=false
+fi
 if [[ "$BUNDLE_ID" == *.debug ]]; then
   SPARKLE_FEED_URL=""
   AUTO_CHECKS=false
@@ -299,7 +305,7 @@ node "$ROOT_DIR/scripts/prepare-apple-mermaid.mjs"
 # Private Swift and worker staging must stay outside the published dist tree.
 mkdir -p "$(dirname "$APP_DESTINATION")" "$ROOT_DIR/.artifacts"
 APP_STAGE_DIR="$(mktemp -d "$ROOT_DIR/.artifacts/.openclaw-package.XXXXXX")"
-APP_ROOT="$APP_STAGE_DIR/OpenClaw.app"
+APP_ROOT="$APP_STAGE_DIR/NeuraFusion.app"
 
 echo "🔨 Building $PRODUCT ($BUILD_CONFIG) [${BUILD_ARCHS[*]}]"
 SWIFT_BUILD_RESULTS="$APP_STAGE_DIR/swift-builds"

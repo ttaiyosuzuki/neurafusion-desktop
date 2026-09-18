@@ -59,7 +59,13 @@ if (!permissions.enabled) {
 
 let workflows;
 try {
-  workflows = JSON.parse(gh(["api", `repos/${REPO}/actions/workflows`, "--paginate"])).workflows ?? [];
+  /* ★--paginate は複数ページの JSON オブジェクトを**連結**して返すので、素の JSON.parse は
+     2ページ目の頭で落ちる（2026-09-18 実測: 106本 > 1ページ100件で発生）。
+     --jq で1本ずつ NDJSON にしてから読む。 */
+  workflows = gh(["api", `repos/${REPO}/actions/workflows`, "--paginate", "--jq", ".workflows[]"])
+    .split("\n")
+    .filter((line) => line.trim() !== "")
+    .map((line) => JSON.parse(line));
 } catch (e) {
   console.error(`workflow の一覧を取れません: ${e.message}`);
   process.exit(2);

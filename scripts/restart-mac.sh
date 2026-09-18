@@ -26,11 +26,11 @@ LAUNCHAGENT_DISABLE_MARKER="${HOME}/.openclaw/disable-launchagent"
 ATTACH_ONLY=1
 BACKGROUND_ONLY=0
 TARGET_ONLY=0
-TARGET_APP_BUNDLE="${ROOT_DIR}/dist/OpenClaw.app"
+TARGET_APP_BUNDLE="${ROOT_DIR}/dist/NeuraFusion.app"
 TARGET_EXECUTABLE="${TARGET_APP_BUNDLE}/${APP_EXECUTABLE_RELATIVE_PATH}"
-INSTALLED_EXECUTABLE="/Applications/OpenClaw.app/${APP_EXECUTABLE_RELATIVE_PATH}"
+INSTALLED_EXECUTABLE="/Applications/NeuraFusion.app/${APP_EXECUTABLE_RELATIVE_PATH}"
 STAGED_APP_DIR="${ROOT_DIR}/dist/.openclaw-replacement-${LOCK_KEY}-$$"
-STAGED_APP_BUNDLE="${STAGED_APP_DIR}/OpenClaw.app"
+STAGED_APP_BUNDLE="${STAGED_APP_DIR}/NeuraFusion.app"
 
 log()  { printf '%s\n' "$*"; }
 fail() { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
@@ -202,8 +202,8 @@ known_openclaw_executables() {
     printf '%s\n' "${APP_BUNDLE}/${APP_EXECUTABLE_RELATIVE_PATH}"
   fi
   printf '%s\n' \
-    "${ROOT_DIR}/dist/OpenClaw.app/${APP_EXECUTABLE_RELATIVE_PATH}" \
-    "/Applications/OpenClaw.app/${APP_EXECUTABLE_RELATIVE_PATH}" \
+    "${ROOT_DIR}/dist/NeuraFusion.app/${APP_EXECUTABLE_RELATIVE_PATH}" \
+    "/Applications/NeuraFusion.app/${APP_EXECUTABLE_RELATIVE_PATH}" \
     "${DEBUG_PROCESS_PATTERN}" \
     "${LOCAL_PROCESS_PATTERN}" \
     "${RELEASE_PROCESS_PATTERN}"
@@ -236,7 +236,7 @@ foreign_openclaw_process_pids() {
         local executable="${command_line%% *}"
         [[ "${executable}" == "${TARGET_EXECUTABLE}" ]] && continue
         [[ "${executable}" == "${INSTALLED_EXECUTABLE}" ]] && continue
-        if [[ "${executable}" == *"/OpenClaw.app/${APP_EXECUTABLE_RELATIVE_PATH}" \
+        if [[ "${executable}" == *"/NeuraFusion.app/${APP_EXECUTABLE_RELATIVE_PATH}" \
           || "${executable}" == *"/apps/macos/.build/debug/OpenClaw" \
           || "${executable}" == *"/apps/macos/.build-local/debug/OpenClaw" \
           || "${executable}" == *"/apps/macos/.build/release/OpenClaw" ]]; then
@@ -421,20 +421,20 @@ choose_app_bundle() {
     return 0
   fi
 
-  if [[ -d "${ROOT_DIR}/dist/OpenClaw.app" ]]; then
-    APP_BUNDLE="$(cd "${ROOT_DIR}/dist/OpenClaw.app" && pwd -P)"
+  if [[ -d "${ROOT_DIR}/dist/NeuraFusion.app" ]]; then
+    APP_BUNDLE="$(cd "${ROOT_DIR}/dist/NeuraFusion.app" && pwd -P)"
     if [[ ! -d "${APP_BUNDLE}/Contents/Frameworks/Sparkle.framework" ]]; then
-      fail "dist/OpenClaw.app missing Sparkle after packaging"
+      fail "dist/NeuraFusion.app missing Sparkle after packaging"
     fi
     return 0
   fi
 
-  if [[ -d "/Applications/OpenClaw.app" ]]; then
-    APP_BUNDLE="$(cd "/Applications/OpenClaw.app" && pwd -P)"
+  if [[ -d "/Applications/NeuraFusion.app" ]]; then
+    APP_BUNDLE="$(cd "/Applications/NeuraFusion.app" && pwd -P)"
     return 0
   fi
 
-  fail "App bundle not found. Set OPENCLAW_APP_BUNDLE to your installed OpenClaw.app"
+  fail "App bundle not found. Set OPENCLAW_APP_BUNDLE to your installed NeuraFusion.app"
 }
 
 # When signed, clear any previous launchagent override marker.
