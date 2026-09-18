@@ -1,0 +1,123 @@
+# NeuraFusion Desktop — macOS の .dmg を CI で作る
+#
+# ★なぜ CI か
+#   手元の Mac には Xcode が入っておらず、Swift は 6.2.3 です。
+#   apps/macos/Package.swift は **swift-tools-version 6.3** を要求するので、
+#   手元では `swift package resolve` の時点で止まります。
+#   macos-latest のランナーには Xcode が入っているので、そちらで作ります。
+#
+# ★指示書との違いを2つ、理由つきで。
+#   1. **electron-builder は使いません。** この製品は Electron ではありません。
+#      apps/macos は SwiftPM（Package.swift）で、既に
+#      scripts/package-mac-dist.sh（swift build → .app → zip → .dmg）があります。
+#      作り直さずに、その既存の経路を呼びます。
+#   2. **xcodebuild を直接は叩きません。** 上の script は `swift build` を使います。
+#      xcodebuild を別に足すと、手元と CI で作り方が2通りになります。
+#
+# ★⚠️ このリポジトリの Actions は**いま無効です**（実測: actions/permissions.enabled = false）。
+#   公開時に、上流から来た **105本の workflow**（cron 21・push 27）が
+#   フォークで暴発するのを避けるために止めてあります。
+#   有効にすると、この workflow だけでなく**105本すべてが動き出します**。
+#   先に scripts/nf-disable-upstream-workflows.mjs で上流ぶんを個別に止めてください。
+#   順番を逆にしないこと。
+#
+# ★署名していません。
+#   Apple Developer Program（年 US$99）が未取得なので、公証も通していません。
+#   利用者は初回だけ右クリック →「開く」が要ります。
+#   署名できるようになったら SIGN_IDENTITY を Secrets に置いて、下の env を足します。
+
+name: nf-build-mac
+
+on:
+  # タグを push したときだけ。ふだんの push では動きません（無駄に回さないため）。
+  push:
+    tags:
+      - "v*"
+  # 手で試せるように。タグを作らずに確かめられます。
+  workflow_dispatch:
+    inputs:
+      upload:
+        description: "作った .dmg を Releases に上げるか（tag push のときは常に上げます）"
+        type: boolean
+        default: false
+
+# 同じタグで二重に走らせない。
+concurrency:
+  group: nf-build-mac-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write # Releases に上げるため
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 90
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 道具の版を控える（あとで「なぜ落ちたか」を追えるように）
+        run: |
+          sw_vers
+          xcodebuild -version
+          swift --version
+
+      - name: Swift が 6.3 以上あることを先に確かめる
+        # ★ここで落としておきます。ビルドの途中で落ちるより、原因が分かりやすい。
+        run: |
+          set -euo pipefail
+          need=6.3
+          have="$(swift --version | sed -n 's/.*Apple Swift version \([0-9.]*\).*/\1/p' | head -1)"
+          echo "swift=${have} / 必要=${need}"
+          if [ -z "${have}" ]; then echo "Swift の版が読めません"; exit 1; fi
+          # 6.2.3 < 6.3 を正しく比べる（文字列比較だと 6.10 < 6.3 になるため sort -V）
+          lowest="$(printf '%s\n%s\n' "${have}" "${need}" | sort -V | head -1)"
+          if [ "${lowest}" != "${need}" ] && [ "${have}" != "${need}" ]; then
+            echo "Swift ${need} 以上が要ります（いま ${have}）"; exit 1
+          fi
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
+      - name: .app と .dmg を作る（既存の経路をそのまま呼ぶ）
+        run: bash scripts/package-mac-dist.sh
+
+      - name: 何ができたかを控える
+        run: ls -lh dist/ || true
+
+      - name: できた .dmg が本当にあることを確かめる
+        # ★「緑なのに中身が無い」を防ぎます。
+        run: |
+          set -euo pipefail
+          count="$(ls dist/*.dmg 2>/dev/null | wc -l | tr -d ' ')"
+          if [ "${count}" = "0" ]; then echo ".dmg が1つもできていません"; exit 1; fi
+          shasum -a 256 dist/*.dmg
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: nf-macos-dmg
+          path: dist/*.dmg
+          if-no-files-found: error
+
+      - name: Releases に上げる（タグ push のときだけ）
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME}"
+          # すでにあるリリースには足す。無ければ作る。
+          if gh release view "${tag}" >/dev/null 2>&1; then
+            gh release upload "${tag}" dist/*.dmg --clobber
+          else
+            gh release create "${tag}" dist/*.dmg --title "${tag}" --notes "CI で作った macOS 版（署名なし）"
+          fi
+
+      - name: 次にやること（画面の定数は自動で書き換えません）
+        run: |
+          echo "サイト側の /fork のダウンロードURLは、この workflow では触りません。"
+          echo "リリースに上がったあと、site リポジトリで次を実行してください:"
+          echo "  node scripts/sync-download-urls.mjs --write"
+          echo "実在を見てから書き換えます。手で書くと、また 404 になります。"
