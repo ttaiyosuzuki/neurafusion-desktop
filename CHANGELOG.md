@@ -6,6 +6,7 @@ Release notes: https://docs.openclaw.ai/releases
 
 Each release has its complete changelog below. Audited contribution records are retained separately when available.
 
+- [2026.9.6](CHANGELOG/2026.9.6.md)
 - [2026.9.4](CHANGELOG/2026.9.4.md) · [Raw](https://github.com/openclaw/openclaw/raw/refs/heads/main/CHANGELOG/2026.9.4.md)
 - [2026.9.3](CHANGELOG/2026.9.3.md) · [Raw](https://github.com/openclaw/openclaw/raw/refs/heads/main/CHANGELOG/2026.9.3.md)
 - [2026.9.2](CHANGELOG/2026.9.2.md) · [Raw](https://github.com/openclaw/openclaw/raw/refs/heads/main/CHANGELOG/2026.9.2.md)
@@ -129,3 +130,11 @@ Each release has its complete changelog below. Audited contribution records are 
 - [2026.1.5](CHANGELOG/2026.1.5.md) · [Raw](https://github.com/openclaw/openclaw/raw/refs/heads/main/CHANGELOG/2026.1.5.md)
 
 Some historical files retain repeated version headings from the original changelog, in their original order. Automated release selection refuses those ambiguous versions.
+## 2026.9.6
+
+NeuraFusion Desktop の最初の GUI 配布版。
+
+- macOS の .app / .dmg を CI（nf-build-mac）で作る経路を追加
+- 配布物の名前を NeuraFusion に変更（.app・.dmg・.zip・CFBundleName）
+- Sparkle 自己更新の既定を無効化（上流 appcast への自動更新を遮断）
+- 署名は ad-hoc・公証なし。初回起動は 右クリック→「開く」
