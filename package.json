@@ -1,15 +1,15 @@
 {
-  "name": "openclaw",
-  "version": "2026.9.4",
+  "name": "neurafusion",
+  "version": "2026.9.6",
   "openclaw": {
     "schemaVersions": {
       "state": 17,
       "agent": 20
     }
   },
-  "description": "Multi-channel AI gateway with extensible messaging integrations",
+  "description": "NeuraFusion — やりたいことを一文で書くと、書類・手続き・合いそうな人までつながるAIの土台",
   "keywords": [],
-  "homepage": "https://github.com/openclaw/openclaw#readme",
+  "homepage": "https://neurafusion.jp/fork",
   "bugs": {
     "url": "https://github.com/openclaw/openclaw/issues"
   },
@@ -17,7 +17,7 @@
   "author": "OpenClaw Foundation (https://openclaw.org)",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/openclaw/openclaw.git"
+    "url": "git+https://github.com/ttaiyosuzuki/neurafusion-desktop.git"
   },
   "bin": {
     "openclaw": "openclaw.mjs",

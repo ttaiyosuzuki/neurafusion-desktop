@@ -81,21 +81,33 @@ function normalizeCommandBaseName(token: string | undefined): string {
   return base.replace(/\.(?:cmd|exe)$/u, "");
 }
 
+/**
+ * ★2026-09-18 リブランド: このCLIは `openclaw` と `neurafusion` の2つの名前で呼べる
+ *   （package.json の bin に両方ある）。
+ *   **ここは安全機構**（エージェントが自分の制御コマンドを叩くのを止める所）なので、
+ *   片方だけを見ていると `neurafusion ...` が素通りする。必ず両方を見ること。
+ */
+const CLI_COMMAND_NAMES = new Set(["openclaw", "neurafusion"]);
+
+function isCliCommandName(name: string): boolean {
+  return CLI_COMMAND_NAMES.has(name);
+}
+
 function stripOpenClawPackageRunner(argv: string[]): string[] {
   const commandName = normalizeCommandBaseName(argv[0]);
-  if (commandName === "openclaw") {
+  if (isCliCommandName(commandName)) {
     return argv;
   }
   if (
     (commandName === "pnpm" || commandName === "npm" || commandName === "yarn") &&
-    normalizeCommandBaseName(argv[1]) === "openclaw"
+    isCliCommandName(normalizeCommandBaseName(argv[1]))
   ) {
     return argv.slice(1);
   }
   if (
     (commandName === "pnpm" || commandName === "npm" || commandName === "yarn") &&
     (argv[1] === "exec" || argv[1] === "dlx" || argv[1] === "run") &&
-    normalizeCommandBaseName(argv[2]) === "openclaw"
+    isCliCommandName(normalizeCommandBaseName(argv[2]))
   ) {
     return argv.slice(2);
   }
@@ -115,7 +127,7 @@ function stripOpenClawPackageRunner(argv: string[]): string[] {
         idx += 1;
       }
     }
-    if (normalizeCommandBaseName(argv[idx]) === "openclaw") {
+    if (isCliCommandName(normalizeCommandBaseName(argv[idx]))) {
       return argv.slice(idx);
     }
   }
@@ -129,7 +141,7 @@ function parseOpenClawChannelsLoginShellCommand(raw: string): boolean {
   }
   const openclawArgv = stripOpenClawPackageRunner(argv);
   return (
-    normalizeCommandBaseName(openclawArgv[0]) === "openclaw" &&
+    isCliCommandName(normalizeCommandBaseName(openclawArgv[0])) &&
     (openclawArgv[1] === "channels" || openclawArgv[1] === "channel") &&
     openclawArgv[2] === "login"
   );

@@ -119,7 +119,10 @@ async function resolveControlUiDistIndexPath(
         try {
           const raw = fs.readFileSync(pkgJsonPath, "utf-8");
           const parsed = JSON.parse(raw) as { name?: unknown };
-          if (parsed.name === "openclaw") {
+          /* ★2026-09-18 リブランドで name が "neurafusion" になった。
+             ここを片方だけにすると Control UI の画面が見つからず、黙って出なくなる。
+             上流から入れた人（"openclaw"）も動くように両方受ける。 */
+          if (parsed.name === "neurafusion" || parsed.name === "openclaw") {
             return fs.existsSync(indexPath) ? indexPath : null;
           }
           // Stop at the first package boundary to avoid resolving through unrelated ancestors.

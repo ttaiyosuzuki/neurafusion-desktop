@@ -76,8 +76,16 @@ function isSafePackageName(name: string): boolean {
   );
 }
 
+/**
+ * ★2026-09-18 リブランド: package.json の name を "neurafusion" に変えた。
+ *   ここは**実行時に自分の名前を見ている**ので、片方だけにすると
+ *   npm 管理下の判定が落ちて、管理ルートの解決が黙って壊れる。
+ *   上流から入れた人（name="openclaw"）も動くように、両方を受ける。
+ */
+const HOST_PEER_PACKAGE_NAMES = new Set(["neurafusion", "openclaw"]);
+
 function isManagedNpmRootHostPeerPackageName(name: string): boolean {
-  return name === "openclaw";
+  return HOST_PEER_PACKAGE_NAMES.has(name);
 }
 
 function readOverrideRecord(value: unknown): Record<string, unknown> {

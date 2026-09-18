@@ -25,7 +25,9 @@ export function isOpenClawArgv(args: string[]): boolean {
   if (normalized.some((arg) => ENTRY_CANDIDATES.some((entry) => arg.endsWith(entry)))) {
     return true;
   }
-  return exe.endsWith("/openclaw") || exe === "openclaw";
+  /* ★2026-09-18 リブランドで `neurafusion` でも起動できる。片方だけだと
+     Gateway の自分判定が外れ、二重起動の検出などが黙って効かなくなる。 */
+  return ["openclaw", "neurafusion"].some((n) => exe.endsWith(`/${n}`) || exe === n);
 }
 
 export function isOpenClawCommandArgv(args: string[], command: string): boolean {
