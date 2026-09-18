@@ -200,9 +200,13 @@ function validateOutputName(value: string) {
 
 function resolvePackedOpenClawFileName(value: string) {
   const filename = value.trim();
+  /* ★NF リブランド: package.json の name が neurafusion になったので、
+     npm pack の出力は neurafusion-<ver>.tgz。旧名（openclaw-）も両対応で受ける
+     （run 35349614643 が「missing packed tarball」で落ちた原因）。 */
   if (
     !filename.endsWith(".tgz") ||
     (!filename.startsWith("openclaw-") &&
+      !filename.startsWith("neurafusion-") &&
       !filename.includes(":") &&
       !filename.includes("/") &&
       !filename.includes("\\"))
@@ -210,7 +214,7 @@ function resolvePackedOpenClawFileName(value: string) {
     return "";
   }
   if (
-    !/^openclaw-[A-Za-z0-9._-]+\.tgz$/u.test(filename) ||
+    !/^(?:openclaw|neurafusion)-[A-Za-z0-9._-]+\.tgz$/u.test(filename) ||
     filename.includes("\0") ||
     filename !== path.basename(filename) ||
     filename !== path.win32.basename(filename)
