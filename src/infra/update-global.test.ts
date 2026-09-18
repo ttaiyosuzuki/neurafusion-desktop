@@ -118,7 +118,7 @@ describe("update global helpers", () => {
 
   it("maps main and explicit package targets to install specs", () => {
     expect(resolveGlobalInstallSpec({ packageName: "openclaw", tag: "main" })).toBe(
-      "github:openclaw/openclaw#main",
+      "github:ttaiyosuzuki/neurafusion-desktop#main",
     );
     expect(
       resolveGlobalInstallSpec({
@@ -160,7 +160,7 @@ describe("update global helpers", () => {
     { packageName: "openclaw", spec: "openclaw@file:../candidate", expected: null },
     { packageName: "openclaw", spec: "openclaw@../candidate", expected: null },
     { packageName: "openclaw", spec: "openclaw@https://example.test/openclaw.tgz", expected: null },
-    { packageName: "openclaw", spec: "openclaw@github:openclaw/openclaw#main", expected: null },
+    { packageName: "openclaw", spec: "openclaw@github:ttaiyosuzuki/neurafusion-desktop#main", expected: null },
     { packageName: "openclaw", spec: "other@1.2.3", expected: null },
     { packageName: "openclaw", spec: "1.2.3", expected: null },
   ])("derives an expected installed version only for an exact npm spec: $spec", (testCase) => {
@@ -176,7 +176,7 @@ describe("update global helpers", () => {
     expect(canResolveRegistryVersionForPackageTarget("openclaw@github:owner/repo")).toBe(false);
     expect(canResolveRegistryVersionForPackageTarget("2026.3.22")).toBe(true);
     expect(canResolveRegistryVersionForPackageTarget("main")).toBe(false);
-    expect(canResolveRegistryVersionForPackageTarget("github:openclaw/openclaw#main")).toBe(false);
+    expect(canResolveRegistryVersionForPackageTarget("github:ttaiyosuzuki/neurafusion-desktop#main")).toBe(false);
     expect(canResolveRegistryVersionForPackageTarget("/tmp/openclaw.tgz")).toBe(false);
   });
 
@@ -804,12 +804,12 @@ describe("update global helpers", () => {
       "--trust",
       "openclaw@https://example.test/openclaw.tgz",
     ]);
-    expect(globalInstallArgs("bun", "github:openclaw/openclaw#main")).toEqual([
+    expect(globalInstallArgs("bun", "github:ttaiyosuzuki/neurafusion-desktop#main")).toEqual([
       "bun",
       "add",
       "-g",
       "--trust",
-      "openclaw@github:openclaw/openclaw#main",
+      "openclaw@github:ttaiyosuzuki/neurafusion-desktop#main",
     ]);
     expect(globalInstallFallbackArgs("npm", "openclaw@latest")).toEqual([
       "npm",

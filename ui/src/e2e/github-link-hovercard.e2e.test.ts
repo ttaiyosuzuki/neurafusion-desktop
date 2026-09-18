@@ -489,8 +489,8 @@ describeControlUiE2e("GitHub link hover cards", () => {
               type: "text",
               text: [
                 "Review https://github.com/openclaw/openclaw/pull/99816,",
-                "then https://github.com/openclaw/openclaw/issues/99815.",
-                "A [missing item](https://github.com/openclaw/openclaw/issues/999999) stays usable.",
+                "then https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/99815.",
+                "A [missing item](https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/999999) stays usable.",
                 "The [repository](https://github.com/openclaw/openclaw) has no item preview.",
                 "The skill lives at https://github.com/blader/humanizer/blob/main/SKILL.md.",
                 "Styling notes live in [the docs](https://docs.openclaw.ai/web/control-ui).",
@@ -597,7 +597,7 @@ describeControlUiE2e("GitHub link hover cards", () => {
     await expect.poll(() => card.count()).toBe(0);
     expect(await missingLink.getAttribute("aria-haspopup")).toBeNull();
     expect(await missingLink.getAttribute("href")).toBe(
-      "https://github.com/openclaw/openclaw/issues/999999",
+      "https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/999999",
     );
     await page.mouse.move(1, 1);
 

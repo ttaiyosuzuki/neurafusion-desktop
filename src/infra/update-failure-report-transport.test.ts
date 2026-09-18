@@ -14,7 +14,7 @@ import {
 import { prepareUpdateFailureReport, submitUpdateFailureReport } from "./update-failure-report.js";
 
 const tempDirs = useAutoCleanupTempDirTracker(afterEach);
-const issueUrl = "https://github.com/openclaw/openclaw/issues/123";
+const issueUrl = "https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/123";
 const authSuccess: Awaited<ReturnType<RunGithubCli>> = {
   started: true,
   status: 0,

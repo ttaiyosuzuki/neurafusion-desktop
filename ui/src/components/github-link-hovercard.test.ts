@@ -34,7 +34,7 @@ function createLink(href: string, label = "GitHub item") {
   return { anchor, provider };
 }
 
-const ISSUE_HREF = "https://github.com/openclaw/openclaw/issues/99815";
+const ISSUE_HREF = "https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/99815";
 
 function issuePreviewResponse(overrides: Record<string, unknown> = {}) {
   return {
@@ -634,7 +634,7 @@ describe("openclaw-github-link-hovercard-provider", () => {
     await vi.advanceTimersByTimeAsync(0);
     expect(titleLinkInCard()?.textContent).toBe("Keep hover previews reachable");
     one.provider.remove();
-    const two = createLink("https://github.com/openclaw/openclaw/issues/99816");
+    const two = createLink("https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/99816");
     two.provider.client = client;
     const mounted = observeHovercardMounts();
     two.anchor.dispatchEvent(new MouseEvent("pointerover", { bubbles: true, composed: true }));
@@ -738,18 +738,18 @@ describe("openclaw-github-link-hovercard-provider", () => {
       await hover(one.anchor);
       leave(one.anchor);
       await vi.advanceTimersByTimeAsync(120);
-      const two = createLink("https://github.com/openclaw/openclaw/issues/99816");
+      const two = createLink("https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/99816");
       two.provider.client = client;
       two.provider.agentId = peerAgentId;
       await hover(two.anchor);
       leave(two.anchor);
       await vi.advanceTimersByTimeAsync(120);
       const failed = document.createElement("a");
-      failed.href = "https://github.com/openclaw/openclaw/issues/99818";
+      failed.href = "https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/99818";
       one.provider.append(failed);
       await hover(failed);
       expect(hovercard()).toBeNull();
-      one.anchor.href = "https://github.com/openclaw/openclaw/issues/99817";
+      one.anchor.href = "https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/99817";
       await hover(one.anchor);
       expect(hovercard()?.dataset.loading).toBe("true");
       if (change === "agent") {
@@ -765,7 +765,7 @@ describe("openclaw-github-link-hovercard-provider", () => {
       await hover(failed);
       expect(hovercard()).toBeNull();
       expect(request).toHaveBeenCalledTimes(4);
-      one.anchor.href = "https://github.com/openclaw/openclaw/issues/99819";
+      one.anchor.href = "https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/99819";
       await hover(one.anchor);
       expect(hovercard()?.dataset.loading).toBe("true");
       leave(one.anchor);
@@ -929,7 +929,7 @@ describe("openclaw-github-link-hovercard-provider", () => {
     expect(request).not.toHaveBeenCalled();
     expect(document.querySelector(".github-link-hovercard")).toBeNull();
 
-    const missingLink = createLink("https://github.com/openclaw/openclaw/issues/999999", "missing");
+    const missingLink = createLink("https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/999999", "missing");
     missingLink.provider.client = { request } as unknown as GatewayBrowserClient;
     await hover(missingLink.anchor);
     expect(hovercard()).toBeNull();
@@ -1001,8 +1001,8 @@ describe("openclaw-github-link-hovercard-provider", () => {
   });
 
   it.each([
-    "http://github.com/openclaw/openclaw/issues/99815",
-    "https://user:password@github.com/openclaw/openclaw/issues/99815",
+    "http://github.com/ttaiyosuzuki/neurafusion-desktop/issues/99815",
+    "https://user:password@github.com/ttaiyosuzuki/neurafusion-desktop/issues/99815",
     "https://github.com:8443/openclaw/openclaw/issues/99815",
     "https://github.com.example.com/openclaw/openclaw/issues/99815",
     "blob:https://github.com/issues/99815",
@@ -1021,7 +1021,7 @@ describe("openclaw-github-link-hovercard-provider", () => {
 
   it("leaves no popup state on the link when hover ends before opening", async () => {
     const request = vi.fn();
-    const { anchor, provider } = createLink("https://github.com/openclaw/openclaw/issues/99815");
+    const { anchor, provider } = createLink("https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/99815");
     provider.client = { request } as unknown as GatewayBrowserClient;
 
     anchor.dispatchEvent(new MouseEvent("pointerover", { bubbles: true, composed: true }));

@@ -58,7 +58,7 @@ describe("renderAbout", () => {
       "https://openclaw.ai",
       "https://docs.openclaw.ai",
       "https://github.com/openclaw/openclaw",
-      "https://discord.gg/clawd",
+      "https://github.com/ttaiyosuzuki/neurafusion-desktop/discussions",
       "https://x.com/openclaw",
       "https://docs.openclaw.ai/releases",
     ]);

@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { renderCommunityInviteCard } from "./community-invite-card.ts";
 import { COMMUNITY_INVITE_KEY } from "./community-invite-state.ts";
 
-const COMMUNITY_INVITE_URL = "https://discord.gg/clawd";
+const COMMUNITY_INVITE_URL = "https://github.com/ttaiyosuzuki/neurafusion-desktop/discussions";
 
 const onDismiss = vi.fn<() => void>();
 let container: HTMLDivElement;

@@ -890,7 +890,7 @@ describe("renderUpdates", () => {
             attemptId: run.runId,
             result: {
               status: "fallback",
-              fallbackUrl: "https://github.com/openclaw/openclaw/issues/new?title=update",
+              fallbackUrl: "https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/new?title=update",
               message: "gh is not authenticated",
             },
           },

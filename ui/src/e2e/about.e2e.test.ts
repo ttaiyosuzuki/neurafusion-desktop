@@ -285,7 +285,7 @@ suite.define(() => {
       await expect.poll(() => githubLink.getAttribute("target")).toBe("_blank");
       await expect.poll(() => githubLink.getAttribute("rel")).toContain("noopener");
       const discordLink = hero.getByRole("link", { name: "Discord", exact: true });
-      await expect.poll(() => discordLink.getAttribute("href")).toBe("https://discord.gg/clawd");
+      await expect.poll(() => discordLink.getAttribute("href")).toBe("https://github.com/ttaiyosuzuki/neurafusion-desktop/discussions");
       const xLink = hero.getByRole("link", { name: "X (Twitter)", exact: true });
       await expect.poll(() => xLink.getAttribute("href")).toBe("https://x.com/openclaw");
 

@@ -47,17 +47,17 @@ function setup(
     marker: `openclaw-report:${"b".repeat(64)}`,
     browserFallback: {
       status: "available" as const,
-      url: "https://github.com/openclaw/openclaw/issues/new",
+      url: "https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/new",
     },
     savedReportPath: `${stateDir}/report.md`,
     title: "Update failure",
-    url: "https://github.com/openclaw/openclaw/issues/new",
+    url: "https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/new",
   };
   const prepare = mocks.prepare.mockReset().mockResolvedValue(prepared);
   const submit = mocks.submit.mockReset().mockResolvedValue({
     savedReportPath: prepared.savedReportPath,
     status: "created" as const,
-    url: "https://github.com/openclaw/openclaw/issues/123",
+    url: "https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/123",
   });
   mocks.getUpdateRun.mockReset().mockReturnValue(undefined);
   const runtime = { log: vi.fn(), error: vi.fn() };
@@ -106,7 +106,7 @@ describe("interactive update failure action", () => {
       expect.any(Object),
     );
     expect(fixture.runtime.log).toHaveBeenCalledWith(
-      "Created GitHub issue: https://github.com/openclaw/openclaw/issues/123",
+      "Created GitHub issue: https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/123",
     );
   });
 
@@ -149,13 +149,13 @@ describe("interactive update failure action", () => {
   it.each([
     [
       "duplicate issue",
-      { status: "duplicate", url: "https://github.com/openclaw/openclaw/issues/123" },
-      "Existing issue: https://github.com/openclaw/openclaw/issues/123",
+      { status: "duplicate", url: "https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/123" },
+      "Existing issue: https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/123",
     ],
     [
       "duplicate fallback with a retired locator",
-      { status: "duplicate", fallbackUrl: "https://github.com/openclaw/openclaw/issues/new" },
-      "Existing prefilled issue: https://github.com/openclaw/openclaw/issues/new",
+      { status: "duplicate", fallbackUrl: "https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/new" },
+      "Existing prefilled issue: https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/new",
     ],
     ["pending", { status: "pending" }, undefined],
     ["unsaved stale", { status: "stale" }, undefined],
@@ -211,7 +211,7 @@ describe("interactive update failure action", () => {
       .mockResolvedValueOnce({
         savedReportPath: fixture.prepared.savedReportPath,
         status: "created",
-        url: "https://github.com/openclaw/openclaw/issues/123",
+        url: "https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/123",
       });
 
     await expect(fixture.run()).resolves.toBe("handled");
@@ -221,7 +221,7 @@ describe("interactive update failure action", () => {
     expect(mocks.confirm).toHaveBeenCalledTimes(2);
     expect(fixture.runtime.log).toHaveBeenCalledWith("spawn gh EAGAIN");
     expect(fixture.runtime.log).toHaveBeenCalledWith(
-      "Created GitHub issue: https://github.com/openclaw/openclaw/issues/123",
+      "Created GitHub issue: https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/123",
     );
   });
 

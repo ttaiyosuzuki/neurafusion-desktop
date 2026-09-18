@@ -157,7 +157,7 @@ describe("update failure report", () => {
     await expect(fs.stat(prepared.savedReportPath)).rejects.toMatchObject({ code: "ENOENT" });
     const result = await submitUpdateFailureReport(prepared, prepared.previewDigest, {
       createIssue: mockFallbackIssue(
-        "https://github.com/openclaw/openclaw/issues/new?title=update",
+        "https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/new?title=update",
       ),
       env: { HOME: home, OPENCLAW_STATE_DIR: stateDir },
       stateDir,
@@ -248,7 +248,7 @@ describe("update failure report", () => {
       { attemptId: "attempt-once", result: failedUpdate() },
       { stateDir },
     );
-    const createIssue = mockCreatedIssue("https://github.com/openclaw/openclaw/issues/123");
+    const createIssue = mockCreatedIssue("https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/123");
 
     const [first, second] = await Promise.all([
       submitUpdateFailureReport(prepared, prepared.previewDigest, { createIssue, stateDir }),
@@ -264,7 +264,7 @@ describe("update failure report", () => {
     expect([first.status, second.status].toSorted()).toEqual(["created", "retryable"]);
     expect(third).toMatchObject({
       status: "duplicate",
-      url: "https://github.com/openclaw/openclaw/issues/123",
+      url: "https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/123",
     });
     await expect(fs.stat(first.savedReportPath)).rejects.toMatchObject({ code: "ENOENT" });
   });
@@ -311,7 +311,7 @@ describe("update failure report", () => {
         { OPENCLAW_STATE_DIR: stateDir },
       ),
     ).toMatchObject({ reserved: true });
-    const createIssue = mockCreatedIssue("https://github.com/openclaw/openclaw/issues/123");
+    const createIssue = mockCreatedIssue("https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/123");
 
     await expect(
       submitUpdateFailureReport(prepared, prepared.previewDigest, { createIssue, stateDir }),
@@ -338,7 +338,7 @@ describe("update failure report", () => {
         issueCreateCalls += 1;
         return {
           status: "created" as const,
-          url: "https://github.com/openclaw/openclaw/issues/123",
+          url: "https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/123",
         };
       },
     );
@@ -362,7 +362,7 @@ describe("update failure report", () => {
         issueCreateCalls += 1;
         return {
           status: "created" as const,
-          url: "https://github.com/openclaw/openclaw/issues/124",
+          url: "https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/124",
         };
       },
     );
@@ -393,7 +393,7 @@ describe("update failure report", () => {
         issueCreateCalls += 1;
         return {
           status: "created" as const,
-          url: "https://github.com/openclaw/openclaw/issues/123",
+          url: "https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/123",
         };
       },
     );
@@ -416,7 +416,7 @@ describe("update failure report", () => {
         issueCreateCalls += 1;
         return {
           status: "created" as const,
-          url: "https://github.com/openclaw/openclaw/issues/124",
+          url: "https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/124",
         };
       },
     );
@@ -451,7 +451,7 @@ describe("update failure report", () => {
         issueCreateCalls += 1;
         return {
           status: "created" as const,
-          url: "https://github.com/openclaw/openclaw/issues/123",
+          url: "https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/123",
         };
       },
     );
@@ -473,7 +473,7 @@ describe("update failure report", () => {
         issueCreateCalls += 1;
         return {
           status: "created" as const,
-          url: "https://github.com/openclaw/openclaw/issues/124",
+          url: "https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/124",
         };
       },
     );
@@ -728,7 +728,7 @@ describe("update failure report", () => {
       }
       return writeFile(...args);
     });
-    const oldCreateIssue = mockCreatedIssue("https://github.com/openclaw/openclaw/issues/122");
+    const oldCreateIssue = mockCreatedIssue("https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/122");
 
     const oldSubmission = submitUpdateFailureReport(prepared, prepared.previewDigest, {
       createIssue: oldCreateIssue,
@@ -745,7 +745,7 @@ describe("update failure report", () => {
 
     nowMs += 10 * 60_000;
     const replacement = await submitUpdateFailureReport(prepared, prepared.previewDigest, {
-      createIssue: mockCreatedIssue("https://github.com/openclaw/openclaw/issues/123"),
+      createIssue: mockCreatedIssue("https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/123"),
       stateDir,
     });
     await fs.mkdir(path.dirname(oldReportPath), { mode: 0o700, recursive: true });
@@ -765,11 +765,11 @@ describe("update failure report", () => {
 
     expect(replacement).toMatchObject({
       status: "created",
-      url: "https://github.com/openclaw/openclaw/issues/123",
+      url: "https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/123",
     });
     expect(oldResult).toMatchObject({
       status: "duplicate",
-      url: "https://github.com/openclaw/openclaw/issues/123",
+      url: "https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/123",
     });
     expect(oldCreateIssue).not.toHaveBeenCalled();
     expect(
@@ -784,7 +784,7 @@ describe("update failure report", () => {
     await expect(fs.readFile(oldStagedReportPath, "utf8")).resolves.toBe(prepared.body);
 
     const reconnectCreateIssue = mockCreatedIssue(
-      "https://github.com/openclaw/openclaw/issues/124",
+      "https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/124",
     );
     const reconnected = await submitUpdateFailureReport(prepared, prepared.previewDigest, {
       createIssue: reconnectCreateIssue,
@@ -793,7 +793,7 @@ describe("update failure report", () => {
 
     expect(reconnected).toMatchObject({
       status: "duplicate",
-      url: "https://github.com/openclaw/openclaw/issues/123",
+      url: "https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/123",
     });
     expect(reconnectCreateIssue).not.toHaveBeenCalled();
     await expect(fs.stat(oldReportPath)).rejects.toMatchObject({ code: "ENOENT" });
@@ -866,7 +866,7 @@ describe("update failure report", () => {
         transportCount += 1;
         return {
           status: "created" as const,
-          url: "https://github.com/openclaw/openclaw/issues/123",
+          url: "https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/123",
         };
       },
     );
@@ -890,13 +890,13 @@ describe("update failure report", () => {
     const successorResult = await successorSubmission;
     expect(successorResult).toMatchObject({
       status: "created",
-      url: "https://github.com/openclaw/openclaw/issues/123",
+      url: "https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/123",
     });
     expect(transportCount).toBe(1);
     expect(successorCreateIssue).toHaveBeenCalledOnce();
 
     const reconnectCreateIssue = mockCreatedIssue(
-      "https://github.com/openclaw/openclaw/issues/124",
+      "https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/124",
     );
     const reconnected = await submitUpdateFailureReport(prepared, prepared.previewDigest, {
       createIssue: reconnectCreateIssue,
@@ -906,7 +906,7 @@ describe("update failure report", () => {
 
     expect(reconnected).toMatchObject({
       status: "duplicate",
-      url: "https://github.com/openclaw/openclaw/issues/123",
+      url: "https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/123",
     });
     expect(reconnectCreateIssue).not.toHaveBeenCalled();
     await expect(listSavedReportArtifacts(prepared)).resolves.toEqual([]);
@@ -941,7 +941,7 @@ describe("update failure report", () => {
 
     nowMs += 10 * 60_000;
     const replacement = await submitUpdateFailureReport(prepared, prepared.previewDigest, {
-      createIssue: mockCreatedIssue("https://github.com/openclaw/openclaw/issues/123"),
+      createIssue: mockCreatedIssue("https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/123"),
       stateDir,
     });
     releaseOldFallback();
@@ -950,11 +950,11 @@ describe("update failure report", () => {
 
     expect(replacement).toMatchObject({
       status: "created",
-      url: "https://github.com/openclaw/openclaw/issues/123",
+      url: "https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/123",
     });
     expect(oldResult).toMatchObject({
       status: "duplicate",
-      url: "https://github.com/openclaw/openclaw/issues/123",
+      url: "https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/123",
     });
     expect(oldResult).not.toHaveProperty("fallbackUrl");
     await expect(fs.stat(`${prepared.savedReportPath}.result.json`)).rejects.toMatchObject({
@@ -976,7 +976,7 @@ describe("update failure report", () => {
       { attemptId: "attempt-created-finalize-failure", result: failedUpdate() },
       { stateDir },
     );
-    const issueUrl = "https://github.com/openclaw/openclaw/issues/123";
+    const issueUrl = "https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/123";
     const createIssue = mockCreatedIssue(issueUrl);
     const finalizeReceipt = vi.fn(finalizeUpdateFailureReportReceipt).mockImplementationOnce(fail);
 
@@ -1003,7 +1003,7 @@ describe("update failure report", () => {
       { attemptId: "attempt-created-cleanup-failure", result: failedUpdate() },
       { stateDir },
     );
-    const issueUrl = "https://github.com/openclaw/openclaw/issues/123";
+    const issueUrl = "https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/123";
     const createIssue = mockCreatedIssue(issueUrl);
     const realRm = fs.rm.bind(fs);
     const rm = vi.spyOn(fs, "rm").mockImplementation(async (target, options) => {

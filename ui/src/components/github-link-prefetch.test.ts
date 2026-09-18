@@ -32,7 +32,7 @@ class VisibilityObserver {
   }
 }
 
-const href = (number: number) => `https://github.com/openclaw/openclaw/issues/${number}`;
+const href = (number: number) => `https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/${number}`;
 let container: HTMLDivElement;
 
 async function show(links = [href(1)], session = "first", active = true, connected = true) {

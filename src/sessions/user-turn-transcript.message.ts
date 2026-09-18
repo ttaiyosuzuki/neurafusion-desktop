@@ -104,7 +104,7 @@ export function buildPersistedUserTurnMessage(params: UserTurnInput): PersistedU
   // derived from each message's own `timestamp` field, so the current turn and
   // every historical turn serialize identically on the wire. Persisting a stamp
   // here would NOT match the bare-current arrival (the gateway no longer stamps
-  // the live turn) — see https://github.com/openclaw/openclaw/issues/3658.
+  // the live turn) — see https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/3658.
   const openClawMeta = buildPersistedUserTurnMetadata(params, normalizedMedia);
   const message: PersistedUserTurnMessage = {
     role: "user",

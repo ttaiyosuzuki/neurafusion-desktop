@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process";
-/** Prepares and submits bounded issue content to openclaw/openclaw. */
+/** Prepares and submits bounded issue content to the NF fork repository (S48 工程7: 上流の tracker に送らない). */
 import { createHash } from "node:crypto";
 import { truncateUtf8Prefix } from "../utils/utf8-truncate.js";
 
@@ -60,8 +60,8 @@ export type GithubIssueSubmitHooks = GithubIssueReconcileHooks & {
   beforeIssueCreate?: () => Promise<() => undefined> | (() => undefined);
 };
 
-const GITHUB_REPOSITORY = "github.com/openclaw/openclaw";
-const GITHUB_REPOSITORY_ISSUES_API = "repos/openclaw/openclaw/issues";
+const GITHUB_REPOSITORY = "github.com/ttaiyosuzuki/neurafusion-desktop";
+const GITHUB_REPOSITORY_ISSUES_API = "repos/ttaiyosuzuki/neurafusion-desktop/issues";
 const GITHUB_ISSUE_CREATE_TIMEOUT_MS = 30_000;
 const GITHUB_OUTPUT_MAX_BYTES = 1024 * 1024;
 const GITHUB_ISSUE_BODY_MAX_BYTES = 20_000;
@@ -82,7 +82,7 @@ function boundUtf8(value: string, maxBytes: number, suffix: string): string {
 
 function buildPrefilledUrl(title: string, body: string): string {
   const query = new URLSearchParams({ body, title });
-  return `https://github.com/openclaw/openclaw/issues/new?${query.toString()}`;
+  return `https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/new?${query.toString()}`;
 }
 
 /** Builds an exact browser fallback when its encoded request stays within a safe bound. */
@@ -177,7 +177,7 @@ function createdIssueUrl(value: unknown): string | undefined {
       url.origin === "https://github.com" &&
       !url.search &&
       !url.hash &&
-      /^\/openclaw\/openclaw\/issues\/\d+$/u.test(url.pathname)
+      /^\/ttaiyosuzuki\/neurafusion-desktop\/issues\/\d+$/u.test(url.pathname)
     ) {
       return url.toString();
     }

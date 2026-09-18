@@ -73,17 +73,17 @@ function setup() {
     marker: `openclaw-report:${"b".repeat(64)}`,
     browserFallback: {
       status: "available" as const,
-      url: "https://github.com/openclaw/openclaw/issues/new",
+      url: "https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/new",
     },
     savedReportPath: `${stateDir}/report.md`,
     title: "Update failed: restart-unhealthy",
-    url: "https://github.com/openclaw/openclaw/issues/new",
+    url: "https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/new",
   };
   mocks.prepare.mockResolvedValue(prepared);
   mocks.submit.mockResolvedValue({
     savedReportPath: prepared.savedReportPath,
     status: "created",
-    url: "https://github.com/openclaw/openclaw/issues/123",
+    url: "https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/123",
   });
   const opts = { run: { runId, env } };
   const target = { env };

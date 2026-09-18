@@ -239,7 +239,7 @@ describe("native link routing", () => {
       }),
     } as unknown as GatewayBrowserClient;
     const anchor = document.createElement("a");
-    anchor.href = "https://github.com/openclaw/openclaw/issues/102691";
+    anchor.href = "https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/102691";
     anchor.textContent = "#102691";
     provider.append(anchor);
     document.body.append(provider);
@@ -273,7 +273,7 @@ describe("native link routing", () => {
       }),
     } as unknown as GatewayBrowserClient;
     const anchor = document.createElement("a");
-    anchor.href = "https://github.com/openclaw/openclaw/issues/102691";
+    anchor.href = "https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/102691";
     anchor.textContent = "#102691";
     provider.append(anchor);
     document.body.append(provider);
@@ -288,7 +288,7 @@ describe("native link routing", () => {
     expect(bridge.browserRequests).toEqual([
       {
         open: true,
-        url: "https://github.com/openclaw/openclaw/issues/102691",
+        url: "https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/102691",
         native: true,
       },
     ]);

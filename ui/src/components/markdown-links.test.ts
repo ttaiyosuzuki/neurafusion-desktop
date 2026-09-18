@@ -909,11 +909,11 @@ describe("toSanitizedMarkdownHtml links", () => {
   describe("github link marks", () => {
     it.each([
       ["bare pull request", "https://github.com/openclaw/openclaw/pull/3434", "#3434", "pull"],
-      ["bare issue", "https://github.com/openclaw/openclaw/issues/3435", "#3435", "issue"],
+      ["bare issue", "https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/3435", "#3435", "issue"],
       ["autolink", "<https://github.com/openclaw/openclaw/pull/3434>", "#3434", "pull"],
       [
         "bare www item",
-        "https://www.github.com/openclaw/openclaw/issues/3435",
+        "https://www.github.com/ttaiyosuzuki/neurafusion-desktop/issues/3435",
         "#3435",
         "issue",
         true,
@@ -939,7 +939,7 @@ describe("toSanitizedMarkdownHtml links", () => {
       ],
       [
         "issue shorthand",
-        "[#3434](https://github.com/openclaw/openclaw/issues/3434)",
+        "[#3434](https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/3434)",
         "#3434",
         "issue",
       ],
@@ -1044,7 +1044,7 @@ describe("toSanitizedMarkdownHtml links", () => {
       ["a commits path", "https://github.com/openclaw/openclaw/pull/3434/commits"],
       [
         "an issue comment fragment",
-        "https://github.com/openclaw/openclaw/issues/3434#issuecomment-1",
+        "https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/3434#issuecomment-1",
       ],
       ["a review comment query", "https://github.com/openclaw/openclaw/pull/3434?tab=files"],
       ["a diff anchor", "https://github.com/openclaw/openclaw/pull/3434/files#diff-abc123"],

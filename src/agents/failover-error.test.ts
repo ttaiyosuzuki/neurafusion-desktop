@@ -52,7 +52,7 @@ const MOONSHOT_INSUFFICIENT_BALANCE_429_PAYLOAD =
 const OPENROUTER_MODEL_NOT_FOUND_PAYLOAD =
   '{"error":{"message":"Healer Alpha was a stealth model revealed on March 18th as an early testing version of MiMo-V2-Omni. Find it here: https://openrouter.ai/xiaomi/mimo-v2-omni","code":404},"user_id":"user_33GTyP8uDSYYbaeBO48AGHXyuMC"}';
 // Issue-backed Anthropic/OpenAI-compatible insufficient_quota payload under HTTP 400:
-// https://github.com/openclaw/openclaw/issues/23440
+// https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/23440
 const INSUFFICIENT_QUOTA_PAYLOAD =
   '{"type":"error","error":{"type":"insufficient_quota","message":"Your account has insufficient quota balance to run this request."}}';
 // Structured OpenAI-compatible server_error payload shape seen in Codex/OpenAI runs.

@@ -2098,7 +2098,7 @@ describe("resolveModel", () => {
   });
 
   it("leaves maxTokens undefined when no configured or catalog value is available (regression: #98295)", async () => {
-    // Regression for https://github.com/openclaw/openclaw/issues/98295.
+    // Regression for https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/98295.
     // A custom provider entry without maxTokens (and no matching bundled
     // static catalog row) must not synthesize an oversized output cap from
     // DEFAULT_CONTEXT_TOKENS. Leaving maxTokens undefined lets the transport

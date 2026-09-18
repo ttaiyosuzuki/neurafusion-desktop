@@ -42,7 +42,7 @@ vi.mock("../infra/github-issue.js", () => ({
     ...input,
     browserFallback: {
       status: "available",
-      url: "https://github.com/openclaw/openclaw/issues/new?title=run-1",
+      url: "https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/new?title=run-1",
     },
     marker: `openclaw-report:${"a".repeat(64)}`,
   }),
@@ -331,7 +331,7 @@ describe("doctorCommand", () => {
     mocks.runDoctorSessionSqlite.mockResolvedValueOnce(report);
     mocks.submitGithubIssue.mockResolvedValueOnce({
       status: "created",
-      url: "https://github.com/openclaw/openclaw/issues/123",
+      url: "https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/123",
     });
     const runtime = createDoctorRuntime();
 
@@ -347,13 +347,13 @@ describe("doctorCommand", () => {
       body: supportIssue.body,
       browserFallback: {
         status: "available",
-        url: "https://github.com/openclaw/openclaw/issues/new?title=run-1",
+        url: "https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/new?title=run-1",
       },
       marker: `openclaw-report:${"a".repeat(64)}`,
       title: supportIssue.title,
     });
     expect(runtime.log).toHaveBeenCalledWith(
-      "session-sqlite recover: created GitHub issue https://github.com/openclaw/openclaw/issues/123",
+      "session-sqlite recover: created GitHub issue https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/123",
     );
     expect(mocks.clearSessionSqliteMigrationGithubIssueClaim).not.toHaveBeenCalled();
     expect(runtime.exit).toHaveBeenCalledWith(0);
@@ -442,7 +442,7 @@ describe("doctorCommand", () => {
 
   it("opens a sanitized fallback without logging its body or query URL", async () => {
     const fallbackUrl =
-      "https://github.com/openclaw/openclaw/issues/new?title=run-1&body=private-report-text";
+      "https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/new?title=run-1&body=private-report-text";
     const supportIssue = {
       body: "private-report-text",
       title: "Session SQLite migration recovery report (run-1)",
@@ -479,7 +479,7 @@ describe("doctorCommand", () => {
 
   it("retains the receipt after an indeterminate browser handoff", async () => {
     const fallbackUrl =
-      "https://github.com/openclaw/openclaw/issues/new?title=run-1&body=private-report-text";
+      "https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/new?title=run-1&body=private-report-text";
     const supportIssue = {
       body: "private-report-text",
       title: "Session SQLite migration recovery report (run-1)",
@@ -541,7 +541,7 @@ describe("doctorCommand", () => {
     mocks.submitGithubIssue.mockResolvedValueOnce({
       reason: "transport-unavailable",
       status: "browser-fallback",
-      url: "https://github.com/openclaw/openclaw/issues/new?title=run-1&body=private-report-text",
+      url: "https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/new?title=run-1&body=private-report-text",
     });
     mocks.detectBrowserOpenSupport.mockResolvedValueOnce({ ok: false, reason: "no-display" });
     const runtime = createDoctorRuntime();

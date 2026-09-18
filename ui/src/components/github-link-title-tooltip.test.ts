@@ -20,7 +20,7 @@ vi.mock(import("./github-link-hovercard.runtime.ts"), async (original) => {
 });
 
 const tag = "openclaw-github-link-hovercard-provider";
-const href = "https://github.com/openclaw/openclaw/issues/99815";
+const href = "https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/99815";
 const response = {
   comments: 2,
   createdAt: "2026-07-05T08:00:00Z",

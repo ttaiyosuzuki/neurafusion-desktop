@@ -459,7 +459,7 @@ suite.define(() => {
       expect(await page.evaluate((key) => localStorage.getItem(key), STORAGE_KEY)).toBeNull();
 
       const cta = page.getByRole("link", { name: "Join us on Discord", exact: true });
-      expect(await cta.getAttribute("href")).toBe("https://discord.gg/clawd");
+      expect(await cta.getAttribute("href")).toBe("https://github.com/ttaiyosuzuki/neurafusion-desktop/discussions");
       expect(await cta.getAttribute("target")).toBe("_blank");
       expect((await cta.getAttribute("rel"))?.split(/\s+/u)).toEqual(
         expect.arrayContaining(["noopener", "noreferrer"]),

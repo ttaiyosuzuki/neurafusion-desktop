@@ -46,7 +46,8 @@ const IDENTITY_MENU_LINKS: ReadonlyArray<{
     icon: "messageSquare",
     label: () => t("agentChip.getHelp"),
   },
-  { href: "https://discord.gg/clawd", icon: "users", label: () => t("agentChip.discord") },
+  /* ★S48 工程7: 上流 Discord に送らない（NF 開設まで GitHub Discussions） */
+  { href: "https://github.com/ttaiyosuzuki/neurafusion-desktop/discussions", icon: "users", label: () => t("agentChip.discord") },
   {
     href: "https://docs.openclaw.ai/releases",
     icon: "scrollText",

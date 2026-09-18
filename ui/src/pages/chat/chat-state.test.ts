@@ -3759,7 +3759,7 @@ describe("ChatStateController render lifecycle", () => {
     expect(refreshSessionPullRequests).not.toHaveBeenCalled();
 
     // Issue links never carry chips.
-    delta("see https://github.com/openclaw/openclaw/issues/42 ");
+    delta("see https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/42 ");
     expect(refreshSessionPullRequests).not.toHaveBeenCalled();
 
     delta("opened https://github.com/openclaw/openclaw/pull/113840 for review ");
@@ -4067,7 +4067,7 @@ describe("session pull request refresh", () => {
     },
     {
       name: "does not refresh for an issue link",
-      text: "Tracked in https://github.com/openclaw/openclaw/issues/111532.",
+      text: "Tracked in https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/111532.",
       refresh: false,
     },
     {

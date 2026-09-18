@@ -94,7 +94,7 @@ describe("tool mutation helpers", () => {
     ["exec", "gh search prs bug --web=true"],
     ["exec", "gh search prs bug -w"],
     ["exec", "gh search prs bug -w=true"],
-    ["exec", "gh api --method POST repos/openclaw/openclaw/issues"],
+    ["exec", "gh api --method POST repos/ttaiyosuzuki/neurafusion-desktop/issues"],
   ])("keeps ambiguous or mutating shell command mutating: %s %s", (toolName, command) => {
     expect(isMutatingToolCall(toolName, { command })).toBe(true);
     expect(buildToolMutationState(toolName, { command }).mutatingAction).toBe(true);

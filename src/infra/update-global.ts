@@ -76,7 +76,8 @@ const PRIMARY_PACKAGE_NAME = "openclaw";
 const ALL_PACKAGE_NAMES = [PRIMARY_PACKAGE_NAME] as const;
 const GLOBAL_RENAME_PREFIX = ".";
 /** npm-compatible spec used when the user asks to install the moving main branch. */
-const OPENCLAW_MAIN_PACKAGE_SPEC = "github:openclaw/openclaw#main";
+/* ★S48 工程7: dev チャンネルの取得元は上流でなく NF fork（自動で上流化しない） */
+const OPENCLAW_MAIN_PACKAGE_SPEC = "github:ttaiyosuzuki/neurafusion-desktop#main";
 const COREPACK_ENABLE_DOWNLOAD_PROMPT_DEFAULT = "0";
 const NPM_GLOBAL_INSTALL_QUIET_FLAGS = ["--no-fund", "--no-audit", "--loglevel=error"] as const;
 const PNPM_OPENCLAW_BUILD_ALLOWLIST_FLAG = `--allow-build=${PRIMARY_PACKAGE_NAME}`;

@@ -10,7 +10,7 @@ function pathFor(platform: NodeJS.Platform) {
 // codex-home, a systemd service home, or a sudo'd shell). Without GH_CONFIG_DIR
 // the gh CLI looks at $XDG_CONFIG_HOME/gh or $HOME/.config/gh and reports
 // "not logged in", even though the operator HOME has a valid hosts.yml.
-// See https://github.com/openclaw/openclaw/issues/78063.
+// See https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/78063.
 
 type GhConfigDiscoveryEnv = {
   HOME?: string;

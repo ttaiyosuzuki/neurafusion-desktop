@@ -419,7 +419,7 @@ export async function resolveModelAsync(
  * providers before setup, the raw `Unknown model` error is too vague. Provider
  * plugins can append a targeted recovery hint here.
  *
- * See: https://github.com/openclaw/openclaw/issues/17328
+ * See: https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/17328
  */
 function buildUnknownModelError(params: {
   provider: string;

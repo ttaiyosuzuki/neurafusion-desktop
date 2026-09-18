@@ -1549,16 +1549,36 @@ install_openclaw() {
     fix_npm_prefix_if_needed
   fi
 
+  # ★S48/NF: パッケージ名は neurafusion（旧 openclaw も両対応）。install.sh の
+  #   npm_openclaw_package_dir() と同じ判定。名前決め打ちだと「usable でない」誤判定になる（CI run#6 の原因）。
+  local nf_pkg_root nf_pkg_dir name
+  nf_pkg_root="$(node_dir)/lib/node_modules"
+  nf_pkg_dir="${nf_pkg_root}/neurafusion"
   local installed_entry lifecycle_pending legacy_install_guard
-  installed_entry="$(node_dir)/lib/node_modules/openclaw/dist/entry.js"
-  lifecycle_pending="$(node_dir)/lib/node_modules/openclaw/.openclaw-lifecycle-pending"
-  legacy_install_guard="$(node_dir)/lib/node_modules/openclaw/dist/openclaw-install-guard"
+  nf_resolve_pkg_dir() {
+    for name in neurafusion openclaw; do
+      if [[ -d "${nf_pkg_root}/${name}" ]]; then nf_pkg_dir="${nf_pkg_root}/${name}"; return 0; fi
+    done
+    nf_pkg_dir="${nf_pkg_root}/neurafusion"
+  }
+  nf_refresh_install_paths() {
+    nf_resolve_pkg_dir
+    installed_entry="${nf_pkg_dir}/dist/entry.js"
+    lifecycle_pending="${nf_pkg_dir}/.openclaw-lifecycle-pending"
+    legacy_install_guard="${nf_pkg_dir}/dist/openclaw-install-guard"
+  }
+  nf_refresh_install_paths
   local npm_install_args=(install -g --prefix "$(node_dir)" "${npm_args[@]}")
   [[ -z "$lifecycle_arg" ]] || npm_install_args+=("$lifecycle_arg")
   npm_install_args+=("$install_spec")
-  if ! env -u NPM_CONFIG_BEFORE -u npm_config_before -u NPM_CONFIG_MIN_RELEASE_AGE -u npm_config_min_release_age -u npm_config_min-release-age "$npm_cmd" "${npm_install_args[@]}" || [[ ! -f "$installed_entry" || -e "$lifecycle_pending" || -e "$legacy_install_guard" ]]; then
+  nf_install_ok() {
+    # ★install の後に呼ぶ（導入で初めてディレクトリ名が確定するため、毎回引き直す）
+    nf_refresh_install_paths
+    [[ -f "$installed_entry" && ! -e "$lifecycle_pending" && ! -e "$legacy_install_guard" ]]
+  }
+  if ! env -u NPM_CONFIG_BEFORE -u npm_config_before -u NPM_CONFIG_MIN_RELEASE_AGE -u npm_config_min_release_age -u npm_config_min-release-age "$npm_cmd" "${npm_install_args[@]}" || ! nf_install_ok; then
     log "npm install openclaw@${resolved_requested} did not produce a usable package; retrying once"
-    if ! env -u NPM_CONFIG_BEFORE -u npm_config_before -u NPM_CONFIG_MIN_RELEASE_AGE -u npm_config_min_release_age -u npm_config_min-release-age "$npm_cmd" "${npm_install_args[@]}" || [[ ! -f "$installed_entry" || -e "$lifecycle_pending" || -e "$legacy_install_guard" ]]; then
+    if ! env -u NPM_CONFIG_BEFORE -u npm_config_before -u NPM_CONFIG_MIN_RELEASE_AGE -u npm_config_min_release_age -u npm_config_min-release-age "$npm_cmd" "${npm_install_args[@]}" || ! nf_install_ok; then
       emit_json error message "npm install did not produce a usable OpenClaw package"
       log "ERROR: npm install did not produce a usable OpenClaw package"
       return 1
@@ -1569,7 +1589,7 @@ install_openclaw() {
   publish_executable_wrapper "${PREFIX}/bin/openclaw" <<EOF
 #!/usr/bin/env bash
 set -euo pipefail
-exec "${PREFIX}/tools/node/bin/node" "$(node_dir)/lib/node_modules/openclaw/dist/entry.js" "\$@"
+exec "${PREFIX}/tools/node/bin/node" "${nf_pkg_dir}/dist/entry.js" "\$@"
 EOF
   emit_json step name openclaw status ok version "$requested"
 }

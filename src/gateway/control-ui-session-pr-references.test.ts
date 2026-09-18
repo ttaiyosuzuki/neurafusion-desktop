@@ -222,7 +222,7 @@ describe("session pull request references", () => {
             type: "text",
             text: [
               "https://github.com/another/repo/pull/905",
-              "https://github.com/openclaw/openclaw/issues/906",
+              "https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/906",
               "https://github.com.evil.example/openclaw/openclaw/pull/907",
               "https://github.com@evil.example/openclaw/openclaw/pull/908",
               "https://github.com:444/openclaw/openclaw/pull/909",

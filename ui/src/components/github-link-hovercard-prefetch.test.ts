@@ -7,7 +7,7 @@ import { parseGitHubLinkTarget } from "./github-link-target.ts";
 
 const TAG = `test-github-prefetch-${crypto.randomUUID()}`;
 customElements.define(TAG, class extends GitHubLinkHovercardProvider {});
-const ISSUE_HREF = "https://github.com/openclaw/openclaw/issues/99815";
+const ISSUE_HREF = "https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/99815";
 const GITHUB_HOVERCARD_CLOSE_DELAY_MS = 120;
 
 function issuePreviewResponse(overrides: Record<string, unknown> = {}) {

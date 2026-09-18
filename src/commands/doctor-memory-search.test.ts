@@ -1194,7 +1194,7 @@ describe("noteMemorySearchHealth", () => {
   it("warns for key-optional provider (lmstudio) when gateway probe timed out", async () => {
     // A gateway timeout sets checked: false but skipped: false/absent. This is a
     // real diagnostic signal — embeddings may be unavailable — so we should warn.
-    // Regression guard: https://github.com/openclaw/openclaw/issues/74608
+    // Regression guard: https://github.com/ttaiyosuzuki/neurafusion-desktop/issues/74608
     await runMemorySearchHealth("lmstudio", {
       gatewayMemoryProbe: {
         checked: false,

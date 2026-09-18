@@ -74,7 +74,7 @@ function isValidTerminalReceipt(receipt: UpdateFailureReportReceipt): boolean {
     return (
       receipt.cleanup === "pending" &&
       receipt.fallbackUrl === undefined &&
-      isCanonicalGithubUrl(receipt.url, /^\/openclaw\/openclaw\/issues\/\d+$/u, {
+      isCanonicalGithubUrl(receipt.url, /^\/ttaiyosuzuki\/neurafusion-desktop\/issues\/\d+$/u, {
         allowSearch: false,
       })
     );
@@ -83,7 +83,7 @@ function isValidTerminalReceipt(receipt: UpdateFailureReportReceipt): boolean {
     return (
       receipt.cleanup === undefined &&
       receipt.url === undefined &&
-      isCanonicalGithubUrl(receipt.fallbackUrl, /^\/openclaw\/openclaw\/issues\/new$/u, {
+      isCanonicalGithubUrl(receipt.fallbackUrl, /^\/ttaiyosuzuki\/neurafusion-desktop\/issues\/new$/u, {
         allowSearch: true,
       })
     );
@@ -137,11 +137,11 @@ function parseReceipt(sentinel: RestartSentinel | null): UpdateFailureReportRece
       (typeof value.sweepSinceMs !== "number" || !Number.isFinite(value.sweepSinceMs))) ||
     (value.sweepOwnerId !== undefined && value.artifactSweep !== "pending") ||
     (value.status === "created" &&
-      !isCanonicalGithubUrl(value.url, /^\/openclaw\/openclaw\/issues\/\d+$/u, {
+      !isCanonicalGithubUrl(value.url, /^\/ttaiyosuzuki\/neurafusion-desktop\/issues\/\d+$/u, {
         allowSearch: false,
       })) ||
     (value.status === "fallback" &&
-      !isCanonicalGithubUrl(value.fallbackUrl, /^\/openclaw\/openclaw\/issues\/new$/u, {
+      !isCanonicalGithubUrl(value.fallbackUrl, /^\/ttaiyosuzuki\/neurafusion-desktop\/issues\/new$/u, {
         allowSearch: true,
       })) ||
     (value.cleanup !== undefined && value.status !== "created" && value.status !== "retryable") ||
