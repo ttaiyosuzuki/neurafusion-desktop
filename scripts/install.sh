@@ -826,7 +826,7 @@ cleanup_openclaw_bin_conflict() {
     local npm_root=""
     npm_root="$(npm root -g 2>/dev/null || true)"
     [[ -n "$npm_root" ]] || return 1
-    begin_openclaw_bin_backup "$bin_path" "${npm_root%/}/openclaw/openclaw.mjs" 0 || return 1
+    begin_openclaw_bin_backup "$bin_path" "$(npm_openclaw_package_dir "$npm_root")/openclaw.mjs" 0 || return 1
     ui_info "Moved existing openclaw command aside for npm retry"
 }
 
@@ -1124,11 +1124,26 @@ NODE
     printf '%s' "$output"
 }
 
+# ★NF リブランド: npm パッケージ名は neurafusion（旧 openclaw も両対応）。
+#   グローバル root 配下で実在する方のパッケージディレクトリを返す。
+npm_openclaw_package_dir() {
+    local npm_root="${1%/}" name=""
+    for name in neurafusion openclaw; do
+        if [[ -d "${npm_root}/${name}" ]]; then
+            echo "${npm_root}/${name}"
+            return 0
+        fi
+    done
+    echo "${npm_root}/neurafusion"
+}
+
 verify_npm_lifecycle_completed() {
     local npm_cmd="$1" npm_root=""
     npm_root="$("$npm_cmd" root -g 2>/dev/null | awk 'NF { value = $0 } END { print value }')" || true
     [[ -n "$npm_root" ]] || { echo "Unable to resolve npm global root after install." >&2; return 1; }
-    [[ ! -e "${npm_root%/}/openclaw/.openclaw-lifecycle-pending" && ! -e "${npm_root%/}/openclaw/dist/openclaw-install-guard" ]] || {
+    local pkg_dir=""
+    pkg_dir="$(npm_openclaw_package_dir "$npm_root")"
+    [[ ! -e "${pkg_dir}/.openclaw-lifecycle-pending" && ! -e "${pkg_dir}/dist/openclaw-install-guard" ]] || {
       echo "OpenClaw lifecycle scripts did not complete; refusing installer success." >&2
       return 1
     }
@@ -2604,7 +2619,7 @@ fix_npm_permissions() {
 ensure_openclaw_bin_link() {
     local npm_root=""
     npm_root="$(npm root -g 2>/dev/null || true)"
-    local launcher="${npm_root}/openclaw/openclaw.mjs"
+    local launcher="$(npm_openclaw_package_dir "$npm_root")/openclaw.mjs"
     if [[ -z "$npm_root" || ! -x "$launcher" ]] || ! "$launcher" --version >/dev/null 2>&1; then
         return 1
     fi
@@ -3090,7 +3105,7 @@ find_openclaw_global_installs() {
     local npm_root=""
     while IFS= read -r npm_root; do
         [[ -n "$npm_root" ]] || continue
-        local package_dir="${npm_root%/}/openclaw"
+        local package_dir="$(npm_openclaw_package_dir "$npm_root")"
         local package_json="${package_dir}/package.json"
         [[ -f "$package_json" ]] || continue
 
@@ -3737,8 +3752,8 @@ resolve_openclaw_version() {
     if [[ -z "$version" ]]; then
         local npm_root=""
         npm_root=$(npm root -g 2>/dev/null || true)
-        if [[ -n "$npm_root" && -f "$npm_root/openclaw/package.json" ]]; then
-            version=$(node -e "console.log(require('${npm_root}/openclaw/package.json').version)" 2>/dev/null || true)
+        if [[ -n "$npm_root" && -f "$(npm_openclaw_package_dir "$npm_root")/package.json" ]]; then
+            version=$(node -e "console.log(require('$(npm_openclaw_package_dir "$npm_root")/package.json').version)" 2>/dev/null || true)
         fi
     fi
     echo "$version"
@@ -3849,7 +3864,7 @@ retire_npm_owner_after_git_install() {
         return 1
     fi
     npm_root="$("$npm_cmd" root -g 2>/dev/null | awk 'NF { value = $0 } END { print value }')" || true
-    package_root="${npm_root%/}/openclaw"
+    package_root="$(npm_openclaw_package_dir "$npm_root")"
     [[ -n "$npm_root" && -f "$package_root/package.json" ]] || return 0
     package_name="$(node -e 'const p=require(process.argv[1]); process.stdout.write(String(p.name || ""))' "$package_root/package.json" 2>/dev/null || true)"
     if [[ "$package_name" != "openclaw" ]]; then
@@ -3891,7 +3906,7 @@ prepare_git_wrapper_backup_for_npm() {
     [[ -n "$npm_root" && -n "$npm_bin" ]] || return 0
     target="${npm_bin%/}/openclaw"
     is_installer_git_wrapper "$target" || return 0
-    launcher="${npm_root%/}/openclaw/openclaw.mjs"
+    launcher="$(npm_openclaw_package_dir "$npm_root")/openclaw.mjs"
     begin_openclaw_bin_backup "$target" "$launcher" 1
 }
 
