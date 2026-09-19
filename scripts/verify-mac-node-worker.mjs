@@ -24,7 +24,13 @@ if (!runtimeArg || !expectedInfoPath) {
 }
 const runtime = fs.realpathSync(runtimeArg);
 const node = path.join(runtime, "bin/node");
-const packageRoot = path.join(runtime, "lib/node_modules/openclaw");
+// npm 名リブランド後は node_modules/neurafusion に入る。両対応（run#7 の失敗原因）。
+const packageRoot = ["neurafusion", "openclaw"]
+  .map((name) => path.join(runtime, "lib/node_modules", name))
+  .find((p) => fs.existsSync(path.join(p, "dist/build-info.json")));
+if (!packageRoot) {
+  throw new Error(`Worker package not found under ${runtime}/lib/node_modules (neurafusion/openclaw)`);
+}
 const expected = JSON.parse(fs.readFileSync(expectedInfoPath, "utf8"));
 const actual = JSON.parse(fs.readFileSync(path.join(packageRoot, "dist/build-info.json"), "utf8"));
 for (const key of ["version", "commit", "builtAt", "buildId"]) {
