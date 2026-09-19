@@ -82,6 +82,13 @@ jobs:
           node-version: "24"
 
       - name: .app と .dmg を作る（既存の経路をそのまま呼ぶ）
+        env:
+          # ★Apple Developer Program（年 US$99）が未取得で、ランナーに署名証明書がありません。
+          #   codesign-mac-app.sh は既定で証明書を探し、無ければ止まります（run 35409226473 の失敗）。
+          #   この配布はもともと無署名の前提（利用者は初回だけ右クリック →「開く」）なので、
+          #   ad-hoc 署名にフォールバックさせます。証明書を取得したら、この行を消して
+          #   SIGN_IDENTITY を Secrets から渡してください。
+          ALLOW_ADHOC_SIGNING: "1"
         run: bash scripts/package-mac-dist.sh
 
       - name: 何ができたかを控える
