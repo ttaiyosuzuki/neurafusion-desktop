@@ -111,6 +111,7 @@ struct StatusMenuDescriptor {
         case dashboard
         case quickChat
         case talkMode
+        case ambientWatch // OC-15: 常時観測トグル
         case allSessions
         case settings
         case connection
@@ -211,6 +212,7 @@ struct StatusMenuDescriptor {
             entries.append(Entry(.action(.quickChat)))
         }
         entries.append(Entry(.action(.talkMode)))
+        entries.append(Entry(.action(.ambientWatch))) // OC-15
         return Section(id: "actions", entries: entries)
     }
 

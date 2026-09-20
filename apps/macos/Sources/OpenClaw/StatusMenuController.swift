@@ -240,6 +240,7 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
             _ = self.state.canvasEnabled
             _ = self.state.canvasPanelVisible
             _ = self.state.talkEnabled
+            _ = AmbientObserver.shared.isEnabled
             _ = self.state.debugPaneEnabled
             _ = self.updater.updateStatus.isUpdateReady
             _ = self.activityStore.current
@@ -379,6 +380,8 @@ private struct StatusMenuIconView: View {
     var body: some View {
         // SwiftUI tracks icon inputs here, independently of menu-only updates.
         let sleeping = statusMenuGatewayIsSleeping(state: self.state)
+        // AmbientObserver は @Observable。ここで読むことで ON/OFF 切替時に再描画される。
+        let ambientOn = AmbientObserver.shared.isEnabled
         CritterStatusLabel(
             isPaused: self.state.isPaused,
             isSleeping: sleeping,
@@ -392,6 +395,17 @@ private struct StatusMenuIconView: View {
             animationsEnabled: self.state.iconAnimationsEnabled && !sleeping,
             iconState: self.effectiveIconState,
             voiceWakeMeterActive: self.state.voiceWakeMeterActive)
+            .overlay(alignment: .bottomTrailing) {
+                if ambientOn {
+                    // 観測ONバッジ: 小さな目。テンプレート描画でメニューバーの明暗に追従。
+                    Image(systemName: "eye.fill")
+                        .font(.system(size: 6, weight: .bold))
+                        .foregroundStyle(.tint)
+                        .padding(1)
+                        .background(Circle().fill(.background))
+                        .accessibilityLabel(Text("Ambient watch on"))
+                }
+            }
     }
 
     private var effectiveIconState: IconState {

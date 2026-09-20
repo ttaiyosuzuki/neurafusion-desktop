@@ -365,6 +365,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
             VoiceWakeGlobalSettingsSync.shared.start()
             QuickChatController.shared.start()
+            AmbientObserver.shared.start() // OC-15: 既定OFF。保存済みポリシーが ON のときだけ購読する
         }
         Task { PresenceReporter.shared.start() }
         Task { await HealthStore.shared.refresh(onDemand: true) }

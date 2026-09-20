@@ -271,6 +271,11 @@ final class StatusMenuRenderer: NSObject {
                 ? String(localized: "Stop Talk Mode")
                 : String(localized: "Start Talk Mode")
             symbol = "waveform.circle.fill"
+        case .ambientWatch:
+            title = AmbientObserver.shared.isEnabled
+                ? String(localized: "Stop Ambient Watch")
+                : String(localized: "Start Ambient Watch")
+            symbol = AmbientObserver.shared.isEnabled ? "eye.fill" : "eye.slash"
         case .allSessions:
             title = String(localized: "All Sessions…")
             symbol = "rectangle.stack"
@@ -336,6 +341,8 @@ final class StatusMenuRenderer: NSObject {
             QuickChatController.shared.toggle()
         case .talkMode:
             Task { await self.state.setTalkEnabled(!self.state.talkEnabled) }
+        case .ambientWatch:
+            AmbientObserver.shared.toggle()
         case .allSessions:
             Task { await DashboardManager.shared.show(atPath: DashboardRouteMap.sessionsPagePath) }
         case .settings:
