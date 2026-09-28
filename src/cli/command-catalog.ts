@@ -98,6 +98,12 @@ export const cliCommandCatalog: readonly CliCommandCatalogEntry[] = [
     policy: { ...PASSIVE_STARTUP_POLICY, hideBanner: true },
   },
   {
+    commandPath: ["kensan"],
+    // NF 検品は設定も共有状態も読まない自己完結コマンド。稼働中の Gateway と
+    // 状態ディレクトリを取り合わない（plugin convergence やリース取得を走らせない）。
+    policy: { ...PASSIVE_STARTUP_POLICY, hideBanner: true },
+  },
+  {
     commandPath: ["crestodian"], // hidden alias
     policy: { configGuard: "skip", loadPlugins: "never", ensureCliPath: false },
   },

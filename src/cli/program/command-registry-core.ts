@@ -38,6 +38,10 @@ const coreEntrySpecs: readonly CommandGroupDescriptorSpec<[ctx: ProgramContext]>
     async (program) => (await import("./register.backup.js")).registerBackupCommand(program),
   ],
   [
+    ["kensan"],
+    async (program) => (await import("./register.kensan.js")).registerKensanCommand(program),
+  ],
+  [
     ["database"],
     async (program) => (await import("./register.database.js")).registerDatabaseCommand(program),
   ],

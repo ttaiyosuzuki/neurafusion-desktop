@@ -50,6 +50,12 @@ export const CORE_CLI_COMMAND_DESCRIPTORS = [
     hasSubcommands: true,
   },
   {
+    name: "kensan",
+    description:
+      "NF 検品: capture only the selected text from any app into the local inspection panel",
+    hasSubcommands: true,
+  },
+  {
     name: "database",
     description: "Inspect database schema compatibility and shared-state write ownership",
     hasSubcommands: true,
