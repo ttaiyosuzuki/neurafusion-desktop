@@ -52,8 +52,11 @@ JSON
 # headless の GNOME は起動直後にアクティビティ画面（Overview）になるので閉じる（--unsafe-mode の Eval。確認用だけ）
 gdbus call --session -d org.gnome.Shell -o /org/gnome/Shell -m org.gnome.Shell.Eval 'Main.overview.hide()' > /dev/null 2>&1
 sleep 1
-# ポータルの GNOME 側を先に起こしておく（起動直後は ScreenCast がまだ出ていないことがある）
+# ポータルの GNOME 側と本体を先に起こしておく（起動直後は ScreenCast がまだ出ていないことがある。
+# この VM では本体の最初の応答に 20 秒ほどかかった: GTK 側の起動待ちが時間切れになるまで待つため）
 gdbus introspect --session -d org.freedesktop.impl.portal.desktop.gnome -o /org/freedesktop/portal/desktop > /dev/null 2>&1
+gdbus call --session --timeout 90 -d org.freedesktop.portal.Desktop -o /org/freedesktop/portal/desktop \
+  -m org.freedesktop.DBus.Properties.Get org.freedesktop.portal.ScreenCast version > /dev/null 2>&1
 sleep 3
 # 代わりの AI 窓はネイティブの Wayland の窓（GDK_BACKEND は既定 = wayland）
 "$HERE/fake-ai.py" > /dev/null 2>&1 &

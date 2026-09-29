@@ -116,7 +116,8 @@ class Overlay:
                     protocol.ready(
                         self.session,
                         ax=self.session == "x11" and readers.atspi_available(),
-                        screen=self.session == "x11" or readers.portal_screencast_available() or readers.portal_screenshot_available(),
+                        # Wayland はポータルがあるか（すぐ返る方）。ScreenCast か Screenshot かは押したときに決める
+                        screen=self.session == "x11" or readers.portal_present(),
                         ocr=readers.ocr_available(),
                         version=VERSION,
                     )

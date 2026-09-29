@@ -253,6 +253,28 @@ def _portal_version(iface: str) -> int:
         return 0
 
 
+def portal_present() -> bool:
+    """xdg-desktop-portal が動いているか、起こせるか。すぐ返る（ready 用）。
+
+    ScreenCast・Screenshot の有無は押したときに確かめる。起動直後のポータルは最初の応答に 20 秒ほど
+    かかることがあり（VM で実測）、ここで待つと丸が出るのも遅れる。"""
+    try:
+        bus = Gio.bus_get_sync(Gio.BusType.SESSION, None)
+        r = bus.call_sync(
+            "org.freedesktop.DBus", "/org/freedesktop/DBus", "org.freedesktop.DBus", "NameHasOwner",
+            GLib.Variant("(s)", (PORTAL_BUS,)), GLib.VariantType("(b)"), Gio.DBusCallFlags.NONE, 1000, None,
+        )
+        if r.unpack()[0]:
+            return True
+        r = bus.call_sync(
+            "org.freedesktop.DBus", "/org/freedesktop/DBus", "org.freedesktop.DBus", "ListActivatableNames",
+            None, GLib.VariantType("(as)"), Gio.DBusCallFlags.NONE, 1000, None,
+        )
+        return PORTAL_BUS in r.unpack()[0]
+    except GLib.Error:
+        return False
+
+
 def portal_screencast_available() -> bool:
     return _portal_version("org.freedesktop.portal.ScreenCast") >= 1 and shutil.which("gst-launch-1.0") is not None
 
