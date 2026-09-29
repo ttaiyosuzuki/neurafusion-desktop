@@ -24,11 +24,10 @@ PY
 count() { grep -c "$1" "$LINES"; }
 # 同意の小窓のボタンを押す（左 = 撮らない、右 = 撮って読む）。ボタンの列は小窓の下端から 18px
 press_consent() {
-  # 小窓が前面（フォーカスあり）になるのを待ち、キーボードで押す。decline = Esc（撮らない）、accept = Tab で「撮って読む」へ移って Space
-  local D; D=$(xdotool search --sync --onlyvisible --classname "^nf-overlay-consent$" | head -1)
-  for _ in $(seq 1 20); do [ "$(xdotool getactivewindow)" = "$D" ] && break; sleep 0.3; done
-  sleep 0.5; [ -n "${2:-}" ] && shot "$2"
-  if [ "$1" = decline ]; then xdotool key Escape; else xdotool key Tab; sleep 0.3; xdotool key space; fi
+  # 同意の小窓が出るのを待ち、AT-SPI でボタンを押す（本人の代わり。decline = 撮らない、accept = 撮って読む）
+  xdotool search --sync --onlyvisible --classname "^nf-overlay-consent$" > /dev/null
+  sleep 0.8; [ -n "${2:-}" ] && shot "$2"
+  if [ "$1" = decline ]; then "$HERE/press-button.py" 撮らない; else "$HERE/press-button.py" 撮って読む; fi
 }
 wid() { xdotool search --sync --onlyvisible --classname "$1" | head -1; }
 

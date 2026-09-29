@@ -258,6 +258,7 @@ class Overlay:
 
 
 def main() -> int:
+    GLib.set_prgname("nf-overlay")
     if Gdk.Display.get_default() is None:
         sys.stdout.write(protocol.error("no-display", "画面につながれません（DISPLAY が無い）") + "\n")
         sys.stdout.flush()

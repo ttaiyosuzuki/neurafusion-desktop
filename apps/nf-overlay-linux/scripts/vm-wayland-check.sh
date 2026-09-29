@@ -3,7 +3,8 @@
 #   OUT=/tmp/nf-linux-vm/share/wayland vm-wayland-check.sh
 # 前提: /tmp/nf-session.env に WAYLAND_DISPLAY・DISPLAY（Xwayland）・DBUS_SESSION_BUS_ADDRESS がある。
 # 確認用の画面は org.gnome.Shell.Screenshot で撮る（--unsafe-mode のときだけ呼べる。丸の本体はこれを使わない）。
-# ポータルの確認（GNOME の「撮影」の画面）は、本人の代わりに AT-SPI でボタンを押す（accept-portal.py）。
+# ポータルの確認（GNOME Shell の撮影の画面。Selection / Screen / Window を本人が選ぶ）は、本人の代わりに
+# Eval で「Screen」を選んで撮影ボタンを押す／閉じる（portal_ui）。丸の本体はこれを使わない。
 set -u
 HERE=$(cd "$(dirname "$0")" && pwd)
 OUT=${OUT:-/tmp/nf-wayland-check}
@@ -25,10 +26,19 @@ d=g[-1]["dot"]; print(d["x"]+d["w"]//2, d["y"]+d["h"]//2)
 PY
 }
 consent() {
-  local D; D=$(xdotool search --sync --onlyvisible --classname "^nf-overlay-consent$" | head -1)
-  for _ in $(seq 1 20); do [ "$(xdotool getactivewindow 2>/dev/null)" = "$D" ] && break; sleep 0.3; done
-  sleep 0.5; [ -n "${2:-}" ] && shot "$2"
-  if [ "$1" = decline ]; then xdotool key Escape; else xdotool key Tab; sleep 0.3; xdotool key space; fi
+  # 同意の小窓が出るのを待ち、AT-SPI でボタンを押す（本人の代わり。decline = 撮らない、accept = 撮って読む）
+  xdotool search --sync --onlyvisible --classname "^nf-overlay-consent$" > /dev/null
+  sleep 0.8; [ -n "${2:-}" ] && shot "$2"
+  if [ "$1" = decline ]; then "$HERE/press-button.py" 撮らない; else "$HERE/press-button.py" 撮って読む; fi
+}
+shell_eval() { gdbus call --session -d org.gnome.Shell -o /org/gnome/Shell -m org.gnome.Shell.Eval "$1"; }
+portal_ui() {
+  for _ in $(seq 1 20); do shell_eval 'Main.screenshotUI.visible' | grep -q "'true'" && break; sleep 0.5; done
+  if [ "$1" = accept ]; then
+    shell_eval 'Main.screenshotUI._screenButton.checked = true; Main.screenshotUI._onCaptureButtonClicked(); "ok"'
+  else
+    shell_eval 'Main.screenshotUI.close(); "ok"'
+  fi
 }
 wait_read() { local n=$1; for _ in $(seq 1 90); do [ "$(count '"type": "read"')" -ge "$n" ] && return 0; sleep 1; done; return 1; }
 
@@ -38,6 +48,9 @@ cat > "$OUT/cfg.json" <<'JSON'
  "panelMode":"disconnected","ocrConsent":"ask-each-time","size":44,"margin":16}
 JSON
 
+# headless の GNOME は起動直後にアクティビティ画面（Overview）になるので閉じる（--unsafe-mode の Eval。確認用だけ）
+gdbus call --session -d org.gnome.Shell -o /org/gnome/Shell -m org.gnome.Shell.Eval 'Main.overview.hide()' > /dev/null
+sleep 1
 # 代わりの AI 窓はネイティブの Wayland の窓（GDK_BACKEND は既定 = wayland）
 "$HERE/fake-ai.py" > /dev/null 2>&1 &
 sleep 4
@@ -57,7 +70,7 @@ echo "--- 2 押す → 同意 → ポータルの確認で撮る"
 set -- $(last_dot); xdotool mousemove "$1" "$2" click 1
 consent accept
 sleep 3; shot w03-portal-dialog
-python3 "$HERE/accept-portal.py" accept > "$OUT/portal-accept.log" 2>&1
+portal_ui accept > "$OUT/portal-accept.log" 2>&1
 wait_read 2; sleep 1; shot w04-ocr-done
 echo "read=$(count '"type": "read"')"
 
@@ -65,7 +78,7 @@ echo "--- 3 押す → 同意 → ポータルで取り消す"
 set -- $(last_dot); xdotool mousemove "$1" "$2" click 1
 consent accept
 sleep 3
-python3 "$HERE/accept-portal.py" cancel > "$OUT/portal-cancel.log" 2>&1
+portal_ui cancel > "$OUT/portal-cancel.log" 2>&1
 wait_read 3; sleep 1; shot w05-portal-cancelled
 echo "read=$(count '"type": "read"')"
 
