@@ -14,7 +14,7 @@ if [ "$(uname -s)" != Linux ] || [ "$(uname -m)" != x86_64 ]; then
   exit 2
 fi
 for c in dpkg-deb curl tar xz file; do
-  command -v "$c" >/dev/null 2>&1 || { echo "要るコマンドがありません: $c（Ubuntu: sudo apt-get install -y dpkg curl tar xz-utils file）" >&2; exit 2; }
+  command -v "$c" >/dev/null 2>&1 || { echo "要るコマンドがありません: ${c}（Ubuntu: sudo apt-get install -y dpkg curl tar xz-utils file）" >&2; exit 2; }
 done
 command -v node >/dev/null 2>&1 || command -v python3 >/dev/null 2>&1 || { echo "node か python3 が要ります" >&2; exit 2; }
 source "$(dirname "$0")/common.sh"
@@ -28,12 +28,14 @@ OVERLAY_SRC="${NF_LINUX_OVERLAY_DIR:-$ROOT_DIR/apps/nf-overlay-linux}"
 DEPENDS="python3, python3-gi, gir1.2-gtk-3.0, gir1.2-wnck-3.0, gir1.2-atspi-2.0, at-spi2-core, tesseract-ocr, tesseract-ocr-jpn"
 RECOMMENDS="gir1.2-webkit2-4.1"
 
-# /opt/neurafusion の中身を $1 に置く
+# /opt/neurafusion の中身を $1 に置く。$2=linux（.deb）|appimage（AppImage の runtime のライセンスも入れる）
 stage_payload() {
-  local dir="$1"
+  local dir="$1" kind="$2" node_ver
   stage_common "$dir"
   cp "$ROOT_DIR/packaging/installer/icons/neurafusion-256.png" "$dir/neurafusion.png"
-  bash "$ROOT_DIR/scripts/nf-dist/fetch-node.sh" linux-x64 "$dir/node" >/dev/null
+  node_ver="$(bash "$ROOT_DIR/scripts/nf-dist/fetch-node.sh" linux-x64 "$dir/node" | awk '{print $2}')"
+  stage_licenses "$dir" "$kind"
+  finish_licenses "$dir" "Node.js ${node_ver}（linux-x64）"
   if [ -x "$OVERLAY_SRC/nf-overlay" ]; then
     mkdir -p "$dir/overlay"
     cp "$OVERLAY_SRC/nf-overlay" "$dir/overlay/"
@@ -63,8 +65,11 @@ EOF
 build_deb() {
   local root="$STAGE_ROOT/linux-deb"
   rm -rf "$root"
-  mkdir -p "$root/DEBIAN" "$root/opt" "$root/usr/bin" "$root/usr/share/applications" "$root/usr/share/icons/hicolor/256x256/apps"
-  stage_payload "$root/opt/neurafusion"
+  mkdir -p "$root/DEBIAN" "$root/opt" "$root/usr/bin" "$root/usr/share/applications" "$root/usr/share/icons/hicolor/256x256/apps" \
+    "$root/usr/share/doc/neurafusion-desktop"
+  stage_payload "$root/opt/neurafusion" linux
+  # Debian の決まり: 著作権と配布の条件を /usr/share/doc/<パッケージ>/copyright に
+  cp "$root/opt/neurafusion/licenses/ALL.txt" "$root/usr/share/doc/neurafusion-desktop/copyright"
   cat > "$root/usr/bin/neurafusion-desktop" <<'EOF'
 #!/bin/sh
 # NeuraFusion Desktop の入口（DK-09）。同梱の Node 24 でランチャーを動かすだけ。
@@ -106,7 +111,7 @@ build_appimage() {
   local appdir="$STAGE_ROOT/linux-appimage/NeuraFusion.AppDir"
   rm -rf "$STAGE_ROOT/linux-appimage"
   mkdir -p "$appdir/usr/share/applications"
-  stage_payload "$appdir/opt/neurafusion"
+  stage_payload "$appdir/opt/neurafusion" appimage
   cat > "$appdir/AppRun" <<'EOF'
 #!/bin/sh
 # NeuraFusion の AppImage の入口（DK-09）
@@ -118,6 +123,7 @@ EOF
   desktop_entry neurafusion-desktop neurafusion-desktop > "$appdir/neurafusion-desktop.desktop"
   cp "$appdir/neurafusion-desktop.desktop" "$appdir/usr/share/applications/"
   cp "$ROOT_DIR/packaging/installer/icons/neurafusion-256.png" "$appdir/neurafusion-desktop.png"
+  normalize_modes "$appdir"
   local out="$OUT_DIR/NeuraFusion-Desktop-$VERSION-x86_64.AppImage"
   rm -f "$out"
   # FUSE の無い環境（VM・CI）でも動くよう、道具は展開して動かす

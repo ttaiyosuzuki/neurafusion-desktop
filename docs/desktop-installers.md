@@ -26,9 +26,8 @@ Linux `~/.local/share/neurafusion/cli/<版>`）。2 回目からは入れ直さ�
 ## 作り方
 
 ```sh
-# 1. 本体の tarball（約 25 分。npm pack だと @openclaw/ai が同梱されず検査で落ちるので --pnpm-pack）
-node scripts/package-openclaw-for-docker.mjs --allow-unreleased-changelog --pnpm-pack
-#    （別の場所の tarball を使うなら NF_DIST_TGZ=<パス>）
+# 1. 本体の tarball（約 13〜25 分。package-openclaw-for-docker.mjs --pnpm-pack で .artifacts/nf-dist-pack/ に書く）
+bash scripts/nf-dist/build-tgz.sh
 
 # 2. Mac（この Mac で。x64 と arm64 の 2 つ。丸の本体は --triple で 1 つずつ作って lipo で universal に）
 bash scripts/nf-dist/build-macos-dmg.sh
@@ -39,11 +38,24 @@ bash scripts/nf-dist/build-windows-installer.sh
 # 4. Linux（GitHub Actions の Linux ランナーで。Mac では止まる。入口・パッケージ・出力は README の「Linux 版の作り方」）
 bash scripts/nf-dist/build-linux-packages.sh          # 丸の本体は apps/nf-overlay-linux（DK-08）。無ければ NF_LINUX_OVERLAY_DIR
 
-# 5. 中身の確認（TS-38 配布形式。NF_DIST_SMOKE=1 で、同梱の Node で本体を実際に入れて --version まで）
+# 5. 中身の確認（TS-38 配布形式。NF_DIST_SMOKE=1 で、同梱の Node で本体を実際に入れて --version・--help まで）
 NF_DIST_SMOKE=1 bash scripts/nf-dist/verify-installers.sh            # Mac: dmg と exe、Linux: deb と appimage
 ```
 
 出力は `.artifacts/installers/`（ignore 下）と `SHA256SUMS.txt`。リリースへの上げは取りまとめ役・本人の確認のあと。
+
+**本体の tarball は自動で選ぶ。** 2〜4 の組み立ては、候補（`.artifacts/*/neurafusion-<版>.tgz` のすべて）を中まで調べ、
+`@openclaw/ai` の入っていない物（npm pack で作った物。`package-openclaw-for-docker.mjs` の検査で落ちても tarball は残る）を除いて、
+残りのうち一番新しい物を使う。1 つも無ければ、配布物を作る前に理由を出して止まる（先に 1 を流す）。
+`NF_DIST_TGZ=<パス>` は別の場所の物を使うときの上書きで、同じ検査にかける（入っていなければ止まる）。
+
+**中身の確認（5）** は呼んだ人のロケールに左右されない（検査自身は `LC_ALL=C` で動く。`ja_JP.UTF-8` でも `C` でも同じ結果）。
+途中で止まっても（失敗・Ctrl-C・kill）、検査が開いた .dmg のマウントと一時フォルダは片付ける（ほかの人のマウントには触れない）。
+見る物: 形と同梱物・本体の tarball に `@openclaw/ai`・ライセンス文書・利用者に見える所の名前とアイコン・中身の権限
+（組み立てた人の umask に左右されない。`common.sh` が `umask 022`）。smoke は使い捨ての HOME で、本人の設定・通知に触れない。
+
+**ライセンス文書**（上流の MIT 全文・同梱物ごとの全文）を各配布物に入れる。何をどこに入れたか・名前とロゴの方針・法務確認待ちの点は
+[desktop-installers-licenses.md](desktop-installers-licenses.md)。
 
 | 形式 | 中身 | 丸の本体 |
 |---|---|---|

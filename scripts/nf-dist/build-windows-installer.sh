@@ -19,7 +19,8 @@ STAGE="$STAGE_ROOT/windows"
 rm -rf "$STAGE"
 stage_common "$STAGE"
 cp "$ROOT_DIR/packaging/installer/icons/neurafusion.ico" "$STAGE/"
-bash "$ROOT_DIR/scripts/nf-dist/fetch-node.sh" win-x64 "$STAGE/node" >/dev/null
+NODE_VER="$(bash "$ROOT_DIR/scripts/nf-dist/fetch-node.sh" win-x64 "$STAGE/node" | awk '{print $2}')"
+stage_licenses "$STAGE" windows
 
 # 丸の本体（Mac でも EnableWindowsTargeting で書き出せる）。途中で止まった前回の中間物が残ると
 # runtimeconfig.json が無いと言って落ちるので、先に同じ構成で掃除する
@@ -34,6 +35,45 @@ CSPROJ="$ROOT_DIR/apps/nf-overlay-windows/src/NfOverlay.Win/NfOverlay.Win.csproj
 mkdir -p "$STAGE/overlay"
 cp "$STAGE_ROOT/windows-overlay/nf-overlay.exe" "$STAGE/overlay/"
 write_manifest "$STAGE" "overlay/nf-overlay.exe"
+
+# 丸の本体に入った .NET ランタイム（自己完結）と WebView2 のライセンス。書き出しに使った版の物を、
+# 復元の記録（project.assets.json）から NuGet の置き場で探して写す（見つからなければ止まる）
+ASSETS="$(dirname "$CSPROJ")/obj/project.assets.json"
+PACKS="$(node -e '
+  const fs = require("fs"), path = require("path");
+  const a = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+  const want = [];
+  for (const fw of Object.values(a.project?.frameworks ?? {}))
+    for (const d of fw.downloadDependencies ?? [])
+      if (/^Microsoft\.(NETCore|WindowsDesktop)\.App\.Runtime\.win-x64$/i.test(d.name))
+        want.push([d.name, String(d.version).replace(/[\[\]\s]/g, "").split(",")[0]]);
+  for (const key of Object.keys(a.libraries ?? {})) {
+    const [name, version] = key.split("/");
+    if (name.toLowerCase() === "microsoft.web.webview2") want.push([name, version]);
+  }
+  for (const [name, version] of want) {
+    const dir = Object.keys(a.packageFolders ?? {}).map((r) => path.join(r, name.toLowerCase(), version)).find((d) => fs.existsSync(d));
+    if (!dir) throw new Error(`NuGet の置き場に無い: ${name} ${version}`);
+    console.log([name, version, dir].join("\t"));
+  }
+' "$ASSETS")"
+LICENSE_VERSIONS=("Node.js ${NODE_VER}（win-x64）")
+while IFS=$'\t' read -r PKG VER DIR; do
+  [ -n "$PKG" ] || continue
+  case "$PKG" in
+    Microsoft.NETCore.App.Runtime.win-x64)
+      cp "$DIR/LICENSE.TXT" "$STAGE/licenses/dotnet-runtime-LICENSE.txt"
+      cp "$DIR/THIRD-PARTY-NOTICES.TXT" "$STAGE/licenses/dotnet-runtime-THIRD-PARTY-NOTICES.txt" ;;
+    Microsoft.WindowsDesktop.App.Runtime.win-x64)
+      cp "$DIR/LICENSE" "$STAGE/licenses/dotnet-windowsdesktop-LICENSE.txt" ;;
+    Microsoft.Web.WebView2)
+      cp "$DIR/LICENSE.txt" "$STAGE/licenses/webview2-LICENSE.txt"
+      cp "$DIR/NOTICE.txt" "$STAGE/licenses/webview2-NOTICE.txt" ;;
+  esac
+  LICENSE_VERSIONS+=("$PKG $VER")
+done <<< "$PACKS"
+LICENSE_VERSIONS+=("$("$MAKENSIS" -VERSION | sed 's/^v/NSIS /')")
+finish_licenses "$STAGE" "${LICENSE_VERSIONS[@]}"
 
 OUT="$OUT_DIR/NeuraFusion-Desktop-$VERSION-windows-x64-Setup.exe"
 rm -f "$OUT"

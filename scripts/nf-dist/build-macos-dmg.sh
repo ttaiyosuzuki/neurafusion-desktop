@@ -42,7 +42,10 @@ for ARCH in "${ARCHS[@]}"; do
   mkdir -p "$APP/Contents/MacOS" "$RES"
 
   stage_common "$RES"
-  bash "$ROOT_DIR/scripts/nf-dist/fetch-node.sh" "darwin-$ARCH" "$RES/node" >/dev/null
+  NODE_VER="$(bash "$ROOT_DIR/scripts/nf-dist/fetch-node.sh" "darwin-$ARCH" "$RES/node" | awk '{print $2}')"
+  # ライセンス文書（.app の中。名前は ASCII。開いた窓の「ライセンス.txt」は下で ALL.txt を写す）
+  stage_licenses "$RES" macos
+  finish_licenses "$RES" "Node.js ${NODE_VER}（darwin-${ARCH}）"
 
   # 丸の本体（NFOverlay.app。apps/nf-overlay-macos/scripts/package-app.sh と同じ形）
   OAPP="$RES/NFOverlay.app"
@@ -57,7 +60,8 @@ for ARCH in "${ARCHS[@]}"; do
   chmod +x "$APP/Contents/MacOS/NeuraFusion"
   sed -e "s/@VERSION@/$VERSION/g" "$ROOT_DIR/packaging/installer/macos/Info.plist" > "$APP/Contents/Info.plist"
 
-  # 署名（内側から）
+  # 署名（内側から。権限を先にそろえる）
+  normalize_modes "$APP"
   codesign --force --sign "$SIGN" "$RES/node/bin/node" 2>/dev/null || true
   codesign --force --sign "$SIGN" "$OAPP"
   codesign --force --sign "$SIGN" "$APP"
@@ -69,6 +73,8 @@ for ARCH in "${ARCHS[@]}"; do
   mv "$APP" "$DMG_SRC/"
   ln -s /Applications "$DMG_SRC/アプリケーション"
   cp "$ROOT_DIR/packaging/installer/はじめにお読みください.txt" "$DMG_SRC/"
+  cp "$DMG_SRC/NeuraFusion.app/Contents/Resources/licenses/ALL.txt" "$DMG_SRC/ライセンス.txt"
+  chmod 644 "$DMG_SRC"/*.txt
   DMG="$OUT_DIR/NeuraFusion-Desktop-$VERSION-macos-$ARCH.dmg"
   rm -f "$DMG"
   hdiutil create -quiet -volname "NeuraFusion" -srcfolder "$DMG_SRC" -fs HFS+ -format UDZO -ov "$DMG"

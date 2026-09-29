@@ -3,7 +3,19 @@
 // 実物の書き出し・中身の確認は scripts/nf-dist/verify-installers.sh（docs/desktop-installers.md）。
 
 import { spawnSync } from "node:child_process";
-import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, symlinkSync, writeFileSync } from "node:fs";
+import {
+  copyFileSync,
+  cpSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  realpathSync,
+  symlinkSync,
+  utimesSync,
+  writeFileSync,
+} from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -157,5 +169,257 @@ describe("3 OS の組み立ての約束", () => {
   it("成果物はリポジトリの外（.artifacts/ は ignore 下）", () => {
     expect(read("scripts/nf-dist/common.sh")).toContain('OUT_DIR="$ROOT_DIR/.artifacts/installers"');
     expect(existsSync(path.join(ROOT, ".gitignore")) && read(".gitignore")).toMatch(/^\.artifacts\/$/m);
+  });
+});
+
+// scripts/nf-dist を一時フォルダに写し、そこをリポジトリの根として動かす（本物の .artifacts には触れない）
+function scratchRoot(version = "9.9.9") {
+  const root = mkdtempSync(path.join(os.tmpdir(), "nf-dist-root-"));
+  cpSync(path.join(ROOT, "scripts", "nf-dist"), path.join(root, "scripts", "nf-dist"), { recursive: true });
+  cpSync(path.join(ROOT, "packaging", "installer"), path.join(root, "packaging", "installer"), { recursive: true });
+  for (const f of ["LICENSE", "NOTICE", "THIRD_PARTY_NOTICES.md"]) copyFileSync(path.join(ROOT, f), path.join(root, f));
+  writeFileSync(path.join(root, "package.json"), JSON.stringify({ name: "neurafusion", version }));
+  return root;
+}
+
+// 偽の小さな本体の tarball。withAi=false が npm pack で作った物（bundleDependencies の @openclaw/ai が抜けた形）
+function fakeTgz(root: string, sub: string, opts: { withAi: boolean; mtime: number; version?: string }) {
+  const stage = mkdtempSync(path.join(os.tmpdir(), "nf-dist-pkg-"));
+  mkdirSync(path.join(stage, "package"), { recursive: true });
+  writeFileSync(path.join(stage, "package", "package.json"), JSON.stringify({ name: "neurafusion", version: opts.version ?? "9.9.9" }));
+  if (opts.withAi) {
+    mkdirSync(path.join(stage, "package", "node_modules", "@openclaw", "ai"), { recursive: true });
+    writeFileSync(path.join(stage, "package", "node_modules", "@openclaw", "ai", "package.json"), '{"name":"@openclaw/ai"}');
+  }
+  const dir = path.join(root, ".artifacts", sub);
+  mkdirSync(dir, { recursive: true });
+  const out = path.join(dir, `neurafusion-${opts.version ?? "9.9.9"}.tgz`);
+  expect(spawnSync("tar", ["-czf", out, "-C", stage, "package"]).status).toBe(0);
+  utimesSync(out, opts.mtime, opts.mtime);
+  return out;
+}
+
+function requireTgz(root: string, env: Record<string, string | undefined> = {}) {
+  const { NF_DIST_TGZ: _drop, ...base } = process.env;
+  const r = spawnSync(
+    "bash",
+    ["-c", 'set -euo pipefail; source "$1/scripts/nf-dist/common.sh"; require_tgz; echo "TGZ=$TGZ"', "_", root],
+    { encoding: "utf8", env: { ...base, ...env } },
+  );
+  return { status: r.status, tgz: /^TGZ=(.*)$/m.exec(r.stdout)?.[1] ?? null, stderr: r.stderr };
+}
+
+describe("本体の tarball を自動で選ぶ（@openclaw/ai を同梱した物だけ）", () => {
+  const T0 = Date.parse("2026-09-29T09:00:00Z") / 1000;
+
+  it("@openclaw/ai の入っていない候補しか無ければ、配布物を作る前に非 0 で止まり、理由を出す", () => {
+    const root = scratchRoot();
+    fakeTgz(root, "docker-e2e-package", { withAi: false, mtime: T0 });
+    const r = requireTgz(root);
+    expect(r.status).not.toBe(0);
+    expect(r.tgz).toBeNull();
+    expect(r.stderr).toContain("使わない（@openclaw/ai が入っていない）");
+    expect(r.stderr).toContain("配布物は作りません");
+    expect(r.stderr).toContain("build-tgz.sh");
+    // 組み立ての入口も同じところで止まり、置き場を作らない
+    const build = spawnSync("bash", [path.join(root, "scripts", "nf-dist", "build-windows-installer.sh")], { encoding: "utf8" });
+    expect(build.status).not.toBe(0);
+    expect(existsSync(path.join(root, ".artifacts", "installers-stage", "windows"))).toBe(false);
+  });
+
+  it("候補が 1 つも無くても止まる", () => {
+    const r = requireTgz(scratchRoot());
+    expect(r.status).not.toBe(0);
+    expect(r.stderr).toContain("配布物は作りません");
+  });
+
+  it("新しいが @openclaw/ai の抜けた方より、古くても入っている方を選ぶ", () => {
+    const root = scratchRoot();
+    const good = fakeTgz(root, "dk9-pack", { withAi: true, mtime: T0 });
+    const bad = fakeTgz(root, "docker-e2e-package", { withAi: false, mtime: T0 + 600 });
+    const r = requireTgz(root);
+    expect(r.status).toBe(0);
+    expect(r.tgz).toBe(good);
+    expect(r.stderr).toContain(`使わない（@openclaw/ai が入っていない）: ${bad}`);
+  });
+
+  it("入っている物が複数あれば一番新しい物。版の違う tarball は候補にしない", () => {
+    const root = scratchRoot();
+    fakeTgz(root, "dk9-pack", { withAi: true, mtime: T0 });
+    const newer = fakeTgz(root, "nf-dist-pack", { withAi: true, mtime: T0 + 60 });
+    fakeTgz(root, "old-pack", { withAi: true, mtime: T0 + 120, version: "9.9.8" });
+    expect(requireTgz(root).tgz).toBe(newer);
+  });
+
+  it("NF_DIST_TGZ に @openclaw/ai の抜けた方を指定すると、入っている候補があっても止まる", () => {
+    const root = scratchRoot();
+    fakeTgz(root, "dk9-pack", { withAi: true, mtime: T0 });
+    const bad = fakeTgz(root, "docker-e2e-package", { withAi: false, mtime: T0 - 60 });
+    const r = requireTgz(root, { NF_DIST_TGZ: bad });
+    expect(r.status).not.toBe(0);
+    expect(r.tgz).toBeNull();
+    expect(r.stderr).toContain("NF_DIST_TGZ の tarball に @openclaw/ai が入っていません");
+  });
+
+  it("NF_DIST_TGZ に入っている方を指定すれば、それを使う（無いファイル・壊れた物は止まる）", () => {
+    const root = scratchRoot();
+    const good = fakeTgz(root, "elsewhere", { withAi: true, mtime: T0 - 600 });
+    fakeTgz(root, "nf-dist-pack", { withAi: true, mtime: T0 });
+    expect(requireTgz(root, { NF_DIST_TGZ: good }).tgz).toBe(good);
+    expect(requireTgz(root, { NF_DIST_TGZ: path.join(root, "missing.tgz") }).status).not.toBe(0);
+    const broken = path.join(root, "broken.tgz");
+    writeFileSync(broken, "not a tarball");
+    expect(requireTgz(root, { NF_DIST_TGZ: broken }).status).not.toBe(0);
+  });
+
+  it("tarball を作る段は --pnpm-pack（npm pack だと @openclaw/ai が抜ける）で、出来た物も同じ検査にかける", () => {
+    const sh = read("scripts/nf-dist/build-tgz.sh");
+    expect(sh).toMatch(/package-openclaw-for-docker\.mjs"[^\n]*\\\n[^\n]*--pnpm-pack/);
+    expect(sh).toContain("tgz_has_ai_runtime");
+    expect(read("docs/desktop-installers.md")).toContain("bash scripts/nf-dist/build-tgz.sh");
+  });
+});
+
+describe("ライセンス文書を配布物に入れる", () => {
+  function staged(kind: "macos" | "windows" | "linux" | "appimage") {
+    const root = scratchRoot();
+    const dir = path.join(root, "stage");
+    mkdirSync(path.join(dir, "node"), { recursive: true });
+    writeFileSync(path.join(dir, "node", "LICENSE"), "Node.js is licensed for use as follows:\n(偽の Node の LICENSE)\n");
+    const r = spawnSync(
+      "bash",
+      ["-c", 'set -euo pipefail; source "$1/scripts/nf-dist/common.sh"; stage_licenses "$2" "$3"; finish_licenses "$2" "Node.js v24.0.0"', "_", root, dir, kind],
+      { encoding: "utf8" },
+    );
+    expect(r.stderr).toBe("");
+    expect(r.status).toBe(0);
+    return { dir, all: readFileSync(path.join(dir, "licenses", "ALL.txt"), "utf8"), index: readFileSync(path.join(dir, "licenses", "README.txt"), "utf8") };
+  }
+
+  it("上流の LICENSE 全文（著作権表示・許諾文・末尾の1行）を、指している THIRD_PARTY_NOTICES.md と並べて置く", () => {
+    const { dir, all } = staged("macos");
+    expect(readFileSync(path.join(dir, "LICENSE"), "utf8")).toBe(read("LICENSE"));
+    expect(readFileSync(path.join(dir, "NOTICE"), "utf8")).toBe(read("NOTICE"));
+    expect(readFileSync(path.join(dir, "THIRD_PARTY_NOTICES.md"), "utf8")).toBe(read("THIRD_PARTY_NOTICES.md"));
+    expect(read("LICENSE")).toContain("Copyright (c) 2026 OpenClaw Foundation");
+    expect(read("LICENSE")).toContain("Permission is hereby granted, free of charge");
+    expect(read("LICENSE")).toMatch(/Third-party notices for incorporated or adapted code are recorded in\s+THIRD_PARTY_NOTICES\.md\./);
+    for (const s of ["Copyright (c) 2026 OpenClaw Foundation", "Permission is hereby granted, free of charge", "Node.js is licensed for use as follows", "Mario Zechner"]) {
+      expect(all).toContain(s);
+    }
+  });
+
+  it("OS ごとの部品のライセンス（Windows は NSIS、AppImage は runtime）と一覧。ALL.txt は自分を含まない", () => {
+    const win = staged("windows");
+    expect(readdirSync(path.join(win.dir, "licenses")).sort()).toEqual(["ALL.txt", "README.txt", "node-LICENSE.txt", "nsis-COPYING.txt"]);
+    expect(win.all).toContain("Common Public License");
+    expect(win.index).toContain("nsis-COPYING.txt: NSIS 3");
+    expect(win.index).toContain("Node.js v24.0.0");
+    expect(win.all.match(/==== licenses\/README\.txt ====/g)).toHaveLength(1);
+    expect(win.all).not.toContain("==== licenses/ALL.txt ====");
+    const img = staged("appimage");
+    expect(img.all).toContain("The AppImage runtime executable contains statically linked code");
+    expect(img.index).toContain("libfuse（LGPL-2.1）");
+    expect(readdirSync(path.join(staged("linux").dir, "licenses")).sort()).toEqual(["ALL.txt", "README.txt", "node-LICENSE.txt"]);
+  });
+
+  it("同梱物の権限を組み立てた人の umask に左右させない（600 の作業ツリーから写しても、ほかの利用者が読める）", () => {
+    const root = scratchRoot();
+    const dir = path.join(root, "stage");
+    mkdirSync(path.join(dir, "bin"), { recursive: true });
+    writeFileSync(path.join(dir, "a.txt"), "a", { mode: 0o600 });
+    writeFileSync(path.join(dir, "bin", "run"), "#!/bin/sh\n", { mode: 0o700 });
+    const r = spawnSync("bash", ["-c", 'source "$1/scripts/nf-dist/common.sh"; normalize_modes "$2"', "_", root, dir]);
+    expect(r.status).toBe(0);
+    const mode = (p: string) => spawnSync("stat", process.platform === "darwin" ? ["-f", "%Lp", p] : ["-c", "%a", p], { encoding: "utf8" }).stdout.trim();
+    expect(mode(path.join(dir, "a.txt"))).toBe("644");
+    expect(mode(path.join(dir, "bin", "run"))).toBe("755");
+    const dmg = read("scripts/nf-dist/build-macos-dmg.sh");
+    expect(dmg.indexOf('normalize_modes "$APP"')).toBeGreaterThan(0);
+    expect(dmg.indexOf('normalize_modes "$APP"')).toBeLessThan(dmg.indexOf('codesign --force --sign "$SIGN" "$APP"'));
+    expect(read("scripts/nf-dist/build-linux-packages.sh")).toContain('normalize_modes "$appdir"');
+  });
+
+  it("各配布物に入れる: .dmg は .app の中と開いた窓、Windows はインストール先（.NET・WebView2 も）、.deb は /usr/share/doc/<pkg>/copyright", () => {
+    const dmg = read("scripts/nf-dist/build-macos-dmg.sh");
+    expect(dmg).toContain('stage_licenses "$RES" macos');
+    expect(dmg).toContain('licenses/ALL.txt" "$DMG_SRC/ライセンス.txt"');
+    const win = read("scripts/nf-dist/build-windows-installer.sh");
+    expect(win).toContain('stage_licenses "$STAGE" windows');
+    for (const f of ["dotnet-runtime-LICENSE.txt", "dotnet-runtime-THIRD-PARTY-NOTICES.txt", "dotnet-windowsdesktop-LICENSE.txt", "webview2-LICENSE.txt", "webview2-NOTICE.txt"]) {
+      expect(win).toContain(f);
+    }
+    expect(read("packaging/installer/windows/neurafusion.nsi")).toContain('File /r "${STAGE}\\*.*"');
+    const linux = read("scripts/nf-dist/build-linux-packages.sh");
+    expect(linux).toContain("usr/share/doc/neurafusion-desktop/copyright");
+    expect(linux).toContain('stage_payload "$appdir/opt/neurafusion" appimage');
+  });
+});
+
+describe("verify-installers.sh はロケールに左右されず、止まってもマウントを残さない", () => {
+  it("全角文字のすぐ前に $変数 を書かない（macOS の bash は UTF-8 のロケールで先頭バイトを変数名に含める）", () => {
+    const dir = path.join(ROOT, "scripts", "nf-dist");
+    const bad: string[] = [];
+    for (const f of readdirSync(dir).filter((n) => n.endsWith(".sh"))) {
+      readFileSync(path.join(dir, f), "utf8")
+        .split("\n")
+        .forEach((line, i) => {
+          if (/\$[A-Za-z_][A-Za-z0-9_]*[^\x00-\x7f]/.test(line)) bad.push(`${f}:${i + 1}`);
+        });
+    }
+    expect(bad).toEqual([]);
+  });
+
+  it("先頭でロケールを C に固定し、EXIT・INT・TERM・ERR を trap する", () => {
+    const sh = read("scripts/nf-dist/verify-installers.sh");
+    expect(sh.indexOf("export LC_ALL=C")).toBeGreaterThan(0);
+    expect(sh.indexOf("export LC_ALL=C")).toBeLessThan(sh.indexOf('source "$HERE/common.sh"'));
+    for (const sig of ["EXIT", "INT", "TERM", "ERR"]) expect(sh).toMatch(new RegExp(`^trap .* ${sig}$`, "m"));
+    expect(sh).toContain("hdiutil detach -quiet -force");
+    expect(sh).toContain('MOUNTS+=("$mnt")');
+  });
+
+  it("ja_JP.UTF-8 でも C でも同じ結果（配布物の無い置き場で動かす）", () => {
+    const root = scratchRoot();
+    const run = (locale: string) =>
+      spawnSync("bash", [path.join(root, "scripts", "nf-dist", "verify-installers.sh"), "dmg", "exe", "deb", "appimage"], {
+        encoding: "utf8",
+        env: { ...process.env, LC_ALL: locale, LANG: locale },
+      });
+    const ja = run("ja_JP.UTF-8");
+    const c = run("C");
+    expect(ja.stdout).toBe(c.stdout);
+    expect(ja.status).toBe(1);
+    expect(c.status).toBe(1);
+    expect(ja.stdout).toContain("ok 0 / NG 4");
+    expect(ja.stderr).not.toContain("unbound variable");
+  });
+
+  it.skipIf(spawnSync("python3", ["--version"]).status !== 0)("名前の検査は上流の名前・旧名・ロブスターを UTF-8 と UTF-16LE で見つける", () => {
+    const dir = mkdtempSync(path.join(os.tmpdir(), "nf-brand-"));
+    const scan = (name: string, data: Buffer) => {
+      writeFileSync(path.join(dir, name), data);
+      return spawnSync("python3", [path.join(ROOT, "scripts", "nf-dist", "brand-scan.py"), path.join(dir, name)], { encoding: "utf8" }).status;
+    };
+    expect(scan("ok.txt", Buffer.from("NeuraFusion 2026.9.6 — やりたいことを、一文で。\n"))).toBe(0);
+    expect(scan("utf8.txt", Buffer.from("Usage: openclaw [options]\n"))).toBe(1);
+    expect(scan("utf16.bin", Buffer.from("x\u0000ProductName OpenClaw", "utf16le"))).toBe(1);
+    expect(scan("lobster.txt", Buffer.from("🦞\n"))).toBe(1);
+    expect(scan("old.txt", Buffer.from("Clawdbot\n"))).toBe(1);
+  });
+
+  it("利用者に見える所の元（Info.plist・NSIS・はじめにお読みください・.desktop）に上流の名前が無い", () => {
+    for (const f of [
+      "packaging/installer/macos/Info.plist",
+      "packaging/installer/macos/NFOverlay-Info.plist",
+      "packaging/installer/macos/NeuraFusion",
+      "packaging/installer/windows/neurafusion.nsi",
+      "packaging/installer/はじめにお読みください.txt",
+    ]) {
+      expect(read(f), f).not.toMatch(/openclaw|clawdbot|moltbot|clawd|clawhub|🦞/i);
+    }
+    const desktop = /\[Desktop Entry\][\s\S]*?EOF/.exec(read("scripts/nf-dist/build-linux-packages.sh"))?.[0] ?? "";
+    expect(desktop).toContain("Name=NeuraFusion");
+    expect(desktop).not.toMatch(/openclaw/i);
   });
 });
