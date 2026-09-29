@@ -21,7 +21,7 @@ from gi.repository import Atspi  # noqa: E402
 PRESSABLE = {Atspi.Role.PUSH_BUTTON, Atspi.Role.TOGGLE_BUTTON, Atspi.Role.PAGE_TAB}
 
 
-def nodes(owner):
+def nodes(owner, roles=PRESSABLE):
     d = Atspi.get_desktop(0)
     for i in range(d.get_child_count()):
         app = d.get_child_at_index(i)
@@ -31,7 +31,7 @@ def nodes(owner):
         while stack:
             n, depth = stack.pop()
             try:
-                if n.get_role() in PRESSABLE and n.get_state_set().contains(Atspi.StateType.SHOWING):
+                if n.get_role() in roles and n.get_state_set().contains(Atspi.StateType.SHOWING):
                     yield n
                 if depth < 40:
                     stack.extend((n.get_child_at_index(j), depth + 1) for j in range(n.get_child_count()))
@@ -59,6 +59,23 @@ def press(owner, match, tries=40):
     return False
 
 
+def select_item(owner, title, tries=10):
+    """一覧の項目（GTK4 の list item は押す操作を持たない）を、親の選択（AT-SPI の Selection）で選ぶ。"""
+    for _ in range(tries):
+        for n in nodes(owner, {Atspi.Role.LIST_ITEM}):
+            name = n.get_name() or ""
+            if title in name:
+                try:
+                    ok = n.get_parent().select_child(n.get_index_in_parent())
+                except Exception:  # noqa: BLE001
+                    ok = False
+                print("selected" if ok else "select failed", owner, "list item", name[:40])
+                return bool(ok)
+        time.sleep(0.5)
+    print("not found (list item)", owner)
+    return False
+
+
 def main():
     a = sys.argv[1:]
     if a and a[0] == "--portal":
@@ -79,7 +96,8 @@ def main():
         picked = False
         if title and press(owner, lambda n, s: n.get_role() == Atspi.Role.PAGE_TAB and s == "Application Window", tries=10):
             time.sleep(1)
-            picked = press(owner, lambda n, s: n.get_role() == Atspi.Role.TOGGLE_BUTTON and title in s, tries=10)
+            # GNOME 46 の一覧は list item（.desktop に結びつく窓だけが出る）。古い形の toggle button も見る
+            picked = select_item(owner, title) or press(owner, lambda n, s: n.get_role() == Atspi.Role.TOGGLE_BUTTON and title in s, tries=2)
         if not picked:
             print("window not listed: sharing the entire screen")
             press(owner, lambda n, s: n.get_role() == Atspi.Role.PAGE_TAB and s == "Entire Screen", tries=4)
