@@ -6,13 +6,13 @@ Node.js・WebView2・Swift・本体の依存は `docs/desktop-installers-license
 
 ## 先に結論（表）
 
-| 部品 | 必要な表示 | 同梱するファイル | ソースの提供 | 今の配布物で足りているか |
-|---|---|---|---|---|
-| 上流 OpenClaw（MIT） | LICENSE の著作権表示と許諾文（`Copyright (c) 2026 OpenClaw Foundation`）。末尾の 1 文が指す THIRD_PARTY_NOTICES.md | `LICENSE`（上流とバイト単位で同じ）・`THIRD_PARTY_NOTICES.md`・`NOTICE`・本体 tarball の `dist/control-ui/provider-icons/ATTRIBUTION.md` | 不要（MIT） | **足りている**。旧表示（2025 Peter Steinberger）は義務ではないが、NOTICE に併記するのを勧める（下の 1.3） |
-| NSIS 3.13（本体・プラグイン: zlib/libpng） | 不要（バイナリの配布に表示の義務なし。"acknowledgment … would be appreciated but is not required"） | `licenses/nsis-COPYING.txt`（入れている） | 不要 | **足りている** |
-| NSIS の LZMA モジュール（CPL 1.0 と例外） | CPL §3 の 4 点: (i) 全 Contributor のための保証の否認 (ii) 責任の除外 (iii) 異なる条件は配る者だけが出す旨 (iv) **ソースを配る者から入手できる旨と入手方法** | `licenses/nsis-COPYING.txt`（CPL の全文を含む） | **要（申し出に応じて渡せる用意と、その案内）**: NSIS 3.13 のソース `nsis-3.13-src.tar.bz2` | **足りていない（一部）**。(iv) は一覧に NSIS の配布ページの URL があるだけで、「NeuraFusion から入手できる」旨が無い。(i)〜(iii) を NeuraFusion として述べた文も無い → NOTICE の案に 4 点の文を入れた |
-| AppImage の runtime（type2-runtime: MIT。静的に musl（MIT）・libfuse 3.15.0 に patch（LGPL-2.1）・squashfuse 0.5.2（BSD-2）・zstd（BSD-3）・zlib を含む） | runtime・musl・squashfuse・zstd の著作権表示と許諾文。libfuse が使われていて LGPL-2.1 の対象である旨の目立つ表示 | runtime の LICENSE（入れている）に加え、**musl の COPYRIGHT・squashfuse と zstd の LICENSE・LGPL-2.1 の全文** | **要（LGPL-2.1 §6）**: libfuse 3.15.0 のソースと patch、再リンクできる runtime のソース（type2-runtime の同じ版と組み立ての台本）を、配布物と同じ場所から取れるようにする（§6 d）か、3 年有効の書面の申し出（§6 c） | **足りていない**（ただし今回の配布物に AppImage は無い。Linux 版はオーナー決定で作っていない）。runtime の版も固定していない（appimagetool の continuous 版が組み立ての時に取る）→ Linux 版を出す前に 3.3 の 4 点 |
-| Windows Desktop ランタイム（.NET 8.0.31。`nf-overlay.exe` に単一ファイルで自己完結） | MIT の部分: 著作権表示と許諾文（入れている）。**Microsoft の条件の部分**（単一ファイルに入る .NET ランタイム・`PresentationNative_cor3.dll`・`vcruntime140_cor3.dll`・`wpfgfx_cor3.dll` = .NET Library License、`D3DCompiler_47_cor3.dll` = Windows SDK License）: Microsoft の表示を消さない・**自分の著作権表示をプログラムに出す**（SDK）・**配る者と利用者に、少なくとも同じだけ保護する条件へ同意させる**・Microsoft を補償する | MIT の `LICENSE`・`THIRD-PARTY-NOTICES`（入れている）に加え、**.NET Library License と Windows SDK License の本文（または URL）と、どのファイルがそれに当たるかの一覧** | 不要（Microsoft の条件は逆に「ソースを出す義務のあるライセンスの対象にしない」ことを求める） | **足りていない**: (1) 入れている文書が MIT だけで、Microsoft の条件の 5 ファイルの記載が無い (2) 利用者の同意の仕組み（利用規約・インストーラの同意画面）が無い (3) `nf-overlay.exe` の版情報の著作権（`LegalCopyright`）が空。(1)(3) は作業で直せる。(2) は文面が要る → 弁護士（`trademark-questions.md` の 2 節） |
+| 部品                                                                                                                                                      | 必要な表示                                                                                                                                                                                                                                                                                                                                                                                                                           | 同梱するファイル                                                                                                                                                        | ソースの提供                                                                                                                                                                                                        | 今の配布物で足りているか                                                                                                                                                                                                                                                                                            |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 上流 OpenClaw（MIT）                                                                                                                                      | LICENSE の著作権表示と許諾文（`Copyright (c) 2026 OpenClaw Foundation`）。末尾の 1 文が指す THIRD_PARTY_NOTICES.md                                                                                                                                                                                                                                                                                                                   | `LICENSE`（上流とバイト単位で同じ）・`THIRD_PARTY_NOTICES.md`・`NOTICE`・本体 tarball の `dist/control-ui/provider-icons/ATTRIBUTION.md`                                | 不要（MIT）                                                                                                                                                                                                         | **足りている**。旧表示（2025 Peter Steinberger）は義務ではないが、NOTICE に併記するのを勧める（下の 1.3）                                                                                                                                                                                                           |
+| NSIS 3.13（本体・プラグイン: zlib/libpng）                                                                                                                | 不要（バイナリの配布に表示の義務なし。"acknowledgment … would be appreciated but is not required"）                                                                                                                                                                                                                                                                                                                                  | `licenses/nsis-COPYING.txt`（入れている）                                                                                                                               | 不要                                                                                                                                                                                                                | **足りている**                                                                                                                                                                                                                                                                                                      |
+| NSIS の LZMA モジュール（CPL 1.0 と例外）                                                                                                                 | CPL §3 の 4 点: (i) 全 Contributor のための保証の否認 (ii) 責任の除外 (iii) 異なる条件は配る者だけが出す旨 (iv) **ソースを配る者から入手できる旨と入手方法**                                                                                                                                                                                                                                                                         | `licenses/nsis-COPYING.txt`（CPL の全文を含む）                                                                                                                         | **要（申し出に応じて渡せる用意と、その案内）**: NSIS 3.13 のソース `nsis-3.13-src.tar.bz2`                                                                                                                          | **足りていない（一部）**。(iv) は一覧に NSIS の配布ページの URL があるだけで、「NeuraFusion から入手できる」旨が無い。(i)〜(iii) を NeuraFusion として述べた文も無い → NOTICE の案に 4 点の文を入れた                                                                                                               |
+| AppImage の runtime（type2-runtime: MIT。静的に musl（MIT）・libfuse 3.15.0 に patch（LGPL-2.1）・squashfuse 0.5.2（BSD-2）・zstd（BSD-3）・zlib を含む） | runtime・musl・squashfuse・zstd の著作権表示と許諾文。libfuse が使われていて LGPL-2.1 の対象である旨の目立つ表示                                                                                                                                                                                                                                                                                                                     | runtime の LICENSE（入れている）に加え、**musl の COPYRIGHT・squashfuse と zstd の LICENSE・LGPL-2.1 の全文**                                                           | **要（LGPL-2.1 §6）**: libfuse 3.15.0 のソースと patch、再リンクできる runtime のソース（type2-runtime の同じ版と組み立ての台本）を、配布物と同じ場所から取れるようにする（§6 d）か、3 年有効の書面の申し出（§6 c） | **足りていない**（ただし今回の配布物に AppImage は無い。Linux 版はオーナー決定で作っていない）。runtime の版も固定していない（appimagetool の continuous 版が組み立ての時に取る）→ Linux 版を出す前に 3.3 の 4 点                                                                                                   |
+| Windows Desktop ランタイム（.NET 8.0.31。`nf-overlay.exe` に単一ファイルで自己完結）                                                                      | MIT の部分: 著作権表示と許諾文（入れている）。**Microsoft の条件の部分**（単一ファイルに入る .NET ランタイム・`PresentationNative_cor3.dll`・`vcruntime140_cor3.dll`・`wpfgfx_cor3.dll` = .NET Library License、`D3DCompiler_47_cor3.dll` = Windows SDK License）: Microsoft の表示を消さない・**自分の著作権表示をプログラムに出す**（SDK）・**配る者と利用者に、少なくとも同じだけ保護する条件へ同意させる**・Microsoft を補償する | MIT の `LICENSE`・`THIRD-PARTY-NOTICES`（入れている）に加え、**.NET Library License と Windows SDK License の本文（または URL）と、どのファイルがそれに当たるかの一覧** | 不要（Microsoft の条件は逆に「ソースを出す義務のあるライセンスの対象にしない」ことを求める）                                                                                                                        | **足りていない**: (1) 入れている文書が MIT だけで、Microsoft の条件の 5 ファイルの記載が無い (2) 利用者の同意の仕組み（利用規約・インストーラの同意画面）が無い (3) `nf-overlay.exe` の版情報の著作権（`LegalCopyright`）が空。(1)(3) は作業で直せる。(2) は文面が要る → 弁護士（`trademark-questions.md` の 2 節） |
 
 ## 1. 上流 OpenClaw
 
@@ -23,11 +23,11 @@ Node.js・WebView2・Swift・本体の依存は `docs/desktop-installers-license
   **LICENSE・THIRD_PARTY_NOTICES.md ともこのリポとバイト単位で同じ**（SHA-256 が一致）。上流の根に `NOTICE` は無い（404）。
 - 上流の LICENSE の履歴（`gh api 'repos/openclaw/openclaw/commits?path=LICENSE'`）は 3 件だけ:
 
-| commit | 日付 | 変更 |
-|---|---|---|
-| `f6dd362d39` | 2025-11-24 | Initial commit（`Copyright (c) 2025 Peter Steinberger`） |
+| commit       | 日付       | 変更                                                                                                                                                                                                                                                                                                                                                                                  |
+| ------------ | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `f6dd362d39` | 2025-11-24 | Initial commit（`Copyright (c) 2025 Peter Steinberger`）                                                                                                                                                                                                                                                                                                                              |
 | `3260da003d` | 2026-05-21 | "fix: update mac copyright owner"。`-Copyright (c) 2025 Peter Steinberger` / `+Copyright (c) 2026 OpenClaw Foundation`。同じ commit で Mac アプリの About の `© 2026 Peter Steinberger — MIT License.` も `© 2026 OpenClaw Foundation — MIT License.` に。CHANGELOG: "Mac app: show OpenClaw Foundation as the About settings copyright owner and align the root MIT license notice." |
-| `bb46b79d3c` | 2026-05-27 | "refactor: internalize OpenClaw agent runtime (#85341)"。末尾に 2 行を足した: `Third-party notices for incorporated or adapted code are recorded in` / `THIRD_PARTY_NOTICES.md.` |
+| `bb46b79d3c` | 2026-05-27 | "refactor: internalize OpenClaw agent runtime (#85341)"。末尾に 2 行を足した: `Third-party notices for incorporated or adapted code are recorded in` / `THIRD_PARTY_NOTICES.md.`                                                                                                                                                                                                      |
 
 ### 1.2 条件（原文）
 
@@ -68,13 +68,14 @@ Node.js・WebView2・Swift・本体の依存は `docs/desktop-installers-license
 
 ### 2.2 条件（原文）
 
-> * All NSIS source code, plug-ins, documentation, examples, header files and graphics, with the exception of the compression modules and where otherwise noted, are licensed under the zlib/libpng license.
-> * The LZMA compression module for NSIS is licensed under the Common Public License version 1.0.
+> - All NSIS source code, plug-ins, documentation, examples, header files and graphics, with the exception of the compression modules and where otherwise noted, are licensed under the zlib/libpng license.
+> - The LZMA compression module for NSIS is licensed under the Common Public License version 1.0.
 
 zlib/libpng（実行部分・プラグイン・MUI の画像）:
 
-> 1. The origin of this software must not be misrepresented; you must not claim that you wrote the original software. If you use this software in a product, an acknowledgment in the product documentation would be appreciated but is not required.
-> 3. This notice may not be removed or altered from any source distribution.
+> 1\. The origin of this software must not be misrepresented; you must not claim that you wrote the original software. If you use this software in a product, an acknowledgment in the product documentation would be appreciated but is not required.
+>
+> 3\. This notice may not be removed or altered from any source distribution.
 
 → バイナリで配るときの表示の義務は無い（3 は「ソースの配布」だけ）。今は COPYING を入れているので十分。
 
@@ -87,9 +88,9 @@ LZMA（CPL 1.0 §3）:
 > ii) effectively excludes on behalf of all Contributors all liability for damages, … ;
 > iii) states that any provisions which differ from this Agreement are offered by that Contributor alone and not by any other party; and
 > iv) states that source code for the Program is available from such Contributor, and informs licensees how to obtain it in a reasonable manner on or through a medium customarily used for software exchange.
-
+>
 > Contributors may not remove or alter any copyright notices contained within the Program.
-
+>
 > SPECIAL EXCEPTION FOR LZMA COMPRESSION MODULE — Igor Pavlov and Amir Szekely, the authors of the LZMA compression module for NSIS, expressly permit you to statically or dynamically link your code (or bind by name) to the files from the LZMA compression module for NSIS without subjecting your linked code to the terms of the Common Public license version 1.0. Any modifications or additions to files from the LZMA compression module for NSIS, however, are subject to the terms of the Common Public License version 1.0.
 
 ### 2.3 判断
@@ -132,7 +133,7 @@ LZMA（CPL 1.0 §3）:
 
 LGPL-2.1 §6（libfuse を静的に含む runtime を配る場合）:
 
-> You must give prominent notice with each copy of the work that the Library is used in it and that the Library and its use are covered by this License.  You must supply a copy of this License.  If the work during execution displays copyright notices, you must include the copyright notice for the Library among them, as well as a reference directing the user to the copy of this License.  Also, you must do one of these things:
+> You must give prominent notice with each copy of the work that the Library is used in it and that the Library and its use are covered by this License. You must supply a copy of this License. If the work during execution displays copyright notices, you must include the copyright notice for the Library among them, as well as a reference directing the user to the copy of this License. Also, you must do one of these things:
 > a) Accompany the work with the complete corresponding machine-readable source code for the Library including whatever changes were used in the work (…); and, if the work is an executable linked with the Library, with the complete machine-readable "work that uses the Library", as object code and/or source code, so that the user can modify the Library and then relink to produce a modified executable containing the modified Library.
 > c) Accompany the work with a written offer, valid for at least three years, to give the same user the materials specified in Subsection 6a, above, for a charge no more than the cost of performing this distribution.
 > d) If distribution of the work is made by offering access to copy from a designated place, offer equivalent access to copy the above specified materials from the same place.
@@ -141,7 +142,7 @@ LGPL-2.1 §6（libfuse を静的に含む runtime を配る場合）:
 
 squashfuse（BSD-2）・zstd（BSD-3）: "Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution."
 
-musl（MIT）: 表示の義務がある。免除は "all public header files (include/* and arch/*/bits/*) and crt files intended to be linked into applications" だけで、
+musl（MIT）: 表示の義務がある。免除は "all public header files (`include/*` and `arch/*/bits/*`) and crt files intended to be linked into applications" だけで、
 静的に入る libc の本体は免除されない。zlib: バイナリの表示の義務なし。
 
 ### 3.3 判断（Linux 版を出す前にすること）
@@ -174,18 +175,20 @@ musl（MIT）: 表示の義務がある。免除は "all public header files (in
   - `~/.nuget/packages/microsoft.netcore.app.runtime.win-x64/8.0.31/` の `LICENSE.TXT`・`THIRD-PARTY-NOTICES.TXT`（nuspec は MIT）。
 - .NET の公式のライセンスの説明（dotnet/core main `44927bc821d3`・2026-09-28）:
   - <https://github.com/dotnet/core/blob/main/license-information.md>: "Product distributions use the following license: … On Windows: [.NET Library License]" /
-    "Product distributions include downloadable assets and runtime packs (https://www.nuget.org/packages/Microsoft.NETCore.App.Runtime.win-x64/)."
+    "Product distributions include downloadable assets and runtime packs (<https://www.nuget.org/packages/Microsoft.NETCore.App.Runtime.win-x64/>)."
   - <https://github.com/dotnet/core/blob/main/license-information-windows.md>（30 行、SHA-256 `3bdf7142d570f117…`。"This document is provided for informative purposes only, and is not itself a license."）:
 
 > The following binaries are licensed with the [.NET Library License](https://dotnet.microsoft.com/dotnet_library_license.htm)
-> * coreclr.dll and .NET runtimes included in binaries published as single-file (…)
-> * Microsoft.DiaSymReader.Native.{x86|amd64|arm|arm64}.dll (used by .NET runtime and SDK)
-> * PresentationNative_cor3.dll (used by WPF)
-> * vcruntime140_cor3.dll (used by WPF)
-> * wpfgfx_cor3.dll (used by WPF)
+>
+> - coreclr.dll and .NET runtimes included in binaries published as single-file (…)
+> - Microsoft.DiaSymReader.Native.{x86|amd64|arm|arm64}.dll (used by .NET runtime and SDK)
+> - PresentationNative_cor3.dll (used by WPF)
+> - vcruntime140_cor3.dll (used by WPF)
+> - wpfgfx_cor3.dll (used by WPF)
 >
 > The following binaries are licensed with the [Windows SDK License](https://learn.microsoft.com/legal/windows-sdk/license):
-> * D3DCompiler_47_cor3.dll (used by WPF)
+>
+> - D3DCompiler_47_cor3.dll (used by WPF)
 >
 > All other binaries and files are licensed with the [MIT license](https://github.com/dotnet/core/blob/main/LICENSE.TXT).
 

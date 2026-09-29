@@ -4,7 +4,7 @@
 
 ## 1. 商標（「OpenClaw」の名前とロブスターのロゴ）
 
-### 事実
+### 1.1 事実
 
 - NeuraFusion Desktop は、公開の OSS「OpenClaw」（<https://github.com/openclaw/openclaw>、MIT License、
   `Copyright (c) 2026 OpenClaw Foundation`）を基に作った有料前提のデスクトップアプリ（Mac の .dmg・Windows の Setup.exe。Linux は後で）。
@@ -29,7 +29,7 @@
     管理画面（ブラウザで開く Control UI）の題名 `OpenClaw Control` と上流のロブスターのアイコン（`favicon.svg`）。
 - オーナーの方針: OpenClaw の名前・fork であることは画面に書かない。出してよいのはライセンス文書の中の著作権表示と由来の事実だけ。
 
-### 聞きたいこと
+### 1.2 聞きたいこと
 
 1. 「OpenClaw」（文字）とロブスターのロゴ・🦞 について、日本・米国・EU で登録・出願があるか。指定商品・役務（第 9 類・第 42 類など）と
    権利者は誰か。登録が無い場合でも、周知・著名な表示として不正競争防止法 2 条 1 項 1 号・2 号の問題になりうるか。
@@ -42,7 +42,7 @@
    一般公開の前に直せば足りるか。
 5. （ついでに）自社の「NeuraFusion」の名前について、先行する登録との衝突の調査と、出願するならどの類か。
 
-### こちらの案
+### 1.3 こちらの案
 
 - 1 の調査を依頼し、登録の有無にかかわらず次の形にする:
   - 由来の事実はライセンス文書（NOTICE）と README にだけ書き、提携していない旨の一文を足す（`NOTICE.proposed.txt`）。
@@ -52,11 +52,11 @@
 
 ## 2. 商標のほかに弁護士が要る点: Microsoft の条件の「利用者の同意」（Windows 版）
 
-### 理由
+### 2.1 理由
 
 原文を読むだけでは決まらず、**利用者に同意させる条件の文面を書く**必要があるため（`components.md` 4 節）。
 
-### 事実
+### 2.2 事実
 
 - Windows 版の丸（`nf-overlay.exe`）は .NET 8.0.31 を単一ファイルで自己完結に含む。Microsoft の説明
   （<https://github.com/dotnet/core/blob/main/license-information-windows.md>）では、単一ファイルに入る .NET ランタイムと
@@ -70,7 +70,7 @@
   "permit modification of the work for the customer's own use and reverse engineering for debugging such modifications" であることを求める
   （Microsoft の条件は逆にリバースエンジニアリングの禁止を利用者に課すことを求める）。対象の配布物は別だが、全部に 1 つの利用規約を使うと食い違う。
 
-### 聞きたいこと
+### 2.3 聞きたいこと
 
 1. 「利用者に同意させる」は、インストーラの同意の画面（「同意する」を押さないと進まない）で足りるか。サービスの利用規約への同意で代えられるか。
    最初の少数の人に個別に送る段階で要るか。
@@ -79,7 +79,7 @@
 3. 補償（indemnify）の義務の範囲と、NeuraFusion が負う危険の大きさ。避けるなら .NET を使わない形に変える方がよいか。
 4. 1 つの利用規約で全部の配布物を扱うときの書き分け（Microsoft の部品の禁止事項と、LGPL-2.1 の部品の許可事項）。
 
-### こちらの案
+### 2.4 こちらの案
 
 - 一般公開の前に、Windows のインストーラに同意の画面（NSIS の `MUI_PAGE_LICENSE`）を足し、Microsoft の部品にだけ適用する短い条件と
   `licenses/` の一覧を示す。利用規約は部品ごとの条件の優先を書く（第三者の部品にはその部品の条件が優先する）。
