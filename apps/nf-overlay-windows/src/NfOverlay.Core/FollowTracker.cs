@@ -77,15 +77,9 @@ public sealed class FollowTracker
 
     private FollowUpdate Decide(WindowState? fg)
     {
-        var d = DecideCore(fg);
-        _tracked = d.Tracked;
-        return d.Update;
-    }
-
-    private (FollowUpdate Update, long Tracked) DecideCore(WindowState? fg)
-    {
-        var u = DecideShape(fg, out var on);
-        return (u, on && fg is not null ? fg.Window : 0);
+        var update = DecideShape(fg, out var on);
+        _tracked = on && fg is not null ? fg.Window : 0;
+        return update;
     }
 
     private FollowUpdate DecideShape(WindowState? fg, out bool on)
