@@ -25,8 +25,8 @@ KINDS=("$@")
 DEB_VERSION="$(echo "$VERSION" | sed 's/-/~/g')"
 OVERLAY_SRC="${NF_LINUX_OVERLAY_DIR:-$ROOT_DIR/apps/nf-overlay-linux}"
 # DK-08 の README に書かれた実行時の OS パッケージ（Ubuntu 24.04 の名前）
-DEPENDS="python3, python3-gi, gir1.2-gtk-3.0, gir1.2-wnck-3.0, gir1.2-atspi-2.0, at-spi2-core, tesseract-ocr, tesseract-ocr-jpn"
-RECOMMENDS="gir1.2-webkit2-4.1"
+DEPENDS="python3, python3-gi, python3-gi-cairo, gir1.2-gtk-3.0, gir1.2-wnck-3.0, gir1.2-atspi-2.0, at-spi2-core, tesseract-ocr, tesseract-ocr-jpn"
+RECOMMENDS="gir1.2-webkit2-4.1, xdg-desktop-portal, pipewire, gstreamer1.0-tools, gstreamer1.0-plugins-base, gstreamer1.0-plugins-good, gstreamer1.0-pipewire"
 
 # /opt/neurafusion の中身を $1 に置く。$2=linux（.deb）|appimage（AppImage の runtime のライセンスも入れる）
 stage_payload() {

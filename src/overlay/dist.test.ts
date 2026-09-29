@@ -146,7 +146,7 @@ describe("3 OS の組み立ての約束", () => {
 
   it("Linux: .deb は DK-08 の README の実行時の依存を Depends に持ち、AppImage は同じランチャーで動く", () => {
     const sh = read("scripts/nf-dist/build-linux-packages.sh");
-    for (const dep of ["python3-gi", "gir1.2-gtk-3.0", "gir1.2-wnck-3.0", "gir1.2-atspi-2.0", "tesseract-ocr-jpn"]) {
+    for (const dep of ["python3-gi", "python3-gi-cairo", "gir1.2-gtk-3.0", "gir1.2-wnck-3.0", "gir1.2-atspi-2.0", "tesseract-ocr-jpn"]) {
       expect(sh).toContain(dep);
     }
     expect(sh).toContain("dpkg-deb --root-owner-group");
