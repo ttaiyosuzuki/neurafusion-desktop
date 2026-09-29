@@ -22,6 +22,16 @@ async function askOwner(message: string): Promise<boolean> {
       execFile("osascript", ["-e", script], (err, stdout) => resolve(!err && stdout.includes("更新する")));
     });
   }
+  if (process.platform === "linux") {
+    const { execFile } = await import("node:child_process");
+    return await new Promise((resolve) => {
+      execFile(
+        "zenity",
+        ["--question", "--title=NeuraFusion", `--text=${message}`, "--ok-label=更新する", "--cancel-label=あとで"],
+        (err) => resolve(!err),
+      );
+    });
+  }
   return false;
 }
 
@@ -57,7 +67,7 @@ export function registerOverlayCommand(program: Command) {
         const { currentPlatform, realHostDeps, resolveNativeBinary, startOverlayHost } = await import("../../overlay/host.js");
         const { loadSettings } = await import("../../overlay/settings.js");
         const platform = currentPlatform();
-        if (!platform) throw new Error("右下の丸は macOS と Windows だけです");
+        if (!platform) throw new Error("右下の丸は macOS・Windows・Linux だけです");
         const settings = await loadSettings();
         if (opts.updateCheck && settings.checkUpdates) {
           const { checkAndMaybeUpdate, realUpdateDeps } = await import("../../overlay/update.js");
@@ -74,7 +84,9 @@ export function registerOverlayCommand(program: Command) {
           throw new Error(
             platform === "macos"
               ? "丸の本体が見つかりません（apps/nf-overlay-macos で swift build -c release、または NF_OVERLAY_BIN を指定）"
-              : "丸の本体（Windows）が見つかりません（NF_OVERLAY_BIN を指定）",
+              : platform === "windows"
+                ? "丸の本体（Windows）が見つかりません（NF_OVERLAY_BIN を指定）"
+                : "丸の本体（Linux）が見つかりません（apps/nf-overlay-linux/nf-overlay、または NF_OVERLAY_BIN を指定）",
           );
         }
         const host = startOverlayHost({ binary, platform, settings, deps: realHostDeps((l) => defaultRuntime.log(l)) });

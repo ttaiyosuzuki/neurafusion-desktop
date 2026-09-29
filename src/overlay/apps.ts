@@ -6,6 +6,7 @@
 // 確かめていないアプリは mac/win を空にしておく（丸は出ない）。
 //   - mac: CFBundleIdentifier（/Applications/<名前>.app/Contents/Info.plist を defaults read で読んだ値）
 //   - win: 実行ファイル名（小文字で比較。dk-win が Windows 実機で確かめて足す）
+//   - linux: X11 の WM_CLASS（instance か class。小文字で比較。Linux 機で xprop WM_CLASS を読んで足す）
 
 export type OverlayReadMode = "ax-then-ocr" | "ax-only" | "off";
 
@@ -17,8 +18,9 @@ export type OverlayAppDef = {
   tier: 1;
   mac: string[];
   win: string[];
+  linux: string[];
   /** 値の出どころ（プラットフォームごと） */
-  source: { mac?: string; win?: string };
+  source: { mac?: string; win?: string; linux?: string };
   /** 押したときの読み方の既定 */
   read: OverlayReadMode;
 };
@@ -32,6 +34,7 @@ export const OVERLAY_APPS: readonly OverlayAppDef[] = [
     tier: 1,
     mac: ["com.anthropic.claudefordesktop"],
     win: [],
+    linux: [],
     source: { mac: `${MAC_MEASURED}（Claude.app 2.9939.4）` },
     read: "ax-then-ocr",
   },
@@ -43,6 +46,7 @@ export const OVERLAY_APPS: readonly OverlayAppDef[] = [
     // 旧版の ChatGPT デスクトップの id はこの Mac では確かめていないので入れない。
     mac: ["com.openai.codex"],
     win: [],
+    linux: [],
     source: { mac: `${MAC_MEASURED}（ChatGPT.app 26.901.51231）` },
     read: "ax-then-ocr",
   },
@@ -52,6 +56,7 @@ export const OVERLAY_APPS: readonly OverlayAppDef[] = [
     tier: 1,
     mac: ["com.todesktop.230313mzl4w4u92"],
     win: [],
+    linux: [],
     source: { mac: `${MAC_MEASURED}（Cursor.app 3.17.21）` },
     read: "ax-then-ocr",
   },
@@ -61,24 +66,27 @@ export const OVERLAY_APPS: readonly OverlayAppDef[] = [
     tier: 1,
     mac: ["notion.id"],
     win: [],
+    linux: [],
     source: { mac: `${MAC_MEASURED}（Notion.app 3.2.1）` },
     read: "ax-then-ocr",
   },
   // 以下は Tier 1 でデスクトップ版があり得るが、まだどの実機でも id を確かめていないもの（丸は出ない）。
-  { id: "perplexity", label: "Perplexity AI", tier: 1, mac: [], win: [], source: {}, read: "ax-then-ocr" },
-  { id: "copilot", label: "Microsoft Copilot", tier: 1, mac: [], win: [], source: {}, read: "ax-then-ocr" },
-  { id: "grok", label: "xAI Grok", tier: 1, mac: [], win: [], source: {}, read: "ax-then-ocr" },
-  { id: "deepseek", label: "DeepSeek", tier: 1, mac: [], win: [], source: {}, read: "ax-then-ocr" },
-  { id: "kimi", label: "Kimi", tier: 1, mac: [], win: [], source: {}, read: "ax-then-ocr" },
-  { id: "doubao", label: "Doubao（豆包）", tier: 1, mac: [], win: [], source: {}, read: "ax-then-ocr" },
-  { id: "qwen", label: "Qwen（通義千問）", tier: 1, mac: [], win: [], source: {}, read: "ax-then-ocr" },
+  { id: "perplexity", label: "Perplexity AI", tier: 1, mac: [], win: [], linux: [], source: {}, read: "ax-then-ocr" },
+  { id: "copilot", label: "Microsoft Copilot", tier: 1, mac: [], win: [], linux: [], source: {}, read: "ax-then-ocr" },
+  { id: "grok", label: "xAI Grok", tier: 1, mac: [], win: [], linux: [], source: {}, read: "ax-then-ocr" },
+  { id: "deepseek", label: "DeepSeek", tier: 1, mac: [], win: [], linux: [], source: {}, read: "ax-then-ocr" },
+  { id: "kimi", label: "Kimi", tier: 1, mac: [], win: [], linux: [], source: {}, read: "ax-then-ocr" },
+  { id: "doubao", label: "Doubao（豆包）", tier: 1, mac: [], win: [], linux: [], source: {}, read: "ax-then-ocr" },
+  { id: "qwen", label: "Qwen（通義千問）", tier: 1, mac: [], win: [], linux: [], source: {}, read: "ax-then-ocr" },
 ];
 
-export type OverlayPlatform = "macos" | "windows";
+export type OverlayPlatform = "macos" | "windows" | "linux";
 
 /** そのプラットフォームで丸を出せる（識別子を確かめた）アプリか */
 export function isSupportedOn(app: OverlayAppDef, platform: OverlayPlatform): boolean {
-  return platform === "macos" ? app.mac.length > 0 : app.win.length > 0;
+  if (platform === "macos") return app.mac.length > 0;
+  if (platform === "windows") return app.win.length > 0;
+  return app.linux.length > 0;
 }
 
 export function findOverlayApp(id: string): OverlayAppDef | undefined {

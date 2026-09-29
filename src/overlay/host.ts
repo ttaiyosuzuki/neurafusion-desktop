@@ -33,6 +33,7 @@ export type OverlayHostHandle = {
 export function currentPlatform(): OverlayPlatform | null {
   if (process.platform === "darwin") return "macos";
   if (process.platform === "win32") return "windows";
+  if (process.platform === "linux") return "linux";
   return null;
 }
 
@@ -53,8 +54,11 @@ export function resolveNativeBinary(platform: OverlayPlatform, env = process.env
         path.join(root, "apps", "nf-overlay-macos", ".build", "release", "nf-overlay"),
         path.join(root, "apps", "nf-overlay-macos", ".build", "debug", "nf-overlay"),
       );
-    } else {
+    } else if (platform === "windows") {
       candidates.push(path.join(root, "apps", "nf-overlay-windows", "nf-overlay.exe"));
+    } else {
+      // Linux: Python + GTK 3 の起動口（docs/overlay-linux.md）
+      candidates.push(path.join(root, "apps", "nf-overlay-linux", "nf-overlay"));
     }
   }
   return candidates.find((c) => existsSync(c)) ?? null;
@@ -92,7 +96,9 @@ export function startOverlayHost(opts: {
         deps.log(
           msg.platform === "windows"
             ? `丸を起動しました（UI Automation: ${msg.uia === false ? "使えない" : "使える"}・画面の撮影: ${msg.screen ? "使える" : "使えない"}）`
-            : `丸を起動しました（アクセシビリティ: ${msg.ax ? "許可あり" : "未許可"}・画面収録: ${msg.screen ? "許可あり" : "未許可"}）`,
+            : msg.platform === "linux"
+              ? `丸を起動しました（${msg.session === "wayland" ? "Wayland: 画面の右下に固定" : "X11"}・AT-SPI: ${msg.ax ? "使える" : "使えない"}・画面の撮影: ${msg.screen ? "使える" : "使えない"}・文字認識: ${msg.ocr === false ? "無い" : "ある"}）`
+              : `丸を起動しました（アクセシビリティ: ${msg.ax ? "許可あり" : "未許可"}・画面収録: ${msg.screen ? "許可あり" : "未許可"}）`,
         );
         break;
       case "read": {

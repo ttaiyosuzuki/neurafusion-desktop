@@ -269,6 +269,84 @@ describe("Windows（dk-win）の行を受ける", () => {
   });
 });
 
+describe("Linux（dk-linux・DK-08）の行を受ける", () => {
+  const custom = [
+    { ...OVERLAY_APPS[0]!, linux: ["nf-fake-ai"], source: { linux: "テスト用" } },
+    { ...OVERLAY_APPS[1]!, linux: [] },
+  ];
+
+  it("config に WM_CLASS を載せ、確かめた識別子が無いアプリは載せない", () => {
+    for (const a of OVERLAY_APPS) if (a.linux.length > 0) expect(a.source.linux).toBeTruthy();
+    expect(isSupportedOn(custom[0]!, "linux")).toBe(true);
+    expect(isSupportedOn(custom[1]!, "linux")).toBe(false);
+    const c = buildConfigMessage(settings(), "linux", custom);
+    expect(c.apps.map((a) => a.id)).toEqual([custom[0]!.id]);
+    expect(c.apps[0]).toMatchObject({ linux: ["nf-fake-ai"], enabled: true, read: "ax-then-ocr" });
+    const off = buildConfigMessage(setEnabled(settings(), custom[0]!.id, false), "linux", custom);
+    expect(off.apps[0]!.enabled).toBe(false);
+  });
+
+  it("ready の session・Wayland の固定の geometry・atspi の read を読み、本文は記録に残さない", async () => {
+    const child = fakeChild();
+    const written: string[] = [];
+    child.stdin.on("data", (b: Buffer) => written.push(...b.toString("utf8").split("\n").filter(Boolean)));
+    const records: unknown[] = [];
+    const logs: string[] = [];
+    const h = startOverlayHost({
+      binary: "/fake",
+      platform: "linux",
+      settings: { ...settings(), panelUrl: "http://127.0.0.1:8787/" },
+      deps: {
+        spawnNative: () => child as never,
+        appendRecord: async (r) => {
+          records.push(r);
+          return records.length;
+        },
+        log: (l) => logs.push(l),
+        now: () => new Date("2026-09-29T08:00:00Z"),
+      },
+    });
+    await new Promise((r) => setImmediate(r));
+    expect(JSON.parse(written[0]!)).toMatchObject({ type: "config", panelMode: "url" });
+    child.stdout.write('{"v":1,"type":"ready","platform":"linux","session":"wayland","ax":false,"screen":true,"ocr":true,"version":"0.1.0"}\n');
+    const geo =
+      '{"v":1,"type":"geometry","app":"*","window":{"x":0,"y":32,"w":1920,"h":1048},"dot":{"x":1860,"y":1020,"w":44,"h":44},"scale":1.0,"px":{"window":{"x":0,"y":32,"w":1920,"h":1048},"dot":{"x":1860,"y":1020,"w":44,"h":44}},"fixed":true}';
+    expect(parseNativeLine(geo)).toMatchObject({ type: "geometry", app: "*", fixed: true });
+    child.stdout.write('{"v":1,"type":"read","app":"claude","method":"atspi","ok":true,"chars":22,"text":"電話 03-1234-5678 の答え","attempts":[{"method":"atspi","ok":true,"chars":22}]}\n');
+    child.stdout.write('{"v":1,"type":"read","app":"*","method":"none","ok":false,"chars":0,"reason":"screen-denied","attempts":[{"method":"ocr","ok":false,"chars":0,"reason":"screen-denied"}]}\n');
+    child.stdout.write('{"v":1,"type":"read","app":"chatgpt","method":"none","ok":false,"chars":0,"reason":"atspi-empty"}\n');
+    await new Promise((r) => setTimeout(r, 20));
+    expect(logs[0]).toContain("Wayland: 画面の右下に固定");
+    const panel = written.map((l) => JSON.parse(l)).find((m) => m.type === "panel-text");
+    expect(panel.text).toContain("[電話伏せ字]");
+    expect(records).toMatchObject([
+      { platform: "linux", app: "claude", method: "atspi", ok: true, chars: 22, masked: 1 },
+      { platform: "linux", app: "*", method: "none", ok: false, reason: "screen-denied" },
+      { platform: "linux", app: "chatgpt", ok: false, reason: "atspi-empty" },
+    ]);
+    const all = JSON.stringify(records) + logs.join("\n") + JSON.stringify(h.seen);
+    expect(all).not.toContain("03-1234-5678");
+    const t = tallyReads(records as never);
+    expect(t.find((x) => x.app === "claude")?.verdict).toBe("atspi");
+    expect(t.find((x) => x.app === "chatgpt")).toMatchObject({ verdict: "unreadable", lastReason: "atspi-empty" });
+  });
+
+  it("X11 の ready は AT-SPI と撮影の有無を出す", async () => {
+    const child = fakeChild();
+    const logs: string[] = [];
+    startOverlayHost({
+      binary: "/fake",
+      platform: "linux",
+      settings: settings(),
+      deps: { spawnNative: () => child as never, appendRecord: async () => 1, log: (l) => logs.push(l), now: () => new Date() },
+    });
+    child.stdout.write('{"v":1,"type":"ready","platform":"linux","session":"x11","ax":true,"screen":true,"ocr":false}\n');
+    await new Promise((r) => setTimeout(r, 20));
+    expect(logs[0]).toContain("X11・AT-SPI: 使える");
+    expect(logs[0]).toContain("文字認識: 無い");
+  });
+});
+
 describe("自動更新（DK-07）", () => {
   const release = {
     tag_name: "v2026.9.10",
