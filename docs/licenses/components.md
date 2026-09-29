@@ -12,7 +12,7 @@ Node.js・WebView2・Swift・本体の依存は `docs/desktop-installers-license
 | NSIS 3.13（本体・プラグイン: zlib/libpng） | 不要（バイナリの配布に表示の義務なし。"acknowledgment … would be appreciated but is not required"） | `licenses/nsis-COPYING.txt`（入れている） | 不要 | **足りている** |
 | NSIS の LZMA モジュール（CPL 1.0 と例外） | CPL §3 の 4 点: (i) 全 Contributor のための保証の否認 (ii) 責任の除外 (iii) 異なる条件は配る者だけが出す旨 (iv) **ソースを配る者から入手できる旨と入手方法** | `licenses/nsis-COPYING.txt`（CPL の全文を含む） | **要（申し出に応じて渡せる用意と、その案内）**: NSIS 3.13 のソース `nsis-3.13-src.tar.bz2` | **足りていない（一部）**。(iv) は一覧に NSIS の配布ページの URL があるだけで、「NeuraFusion から入手できる」旨が無い。(i)〜(iii) を NeuraFusion として述べた文も無い → NOTICE の案に 4 点の文を入れた |
 | AppImage の runtime（type2-runtime: MIT。静的に musl（MIT）・libfuse 3.15.0 に patch（LGPL-2.1）・squashfuse 0.5.2（BSD-2）・zstd（BSD-3）・zlib を含む） | runtime・musl・squashfuse・zstd の著作権表示と許諾文。libfuse が使われていて LGPL-2.1 の対象である旨の目立つ表示 | runtime の LICENSE（入れている）に加え、**musl の COPYRIGHT・squashfuse と zstd の LICENSE・LGPL-2.1 の全文** | **要（LGPL-2.1 §6）**: libfuse 3.15.0 のソースと patch、再リンクできる runtime のソース（type2-runtime の同じ版と組み立ての台本）を、配布物と同じ場所から取れるようにする（§6 d）か、3 年有効の書面の申し出（§6 c） | **足りていない**（ただし今回の配布物に AppImage は無い。Linux 版はオーナー決定で作っていない）。runtime の版も固定していない（appimagetool の continuous 版が組み立ての時に取る）→ Linux 版を出す前に 3.3 の 4 点 |
-| Windows Desktop ランタイム（.NET 8.0.31） | （4 節で記入） | | | |
+| Windows Desktop ランタイム（.NET 8.0.31。`nf-overlay.exe` に単一ファイルで自己完結） | MIT の部分: 著作権表示と許諾文（入れている）。**Microsoft の条件の部分**（単一ファイルに入る .NET ランタイム・`PresentationNative_cor3.dll`・`vcruntime140_cor3.dll`・`wpfgfx_cor3.dll` = .NET Library License、`D3DCompiler_47_cor3.dll` = Windows SDK License）: Microsoft の表示を消さない・**自分の著作権表示をプログラムに出す**（SDK）・**配る者と利用者に、少なくとも同じだけ保護する条件へ同意させる**・Microsoft を補償する | MIT の `LICENSE`・`THIRD-PARTY-NOTICES`（入れている）に加え、**.NET Library License と Windows SDK License の本文（または URL）と、どのファイルがそれに当たるかの一覧** | 不要（Microsoft の条件は逆に「ソースを出す義務のあるライセンスの対象にしない」ことを求める） | **足りていない**: (1) 入れている文書が MIT だけで、Microsoft の条件の 5 ファイルの記載が無い (2) 利用者の同意の仕組み（利用規約・インストーラの同意画面）が無い (3) `nf-overlay.exe` の版情報の著作権（`LegalCopyright`）が空。(1)(3) は作業で直せる。(2) は文面が要る → 弁護士（`trademark-questions.md` の 2 節） |
 
 ## 1. 上流 OpenClaw
 
@@ -160,3 +160,75 @@ musl（MIT）: 表示の義務がある。免除は "all public header files (in
    禁じない（§6 冒頭）。
 
 - **弁護士は要らないと判断した**（LGPL-2.1 §6 の標準の満たし方で、材料はすべて公開の OSS）。
+
+## 4. Windows Desktop ランタイム（.NET 8.0.31）
+
+### 4.1 読んだ物
+
+- runtime pack（NuGet の置き場。`build-windows-installer.sh` 64〜70 行目がここから写す）:
+  - `~/.nuget/packages/microsoft.windowsdesktop.app.runtime.win-x64/8.0.31/LICENSE`（22 行、SHA-256 `a89886665765362e…`）: "The MIT License (MIT)" /
+    "Copyright (c) .NET Foundation and Contributors"。nuspec は `<license type="expression">MIT`、`<copyright>© Microsoft Corporation. All rights reserved.`、
+    `<repository … url="https://github.com/dotnet/windowsdesktop" commit="337963009d48…">`。第三者の表示のファイルは pack に無い。
+  - 同じ pack の `runtimes/win-x64/native/` にネイティブ DLL 5 つ: `D3DCompiler_47_cor3.dll`・`PenImc_cor3.dll`・`PresentationNative_cor3.dll`・
+    `vcruntime140_cor3.dll`・`wpfgfx_cor3.dll`。
+  - `~/.nuget/packages/microsoft.netcore.app.runtime.win-x64/8.0.31/` の `LICENSE.TXT`・`THIRD-PARTY-NOTICES.TXT`（nuspec は MIT）。
+- .NET の公式のライセンスの説明（dotnet/core main `44927bc821d3`・2026-09-28）:
+  - <https://github.com/dotnet/core/blob/main/license-information.md>: "Product distributions use the following license: … On Windows: [.NET Library License]" /
+    "Product distributions include downloadable assets and runtime packs (https://www.nuget.org/packages/Microsoft.NETCore.App.Runtime.win-x64/)."
+  - <https://github.com/dotnet/core/blob/main/license-information-windows.md>（30 行、SHA-256 `3bdf7142d570f117…`。"This document is provided for informative purposes only, and is not itself a license."）:
+
+> The following binaries are licensed with the [.NET Library License](https://dotnet.microsoft.com/dotnet_library_license.htm)
+> * coreclr.dll and .NET runtimes included in binaries published as single-file (…)
+> * Microsoft.DiaSymReader.Native.{x86|amd64|arm|arm64}.dll (used by .NET runtime and SDK)
+> * PresentationNative_cor3.dll (used by WPF)
+> * vcruntime140_cor3.dll (used by WPF)
+> * wpfgfx_cor3.dll (used by WPF)
+>
+> The following binaries are licensed with the [Windows SDK License](https://learn.microsoft.com/legal/windows-sdk/license):
+> * D3DCompiler_47_cor3.dll (used by WPF)
+>
+> All other binaries and files are licensed with the [MIT license](https://github.com/dotnet/core/blob/main/LICENSE.TXT).
+
+- 実物: `Setup.exe` から `7zz e` で `overlay/nf-overlay.exe`（78,309,697 バイト）を出し、単一ファイルの目録の名前を探した:
+  `D3DCompiler_47_cor3.dll`・`PenImc_cor3.dll`・`PresentationNative_cor3.dll`・`vcruntime140_cor3.dll`・`wpfgfx_cor3.dll`・`System.Private.CoreLib.dll`
+  がある（`build-windows-installer.sh` 31〜32 行目 `-p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true`）。
+  `Microsoft.DiaSymReader.Native.*` は無い。**単一ファイルなので .NET ランタイム自体も .NET Library License の側**。
+  WPF が入るのは `NfOverlay.Win.csproj` 12〜13 行目 `<UseWPF>true</UseWPF>`（"System.Windows.Automation（UIAutomationClient / UIAutomationTypes）は WPF の参照に入っている"）のため。
+  丸のソースは WinForms で、WPF の画面の名前空間は使っていない（`git grep` 0 件）。
+- `nf-overlay.exe` 自身の版情報: `CompanyName` = `NeuraFusion`・`ProductName` = `NeuraFusion Overlay`・**`LegalCopyright` は空**（csproj に `<Copyright>` が無い）。
+- Microsoft の条件の本文（2026-09-30 に取得）:
+  - <https://dotnet.microsoft.com/dotnet_library_license.htm>（"MICROSOFT SOFTWARE LICENSE TERMS / MICROSOFT .NET LIBRARY"。本文を文字にして 44 行、SHA-256 `f259e7b356dc8575…`）
+  - <https://learn.microsoft.com/en-us/legal/windows-sdk/license>（"MICROSOFT WINDOWS SOFTWARE DEVELOPMENT KIT (SDK) FOR WINDOWS 10"。127 行、`c5d309acf308db01…`）
+
+### 4.2 条件（原文）
+
+.NET Library License 3.a:
+
+> ii. Distribution Requirements. For any Distributable Code you distribute, you must
+> · use the Distributable Code in your applications and not as a standalone distribution;
+> · require distributors and external end users to agree to terms that protect it at least as much as this agreement; and
+> · indemnify, defend, and hold harmless Microsoft from any claims, including attorneys' fees, related to the distribution or use of your applications, except to the extent that any claim is based solely on the unmodified Distributable Code.
+> iii. Distribution Restrictions. You may not
+> · use Microsoft's trademarks in your applications' names or in a way that suggests your applications come from or are endorsed by Microsoft; or
+> · modify or distribute the source code of any Distributable Code so that any part of it becomes subject to an Excluded License. …
+
+同じ 5 節（利用者を守らせる中身）: "You may not · work around any technical limitations in the software; · reverse engineer, decompile or disassemble the software, … · remove, minimize, block or modify any notices of Microsoft or its suppliers in the software; …"。
+4.a: "If you use these features, you must comply with applicable law, including providing appropriate notices to users of your applications together with Microsoft's privacy statement."
+
+Windows SDK License 2.a.ii: "Add significant primary functionality to it in your programs; … Require distributors and external end users to agree to terms that protect it at least as much as this agreement; … Display your valid copyright notice on your programs; and Indemnify, defend, and hold harmless Microsoft …"。
+2.a.iii: "Alter any copyright, trademark or patent notice in the Distributable Code; … Distribute Distributable Code to run on a platform other than the Microsoft operating system platform; …"
+
+### 4.3 判断
+
+- pack の中の `LICENSE` と nuspec は MIT だが、Microsoft 自身の説明は上の 5 つ（と単一ファイルのランタイム）を別の条件としている。
+  **食い違うときは Microsoft の説明の側（条件の重い側）で扱う**。
+- 作業で直せる物（配布の担当へ。ここでは台本を変えていない）:
+  1. `licenses/` に `.NET Library License` と `Windows SDK License` の本文（取得日と URL つき）を足し、`README.txt` に「どのファイルが
+     どの条件か」を書く（NOTICE の案の .NET の節）。
+  2. `NfOverlay.Win.csproj` に `<Copyright>Copyright (c) 2026 NeuraFusion</Copyright>` を足し、`LegalCopyright` を出す（SDK の "Display your valid copyright notice"）。verify に項目を足す。
+  3. Microsoft のプライバシーの声明の URL（<https://go.microsoft.com/fwlink/?LinkID=824704>）を NOTICE に書く（4.a の保険。.NET が Windows のエラー報告に情報を足すため）。
+- 別案（技術。要検証）: UI Automation を WPF の参照でなく COM の UIAutomationCore で呼べば `UseWPF` を外せ、WPF の 5 つの DLL
+  （.NET Library License 3 つ・Windows SDK License 1 つ）は入らなくなる見込み。ただし単一ファイルのランタイム自体が .NET Library License の側なので、
+  **利用者の同意の要件は .NET を Windows で配る限り残る**。
+- **弁護士が要る**: 「配る者と利用者に、少なくとも同じだけ保護する条件へ同意させる」の満たし方（利用規約の文面・インストーラで
+  同意を取るか・補償の範囲）。文面を書く仕事で、原文を読むだけでは決まらない → `trademark-questions.md` の 2 節。
