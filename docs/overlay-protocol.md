@@ -2,7 +2,7 @@
 
 AI アプリ（Claude・ChatGPT のデスクトップ版、Cursor など）の中にボタンは埋め込めないので、
 アプリの上に小さな丸の窓を重ねる。Node の CLI（`src/overlay/`）が設定と起動・停止を持ち、
-ネイティブのプロセス（Mac: `apps/nf-overlay-macos` の `nf-overlay`、Windows: dk-win の担当）が
+ネイティブのプロセス（Mac: `apps/nf-overlay-macos` の `nf-overlay`、Windows: `apps/nf-overlay-windows`、Linux: `apps/nf-overlay-linux`（[overlay-linux.md](overlay-linux.md)））が
 丸の表示・位置の追従・押したときの読み取りを持つ。Mac と Windows は**同じ形**の JSON をやりとりする。
 
 ## 通り道
