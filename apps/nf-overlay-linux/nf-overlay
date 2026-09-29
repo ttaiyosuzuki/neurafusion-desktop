@@ -1,0 +1,5 @@
+#!/bin/sh
+# nf-overlay（Linux）の起動口。Node（src/overlay/host.ts）がこれを標準入出力つきで起動する。
+# GTK・AT-SPI・libwnck は OS の Python（PyGObject）を使うので /usr/bin/python3 で動かす。
+DIR=$(dirname "$(readlink -f "$0")")
+PYTHONPATH="$DIR${PYTHONPATH:+:$PYTHONPATH}" exec /usr/bin/python3 -m nf_overlay.app "$@"
