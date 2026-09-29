@@ -47,6 +47,7 @@ for ARCH in "${ARCHS[@]}"; do
   cp "$OVERLAY_BIN" "$OAPP/Contents/MacOS/nf-overlay"
   sed -e "s/@VERSION@/$VERSION/g" "$ROOT_DIR/packaging/installer/macos/NFOverlay-Info.plist" > "$OAPP/Contents/Info.plist"
   write_manifest "$RES" "NFOverlay.app/Contents/MacOS/nf-overlay"
+  cp "$ROOT_DIR/packaging/installer/icons/neurafusion.icns" "$RES/neurafusion.icns"
 
   # 入口
   cp "$ROOT_DIR/packaging/installer/macos/NeuraFusion" "$APP/Contents/MacOS/NeuraFusion"
