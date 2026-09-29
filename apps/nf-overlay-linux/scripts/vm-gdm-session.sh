@@ -27,8 +27,16 @@ bash "$(dirname "$0")/vm-session.sh" down > /dev/null 2>&1
 sudo systemctl stop gdm
 sleep 2
 
-# 1. 画面の装置（vkms）
+# 1. 画面の装置（vkms）。mutter は vkms を試験用として無視する（61-mutter.rules の mutter-device-ignore。Wayland が
+#    「No GPUs found」で上がらず GDM が X11 に戻す）ので、この VM ではタグを外す。タグは一度付くと残るので装置を作り直す
+R=/etc/udev/rules.d/62-nf-vkms-mutter.rules
+if ! [ -e $R ]; then
+  echo 'ENV{ID_PATH}=="platform-vkms", TAG-="mutter-device-ignore"' | sudo tee $R > /dev/null
+  sudo udevadm control --reload
+fi
+if [ -e /dev/dri/card0 ] && udevadm info /dev/dri/card0 | grep -q 'TAGS=.*mutter-device-ignore'; then sudo modprobe -r vkms; fi
 [ -e /dev/dri/card0 ] || sudo modprobe vkms
+udevadm settle
 for _ in $(seq 1 20); do [ "$(loginctl show-seat seat0 -p CanGraphical --value)" = yes ] && break; sleep 0.5; done
 echo "seat0 CanGraphical=$(loginctl show-seat seat0 -p CanGraphical --value)"
 
@@ -47,26 +55,37 @@ systemctl --user set-environment GSK_RENDERER=cairo
 systemctl --user unset-environment DISPLAY WAYLAND_DISPLAY XAUTHORITY XDG_SESSION_TYPE XDG_CURRENT_DESKTOP 2>/dev/null
 systemctl --user restart pipewire.socket pipewire-pulse.socket 2>/dev/null
 
-# 4. GDM を起こし、自動ログインのセッションが seat0 に出るのを待つ
+# 4. GDM を起こし、自動ログインのセッションが seat0 の前面に出るのを待つ
 sudo systemctl start gdm
+active_sid() {
+  local s
+  s=$(loginctl show-seat seat0 -p ActiveSession --value)
+  [ -n "$s" ] && [ "$(loginctl show-session "$s" -p Name --value)" = "$U" ] && [ "$(loginctl show-session "$s" -p Class --value)" = user ] && echo "$s"
+}
 SID=
-for _ in $(seq 1 120); do
-  SID=$(loginctl list-sessions --no-legend | awk -v u="$U" '$3 == u && $4 == "seat0" { print $1 }' | head -1)
-  [ -n "$SID" ] && [ "$(loginctl show-session "$SID" -p Class --value)" = user ] && break
-  sleep 1
-done
+for _ in $(seq 1 120); do SID=$(active_sid) && [ -n "$SID" ] && break; sleep 1; done
 [ -n "$SID" ] || { echo "自動ログインのセッションが出ない"; sudo journalctl -u gdm --since -3min --no-pager | tail -20; exit 1; }
-loginctl show-session "$SID" -p Id -p Type -p Class -p Desktop -p Service -p Seat -p State
 
 # 5. gnome-shell が上がり、gnome-session が環境を渡すのを待つ
+want='^DISPLAY='
+[ "$MODE" = wayland ] && want='^WAYLAND_DISPLAY='
 for _ in $(seq 1 120); do
   E=$(systemctl --user show-environment)
-  if echo "$E" | grep -q "^XDG_SESSION_TYPE=$MODE" && echo "$E" | grep -q '^DISPLAY=' \
+  if echo "$E" | grep -q "^XDG_SESSION_TYPE=$MODE" && echo "$E" | grep -q "$want" \
     && gdbus call --session -d org.gnome.Shell -o /org/gnome/Shell -m org.freedesktop.DBus.Properties.Get org.gnome.Shell ShellVersion > /dev/null 2>&1; then
     break
   fi
   sleep 1
 done
+# Wayland が上がらないと GDM は黙って X11 のセッションに入り直すので、前面のセッションと種類を確かめ直す
+SID=$(active_sid)
+TYPE=$(loginctl show-session "$SID" -p Type --value 2>/dev/null)
+loginctl show-session "$SID" -p Id -p Type -p Class -p Desktop -p Service -p Seat -p State
+if [ "$TYPE" != "$MODE" ]; then
+  echo "GDM が $MODE ではなく ${TYPE:-不明} のセッションに入った"
+  sudo journalctl -b --since -3min --no-pager | grep -E 'Failed to setup|No GPUs|Session never registered' | tail -5
+  exit 1
+fi
 systemctl --user show-environment | grep -E '^(DISPLAY|WAYLAND_DISPLAY|XAUTHORITY|XDG_SESSION_TYPE|XDG_CURRENT_DESKTOP|XDG_SESSION_DESKTOP|DESKTOP_SESSION|GDMSESSION)=' > /tmp/nf-session.env
 echo "DBUS_SESSION_BUS_ADDRESS=$DBUS_SESSION_BUS_ADDRESS" >> /tmp/nf-session.env
 echo "NF_LOGIND_SESSION=$SID" >> /tmp/nf-session.env
