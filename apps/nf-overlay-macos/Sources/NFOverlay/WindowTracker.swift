@@ -124,5 +124,5 @@ final class WindowTracker {
         }
     }
 
-    static var primaryHeight: Double { NSScreen.screens.first?.frame.height ?? 0 }
+    static var primaryHeight: Double { Double(NSScreen.screens.first?.frame.height ?? 0) }
 }
