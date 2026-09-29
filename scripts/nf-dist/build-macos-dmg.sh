@@ -16,20 +16,23 @@ SIGN="${NF_SIGN_IDENTITY:--}"
 
 # 丸の本体（両方のアーキテクチャを1つに。できなければ今の Mac のアーキテクチャだけ）
 OVERLAY_DIR="$ROOT_DIR/apps/nf-overlay-macos"
-( cd "$OVERLAY_DIR" && swift build -c release --arch x86_64 --arch arm64 >/dev/null 2>&1 ) && UNIVERSAL=1 || UNIVERSAL=0
-if [ "$UNIVERSAL" = 1 ]; then
-  OVERLAY_BIN="$(cd "$OVERLAY_DIR" && swift build -c release --arch x86_64 --arch arm64 --show-bin-path)/nf-overlay"
-else
-  ( cd "$OVERLAY_DIR" && swift build -c release >/dev/null )
-  OVERLAY_BIN="$(cd "$OVERLAY_DIR" && swift build -c release --show-bin-path)/nf-overlay"
-fi
+# Xcode の無い Mac（CLT だけ）では --arch を2つ並べられないので、--triple で1つずつ作って lipo でまとめる
+OVERLAY_BIN="$STAGE_ROOT/nf-overlay-universal"
+SLICES=()
+for T in x86_64 arm64; do
+  if ( cd "$OVERLAY_DIR" && swift build -c release --triple "$T-apple-macosx14.0" >/dev/null 2>&1 ); then
+    SLICES+=("$(cd "$OVERLAY_DIR" && swift build -c release --triple "$T-apple-macosx14.0" --show-bin-path)/nf-overlay")
+  fi
+done
+[ ${#SLICES[@]} -gt 0 ] || { echo "丸の本体を作れませんでした" >&2; exit 1; }
+lipo -create "${SLICES[@]}" -output "$OVERLAY_BIN"
 OVERLAY_ARCHS="$(lipo -archs "$OVERLAY_BIN")"
 echo "==> 丸の本体: $OVERLAY_ARCHS"
 
 for ARCH in "${ARCHS[@]}"; do
   case "$ARCH" in x64) LIPO_ARCH=x86_64 ;; arm64) LIPO_ARCH=arm64 ;; *) echo "知らない arch: $ARCH" >&2; exit 2 ;; esac
   if ! echo " $OVERLAY_ARCHS " | grep -q " $LIPO_ARCH "; then
-    echo "==> $ARCH: 丸の本体をこのアーキテクチャ向けに作れないので飛ばします（Xcode の無い Mac では universal が作れない）" >&2
+    echo "==> $ARCH: 丸の本体をこのアーキテクチャ向けに作れないので飛ばします（この Mac ではこのアーキテクチャ向けの丸を作れなかった）" >&2
     continue
   fi
   STAGE="$STAGE_ROOT/macos-$ARCH"
