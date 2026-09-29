@@ -1,7 +1,7 @@
 #!/bin/bash
 # VM の X11 セッションの中で、丸の動きを1通り確かめて画面を撮る（DK-08・TS-38 の実機分）。
 #   OUT=/tmp/nf-linux-vm/share/x11 vm-x11-check.sh
-# 前提: /tmp/nf-session.env（vm-session.sh・x11shell.sh が書く）に DISPLAY と DBUS_SESSION_BUS_ADDRESS がある。
+# 前提: /tmp/nf-session.env（vm-session.sh x11 か vm-gdm-session.sh x11 が書く）に DISPLAY と DBUS_SESSION_BUS_ADDRESS がある。
 set -u
 HERE=$(cd "$(dirname "$0")" && pwd)
 OUT=${OUT:-/tmp/nf-x11-check}
@@ -22,6 +22,8 @@ d=g[-1]["dot"]; print(d["x"]+d["w"]//2, d["y"]+d["h"]//2)
 PY
 }
 count() { grep -c "$1" "$LINES"; }
+# drive.py は json.dumps の既定（": " と ", "）で書く
+wait_read() { local n=$1; for _ in $(seq 1 90); do [ "$(count '"type": "read"')" -ge "$n" ] && return 0; sleep 1; done; return 1; }
 # 同意の小窓のボタンを押す（左 = 撮らない、右 = 撮って読む）。ボタンの列は小窓の下端から 18px
 press_consent() {
   # 同意の小窓が出るのを待ち、AT-SPI でボタンを押す（本人の代わり。decline = 撮らない、accept = 撮って読む）
@@ -56,7 +58,7 @@ xdotool windowmove --sync "$A" 400 200; sleep 1.5; shot 02-follow-moved
 xdotool windowsize --sync "$A" 640 480; sleep 1.5; shot 03-follow-resized
 echo "geometry=$(count '"geometry"')"
 if [ "$(count '"geometry"')" = 0 ]; then echo "丸が出ない"; tail -5 "$OUT/stderr.log"; send '{"v":1,"type":"stop"}'; echo "lines=$(wc -l < "$LINES")"; exit 1; fi
-read_before=$(count '"type":"read"')
+read_before=$(count '"type": "read"')
 
 echo "--- 2 対象外・最小化"
 xdotool windowactivate --sync "$T"; sleep 1.5; shot 04-not-target
@@ -65,20 +67,21 @@ xdotool windowactivate --sync "$A"; sleep 1.5
 echo "hidden=$(count '"hidden"') read_before_click=$read_before"
 
 echo "--- 3 押す → AT-SPI"
-set -- $(last_dot); xdotool mousemove "$1" "$2" click 1; sleep 4; shot 05-clicked-atspi-panel
-echo "read=$(count '"type":"read"') clicked=$(count '"clicked"')"
+set -- $(last_dot); xdotool mousemove "$1" "$2" click 1; wait_read 1; sleep 1; shot 05-clicked-atspi-panel
+echo "read=$(count '"type": "read"') clicked=$(count '"clicked"')"
 
 echo "--- 4 読めない版: 同意を断る"
 xdotool windowactivate --sync "$B"; sleep 1.5
 set -- $(last_dot); xdotool mousemove "$1" "$2" click 1
-press_consent decline 06-consent-dialog; sleep 3
-echo "read=$(count '"type":"read"')"
+press_consent decline 06-consent-dialog; wait_read 2
+echo "read=$(count '"type": "read"')"
 
 echo "--- 5 読めない版: 同意して撮る"
 xdotool windowactivate --sync "$B"; sleep 1.5
 set -- $(last_dot); xdotool mousemove "$1" "$2" click 1
 press_consent accept 07a-consent-accept
-for _ in $(seq 1 60); do [ "$(count '"method": "ocr", "ok": true')" != 0 ] && break; sleep 1; done; sleep 1; shot 07-ocr-done
+wait_read 3; sleep 1; shot 07-ocr-done
+echo "read=$(count '"type": "read"')"
 
 echo "--- 6 アプリのオフ"
 send "$(python3 -c "import json;c=json.load(open('$OUT/cfg.json'));c['apps'][0]['enabled']=False;print(json.dumps(c,ensure_ascii=False))")"
@@ -87,5 +90,5 @@ send '{"v":1,"type":"get-read-log"}'; sleep 1
 send '{"v":1,"type":"stop"}'; sleep 2
 wait $DRV 2>/dev/null
 cp ~/.local/share/neurafusion/overlay/read-log.json "$OUT/read-log.json" 2>/dev/null
-pkill -f fake-ai.py; pkill -x gnome-text-editor
+pkill -f "[f]ake-ai.py"; pkill -f "[g]nome-text-editor"
 echo "lines=$(wc -l < "$LINES")"

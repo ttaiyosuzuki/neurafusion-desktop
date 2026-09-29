@@ -1,8 +1,9 @@
 #!/bin/bash
 # VM の Wayland セッション（gnome-shell --headless --wayland --unsafe-mode）の中で、固定の丸を確かめて画面を撮る（DK-08）。
 #   OUT=/tmp/nf-linux-vm/share/wayland vm-wayland-check.sh
-# 前提: /tmp/nf-session.env に WAYLAND_DISPLAY・DISPLAY（Xwayland）・DBUS_SESSION_BUS_ADDRESS がある。
-# 確認用の画面は org.gnome.Shell.Screenshot で撮る（--unsafe-mode のときだけ呼べる。丸の本体はこれを使わない）。
+# 前提: /tmp/nf-session.env（vm-session.sh wayland か vm-gdm-session.sh wayland が書く）に WAYLAND_DISPLAY・DISPLAY（Xwayland）・
+# DBUS_SESSION_BUS_ADDRESS がある。確認用の画面は org.gnome.Shell.Screenshot で撮る（--unsafe-mode のときだけ呼べる）。
+# GDM から入った本物のセッションでは断られるので gnome-screenshot で撮る。丸の本体はどちらも使わない。
 # ポータルの確認（画面共有 = ScreenCast の「Share Screen」。共有する窓・画面を本人が選ぶ）は、本人の代わりに
 # AT-SPI で Share / Cancel を押す（press-button.py --portal）。丸の本体はこれを使わない。
 set -u
@@ -16,7 +17,11 @@ FIFO=/tmp/nf-drive.fifo
 rm -f "$FIFO"; mkfifo "$FIFO"
 rm -f ~/.local/share/neurafusion/overlay/read-log.json
 
-shot() { gdbus call --session -d org.gnome.Shell -o /org/gnome/Shell/Screenshot -m org.gnome.Shell.Screenshot.Screenshot false false "$OUT/$1.png" > /dev/null; echo "shot $1"; }
+shot() {
+  gdbus call --session -d org.gnome.Shell -o /org/gnome/Shell/Screenshot -m org.gnome.Shell.Screenshot.Screenshot false false "$OUT/$1.png" > /dev/null 2>&1 \
+    || gnome-screenshot -f "$OUT/$1.png" > /dev/null 2>&1
+  echo "shot $1"
+}
 send() { echo "$1" > "$FIFO"; }
 count() { grep -c "$1" "$LINES"; }
 last_dot() { python3 - "$LINES" <<'PY'
@@ -42,7 +47,7 @@ cat > "$OUT/cfg.json" <<'JSON'
 JSON
 
 # headless の GNOME は起動直後にアクティビティ画面（Overview）になるので閉じる（--unsafe-mode の Eval。確認用だけ）
-gdbus call --session -d org.gnome.Shell -o /org/gnome/Shell -m org.gnome.Shell.Eval 'Main.overview.hide()' > /dev/null
+gdbus call --session -d org.gnome.Shell -o /org/gnome/Shell -m org.gnome.Shell.Eval 'Main.overview.hide()' > /dev/null 2>&1
 sleep 1
 # ポータルの GNOME 側を先に起こしておく（起動直後は ScreenCast がまだ出ていないことがある）
 gdbus introspect --session -d org.freedesktop.impl.portal.desktop.gnome -o /org/freedesktop/portal/desktop > /dev/null 2>&1

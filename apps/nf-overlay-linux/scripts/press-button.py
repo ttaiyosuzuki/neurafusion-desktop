@@ -43,13 +43,15 @@ def press(owner, match, tries=40):
         for n in nodes(owner):
             name = n.get_name() or ""
             if match(n, name):
+                # 押すと小窓が閉じて部品が消えるので、名前は先に読む
+                role = n.get_role_name()
                 if n.get_n_actions() > 0:
                     n.do_action(0)
                 else:
                     # GTK4 の切り替えタブは操作を持たないことがある → 押せない（呼ぶ側で別の道へ）
                     print("no action", n.get_role_name(), name[:40])
                     return False
-                print("pressed", owner, n.get_role_name(), name[:40])
+                print("pressed", owner, role, name[:40])
                 return True
         time.sleep(0.5)
     print("not found", owner)
