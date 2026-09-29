@@ -7,7 +7,7 @@ import { formatConsoleDiagnosticBlock } from "../../logging/json-console-line.js
 import { escapeRegExp } from "../../utils.js";
 import { isRootVersionInvocation } from "../argv.js";
 import { formatCliBannerLine, hasEmittedCliBanner } from "../banner.js";
-import { CLI_NAME } from "../cli-name.js";
+import { CLI_DISPLAY_NAME, CLI_NAME } from "../cli-name.js";
 import { CLI_LOG_LEVEL_VALUES, parseCliLogLevelOption } from "../log-level-option.js";
 import {
   getCommanderErrorCommandNames,
@@ -18,6 +18,9 @@ import { formatCliParseErrorOutput } from "./error-output.js";
 import { getSubCliCommandsWithSubcommands } from "./subcli-descriptors.js";
 
 const CLI_NAME_PATTERN = escapeRegExp(CLI_NAME);
+const CLI_DISPLAY_NAME_PATTERN = escapeRegExp(CLI_DISPLAY_NAME);
+// Commander builds `Usage:` from program.name(), which stays CLI_NAME for completion; show the NeuraFusion command.
+const USAGE_CLI_NAME = new RegExp(`^(Usage:\\s+)${CLI_NAME_PATTERN}(?=\\s|$)`, "gm");
 const ROOT_COMMANDS_WITH_SUBCOMMANDS = new Set([
   ...getCoreCliCommandsWithSubcommands(),
   ...getSubCliCommandsWithSubcommands(),
@@ -26,32 +29,32 @@ const ROOT_COMMANDS_HINT =
   "Hint: commands suffixed with * have subcommands. Run <command> --help for details.";
 
 const EXAMPLES = [
-  ["openclaw onboard", "Run guided setup for a local Gateway, workspace, auth, and channels."],
-  ["openclaw setup", "Create the baseline config, workspace, and session folders."],
-  ["openclaw configure", "Change models, Gateway, channels, plugins, skills, and health checks."],
-  ["openclaw status", "Check Gateway, channel, model, and recent-session status."],
-  ["openclaw doctor --fix", "Repair common config, service, plugin, and channel problems."],
-  ["openclaw channels add", "Add or update a chat channel account with guided prompts."],
-  ["openclaw channels status", "See connected messaging accounts and login state."],
-  ["openclaw --dev gateway", "Run a dev Gateway (isolated state/config) on ws://127.0.0.1:19001."],
-  ["openclaw gateway run --force", "Start the Gateway and replace anything bound to its port."],
-  ["openclaw models status", "Show model/provider auth health before running agents."],
-  ["openclaw plugins list", "Inspect enabled, disabled, and installed plugins."],
+  ["onboard", "Run guided setup for a local Gateway, workspace, auth, and channels."],
+  ["setup", "Create the baseline config, workspace, and session folders."],
+  ["configure", "Change models, Gateway, channels, plugins, skills, and health checks."],
+  ["status", "Check Gateway, channel, model, and recent-session status."],
+  ["doctor --fix", "Repair common config, service, plugin, and channel problems."],
+  ["channels add", "Add or update a chat channel account with guided prompts."],
+  ["channels status", "See connected messaging accounts and login state."],
+  ["--dev gateway", "Run a dev Gateway (isolated state/config) on ws://127.0.0.1:19001."],
+  ["gateway run --force", "Start the Gateway and replace anything bound to its port."],
+  ["models status", "Show model/provider auth health before running agents."],
+  ["plugins list", "Inspect enabled, disabled, and installed plugins."],
   [
-    'openclaw agent --to +15555550123 --message "Run summary" --deliver',
+    'agent --to +15555550123 --message "Run summary" --deliver',
     "Run one agent turn through the Gateway and optionally deliver the reply.",
   ],
   [
-    'openclaw message send --channel telegram --target @mychat --message "Hi"',
+    'message send --channel telegram --target @mychat --message "Hi"',
     "Send via your Telegram bot.",
   ],
 ] as const;
 
 export function formatProgramHelpOutput(str: string): string {
   // Commander emits plain section labels; decorate them after command-specific help renders.
-  let output = str;
+  let output = str.replace(USAGE_CLI_NAME, `$1${CLI_DISPLAY_NAME}`);
   const isRootHelp = new RegExp(
-    `^Usage:\\s+${CLI_NAME_PATTERN}\\s+\\[options\\]\\s+\\[command\\]\\s*$`,
+    `^Usage:\\s+${CLI_DISPLAY_NAME_PATTERN}\\s+\\[options\\]\\s+\\[command\\]\\s*$`,
     "m",
   ).test(output);
   if (isRootHelp && /^Commands:/m.test(output)) {
@@ -151,7 +154,7 @@ export function configureProgramHelp(
   });
 
   const fmtExamples = EXAMPLES.map(
-    ([cmd, desc]) => `  ${theme.command(cmd)}\n    ${theme.muted(desc)}`,
+    ([args, desc]) => `  ${theme.command(`${CLI_DISPLAY_NAME} ${args}`)}\n    ${theme.muted(desc)}`,
   ).join("\n");
 
   program.addHelpText("afterAll", ({ command }) => {
