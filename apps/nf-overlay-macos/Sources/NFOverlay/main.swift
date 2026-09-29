@@ -110,7 +110,9 @@ final class AppController {
         reading = false
         guard case let .done(method, ok, reason, text) = step else { return }
         io.send(.read(app: appId, method: method, ok: ok, chars: text?.count ?? 0, reason: reason, text: text))
-        if !ok {
+        if ok {
+            panel.showStatus("読み取った文字: \(text?.count ?? 0) 文字（\(method == .ax ? "画面の文字" : "文字認識")。未接続のため、どこにも送っていません）")
+        } else {
             let why: String
             switch reason {
             case .axDenied: why = "アクセシビリティの許可がありません（システム設定 → プライバシーとセキュリティ）。"

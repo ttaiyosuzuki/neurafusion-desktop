@@ -59,15 +59,12 @@ final class PanelWindow: NSPanel, WKNavigationDelegate {
     }
 
     /// Node で個人情報を伏せた本文を渡す。Web 側は `nf-overlay-text` の出来事で受け取る。
-    /// 未接続のときは本文を出さず、文字数だけ示す。
+    /// 未接続のときは何もしない（本文を画面に出さない）。
     func deliver(text: String) {
-        if mode == .url {
-            guard let data = try? JSONSerialization.data(withJSONObject: ["text": text]),
-                  let json = String(data: data, encoding: .utf8) else { return }
-            web.evaluateJavaScript("window.dispatchEvent(new CustomEvent('nf-overlay-text',{detail:\(json)}));")
-        } else {
-            web.loadHTMLString(Self.disconnectedHtml(detail: "読み取った文字: \(text.count) 文字（未接続のため、どこにも送っていません）"), baseURL: nil)
-        }
+        guard mode == .url,
+              let data = try? JSONSerialization.data(withJSONObject: ["text": text]),
+              let json = String(data: data, encoding: .utf8) else { return }
+        web.evaluateJavaScript("window.dispatchEvent(new CustomEvent('nf-overlay-text',{detail:\(json)}));")
     }
 
     func showStatus(_ s: String) {
