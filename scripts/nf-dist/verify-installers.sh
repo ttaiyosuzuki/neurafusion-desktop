@@ -96,6 +96,26 @@ images_are_ours() {
   if [ -z "$bad" ] && [ "$n" -gt 0 ]; then ok "${label}（${n} 個）"; else ng "${label}（ほかの画像:${bad:- 1 つも無い}）"; fi
 }
 
+# $1=本体の tarball $2=名前。管理画面（Control UI）の題名・アプリの名前・アイコンが NeuraFusion の物か
+# （アイコンは packaging/installer/icons の物とバイト単位で同じ。ui/public の物はそこから作った写し）
+control_ui_is_ours() {
+  local tgz="$1" name="$2" t ui=package/dist/control-ui
+  make_tmp
+  t="$TMP_DIR"
+  if ! tar -xzf "$tgz" -C "$t" "$ui/index.html" "$ui/manifest.webmanifest" "$ui/favicon.svg" "$ui/favicon.ico" \
+    "$ui/favicon-32.png" "$ui/apple-touch-icon.png" 2> /dev/null; then
+    ng "$name: 管理画面の題名とアイコンを本体の tarball から出せない（${ui}）"
+    return 0
+  fi
+  grep -o '<title>[^<]*</title>' "$t/$ui/index.html" > "$t/ui-title.txt" || true
+  if grep -q -x -F '<title>NeuraFusion Control</title>' "$t/ui-title.txt"; then
+    no_brand "$name: 管理画面の題名（NeuraFusion Control）・アプリの名前（manifest）" "$t/ui-title.txt" "$t/$ui/manifest.webmanifest"
+  else
+    ng "$name: 管理画面の題名が NeuraFusion Control でない（$(head -1 "$t/ui-title.txt")）"
+  fi
+  images_are_ours "$name: 管理画面のアイコン（favicon・apple-touch-icon）はどれも NeuraFusion の物" "$t/$ui"
+}
+
 # $1=フォルダ $2=名前。中身をほかの利用者も読める・動かせるか（組み立てた人の umask が 077 だと、写した先で本人しか開けない）
 check_modes() {
   local bad
@@ -206,6 +226,7 @@ verify_one_dmg() {
   else
     ng "$name: 本体の tarball に @openclaw/ai が入っていない（npm pack で作った物？）"
   fi
+  control_ui_is_ours "$res/$PACKAGE_NAME-$VERSION.tgz" "$name"
   check_modes "$app" "$name"
 
   # ライセンス文書（.app の中と、開いた窓）
@@ -279,6 +300,7 @@ verify_exe() {
   else
     ng "$name: 本体の tarball に @openclaw/ai が入っていない（npm pack で作った物？）"
   fi
+  control_ui_is_ours "$x/$PACKAGE_NAME-$VERSION.tgz" "$name"
   check_licenses "$x" "$name" nsis-COPYING.txt dotnet-runtime-LICENSE.txt dotnet-runtime-THIRD-PARTY-NOTICES.txt \
     dotnet-windowsdesktop-LICENSE.txt webview2-LICENSE.txt webview2-NOTICE.txt
   no_brand "$name: 丸の本体（nf-overlay.exe の製品名・会社名・中の文字）・README-ja.txt" "$x/overlay/nf-overlay.exe" "$x/README-ja.txt"
@@ -316,6 +338,7 @@ verify_deb() {
   else
     ng "$name: 本体の tarball に @openclaw/ai が入っていない（npm pack で作った物？）"
   fi
+  control_ui_is_ours "$opt/$PACKAGE_NAME-$VERSION.tgz" "$name"
   check_modes "$x" "$name"
   check_licenses "$opt" "$name"
   cr="$x/usr/share/doc/neurafusion-desktop/copyright"
@@ -360,6 +383,7 @@ verify_appimage() {
   else
     ng "$name: 本体の tarball に @openclaw/ai が入っていない（npm pack で作った物？）"
   fi
+  control_ui_is_ours "$sq/opt/neurafusion/$PACKAGE_NAME-$VERSION.tgz" "$name"
   check_modes "$sq" "$name"
   check_licenses "$sq/opt/neurafusion" "$name" appimage-type2-runtime-LICENSE.txt
   no_brand "$name: デスクトップ項目・AppRun・README-ja.txt" "$sq/neurafusion-desktop.desktop" "$sq/AppRun" "$sq/opt/neurafusion/README-ja.txt"

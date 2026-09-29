@@ -14,8 +14,8 @@
 - 本体の依存に GPL だけ・AGPL・LGPL・SSPL の物は無い（2 節）。
 - 名前・ロゴ: MIT は商標の許諾を含まない。上流に商標・ロゴの方針の文書は見つからなかった。配布物の利用者に見える所（アプリ名・
   アイコン・インストーラの文言・「アプリと機能」の表示名と発行元・デスクトップ項目・`--version`）に上流の名前もロブスターも無い
-  ことを検査に入れ、作り直した物で確かめた。**ただし CLI 本体の `--help` と管理画面（Control UI）には上流の名前とロブスターが
-  残っている**（CLI 本体の表記で、配布の組み立ての外。4 節。直すかは要判断）。
+  ことを検査に入れ、作り直した物で確かめた。CLI の `--help`（最上位）と管理画面（Control UI）の題名・アイコンも NeuraFusion に
+  した（2026-09-30）。`--help` に残す上流の名前は、機能上の名前と上流の外部サービスだけ（理由つきの許可リスト。4 節）。
 
 ## 1. 上流の原文
 
@@ -114,21 +114,24 @@ THIRD_PARTY_NOTICES.md.
 
 | 配布物 | 見る所 |
 |---|---|
-| `.dmg` | ボリューム名・窓と `.app` に並ぶファイル名・`Info.plist`（入口と丸の名前・アクセシビリティの理由・著作権の欄）・はじめにお読みください.txt・入口と丸の本体の中の文字・アイコン（`CFBundleIconFile`）・窓と `.app` の中の画像すべて・（NF_DIST_SMOKE=1）`--version` と `--help` |
-| `Setup.exe` | インストーラの文言・「アプリと機能」の表示名（`DisplayName`）と発行元（`Publisher`）・ショートカット名（NSIS の見出し）・版情報（製品名・説明・著作権）・入れるファイルの名前・丸の本体 `nf-overlay.exe`（製品名・会社名・中の文字）・アイコン・入れる画像すべて |
-| `.deb`・AppImage | パッケージの説明・デスクトップ項目（`Name`・`Comment`）・入口・AppRun・README・アイコン・画像・（NF_DIST_SMOKE=1）`--version` と `--help` |
+| `.dmg` | ボリューム名・窓と `.app` に並ぶファイル名・`Info.plist`（入口と丸の名前・アクセシビリティの理由・著作権の欄）・はじめにお読みください.txt・入口と丸の本体の中の文字・アイコン（`CFBundleIconFile`）・窓と `.app` の中の画像すべて・管理画面の題名とアイコン・（NF_DIST_SMOKE=1）`--version` と `--help` |
+| `Setup.exe` | インストーラの文言・「アプリと機能」の表示名（`DisplayName`）と発行元（`Publisher`）・ショートカット名（NSIS の見出し）・版情報（製品名・説明・著作権）・入れるファイルの名前・丸の本体 `nf-overlay.exe`（製品名・会社名・中の文字）・アイコン・入れる画像すべて・管理画面の題名とアイコン |
+| `.deb`・AppImage | パッケージの説明・デスクトップ項目（`Name`・`Comment`）・入口・AppRun・README・アイコン・画像・管理画面の題名とアイコン・（NF_DIST_SMOKE=1）`--version` と `--help` |
 
-2026-09-29 に作り直した物の結果は `tools/agent-tasks/2026-09-29_dk-dist_result.md`。配布の組み立ての層（上の表）はすべて ok。
-**残っている所（CLI 本体の表記。配布の組み立ての外）**:
+管理画面（Control UI、本体の tarball の `dist/control-ui/`）は、題名 `NeuraFusion Control`・`manifest.webmanifest` の名前・アイコン 4 つ
+（`favicon.svg`・`favicon.ico`・`favicon-32.png`・`apple-touch-icon.png`。`packaging/installer/icons` の物とバイト単位で同じ）を見る。
 
-- `--help`（最上位だけで 30 か所）: `Usage: openclaw [options] [command]`、例の `openclaw onboard` など、コマンドの説明
-  （"Manage OpenClaw plugins and extensions" など）、環境変数名 `OPENCLAW_*`・設定の置き場 `~/.openclaw`、`ClawHub`。
-  `--version` は `NeuraFusion 2026.9.6 (<commit>)` で問題ない。検査はこの 1 項目を NG と出す。
-- 管理画面（Control UI、ブラウザで開く物。本体の tarball の `dist/control-ui/`）: 題名 `OpenClaw Control`・`manifest.webmanifest` の
-  `"name": "OpenClaw Control"`・アイコンは上流のロブスター（`favicon.svg` は上流の `ui/public/favicon.svg` と同じ物）。
+**`--help` は許可リストつき**（2026-09-30。`scripts/nf-dist/brand-allow-help.json`。項目ごとに理由を書き、理由の無い項目があると
+検査は止まる）。製品名としての OpenClaw・`Usage:` と例のコマンド名（`neurafusion`。`openclaw` は互換のために残るコマンド）・
+コマンドの説明は NeuraFusion にした。許可リストに入れたのは次の 4 つだけ:
 
-直すなら CLI 本体の表示の言い換え（`src/cli/program/help.ts` の `CLI_NAME`・例・各コマンドの説明、`ui/` の題名とアイコン）。
-環境変数名と `~/.openclaw` は機能上の名前で、変えると設定の置き場が上流・既存の利用者と食い違う。→ 要判断（オーナー）
+- 環境変数 `OPENCLAW_*`・設定の置き場 `~/.openclaw`（`--dev`・`--profile` の置き場を含む）: 機能上の名前。変えると今の設定が効かない
+- `ClawHub`・文書のサイト `docs.openclaw.ai`: 上流の外部サービスを指す名前（NeuraFusion の物と書くと事実と違う）
+
+同じ許可リストで `src/cli/program/root-help.brand.test.ts` が、最上位の `--help` の許可リスト以外の上流の名前を 0 件に保つ。
+**残っている所（今回の範囲の外）**: サブコマンドの `--help` と実行中の案内（`openclaw doctor` などの修理の案内・補完の対象の名前は
+互換のため `openclaw` のまま）、管理画面の中の文言（「Ask OpenClaw」・ロブスターのペットなど。翻訳の記録つきで 20 以上の言語に
+またがる）。`--version` は `NeuraFusion <版> (<commit>)`。
 
 ## 5. 法務確認待ち（作業は止めていない）
 
