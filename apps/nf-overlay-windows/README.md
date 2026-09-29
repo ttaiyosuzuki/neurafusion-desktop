@@ -19,17 +19,19 @@ NeuraFusion デスクトップ版の Windows 側ネイティブ部品。前面�
 ## Node との約束（標準入出力・JSON 1行ずつ）
 
 Node の CLI（`src/overlay/`、dk-mac の担当）がこの実行ファイルを起動し、標準入力に設定を送る。
-詳細は [docs/overlay-windows.md](../../docs/overlay-windows.md)。dk-mac の `docs/overlay-protocol.md` が先に
-main に入った場合はそちらを正とし、差をこの README の「Mac 版との差」に書く。
+形は dk-mac の [docs/overlay-protocol.md](../../docs/overlay-protocol.md)（Mac と共通）に合わせた。
+Windows 版の設計と、約束との差は [docs/overlay-windows.md](../../docs/overlay-windows.md)。
 
-- 受け取る: `{"type":"config",...}` / `{"type":"stop"}` / `{"type":"getReadLog"}`
-- 出す: `ready` / `geometry` / `hidden` / `clicked` / `read` / `readLog` / `error`
-- 読んだ生の文字は **パネル（WebView2）にだけ** 渡す。標準出力とログには文字数（`chars`）だけを出す。
+- 受け取る: `config` / `stop` / `panel-text` / `get-read-log`（知らない type は読み飛ばす）
+- 出す: `ready` / `geometry` / `hidden` / `clicked` / `read` / `panel` / `read-log` / `error`（どれも `"v":1`）
+- 読んだ生の文字は、読めたときの `read` の1行でだけ Node に渡す。Node が PII を除いて `panel-text` で返したものだけをパネルに出す。
+  ネイティブ側の記録（`read-log.json`）と標準エラーには文字数だけで、本文を書かない。
 
 ## 守ること（指示書 §8）
 
 - 押す前は読まない。常時監視しない（ウィンドウの位置の変化だけを OS のイベントで受け、中身は読まない）。
 - 読み取りは「丸を押した1回につき1回」。`ReadGate` が押された印の無い読み取りを拒む（テストあり）。
+- ウィンドウを撮る（OCR）前には、毎回同意の小窓を出す（§8-3）。断られたら撮らない（テストあり）。
 - 見た目は青い丸・目2つ・白いぼかし（ブラウザ拡張の丸と同じ系統。他社の意匠は使わない）。
 - 対応アプリの実行ファイル名は Node から受け取る。このプログラムの中に推測の既定値は持たない。
 
@@ -46,4 +48,5 @@ Windows では `dotnet publish src/NfOverlay.Win -c Release -r win-x64 --self-co
 
 ## Mac 版との差
 
-（dk-mac の約束が決まり次第ここに書く）
+[docs/overlay-windows.md「約束（overlay-protocol.md との対応）」](../../docs/overlay-windows.md) の 1〜7。
+主なもの: `read.method` が `"ax"` ではなく `"uia"`、`ready` が `ax` ではなく `uia`、`geometry` に `scale`・`px` を追加。
