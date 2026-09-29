@@ -145,8 +145,31 @@ public class FollowTests
         var t = new FollowTracker(Config());
         var s = Assert.IsType<FollowUpdate.Show>(t.Update(Win(7, "alpha-ai.exe", new Rect(100, 100, 800, 600))));
         Assert.Equal(
-            "{\"type\":\"geometry\",\"app\":\"alpha\",\"frame\":{\"x\":100,\"y\":100,\"w\":800,\"h\":600}," +
-            "\"bubble\":{\"x\":840,\"y\":640,\"w\":44,\"h\":44},\"scale\":1}",
+            "{\"v\":1,\"type\":\"geometry\",\"app\":\"alpha\",\"window\":{\"x\":100,\"y\":100,\"w\":800,\"h\":600}," +
+            "\"dot\":{\"x\":840,\"y\":640,\"w\":44,\"h\":44},\"scale\":1," +
+            "\"px\":{\"window\":{\"x\":100,\"y\":100,\"w\":800,\"h\":600},\"dot\":{\"x\":840,\"y\":640,\"w\":44,\"h\":44}}}",
             s.ToLine());
+    }
+
+    [Fact]
+    public void Geometry_on_150_percent_monitor_reports_logical_and_physical()
+    {
+        var t = new FollowTracker(Config());
+        var s = Assert.IsType<FollowUpdate.Show>(t.Update(Win(7, "alpha-ai.exe", new Rect(300, 150, 1500, 900), scale: 1.5,
+            work: new Rect(0, 0, 2880, 1800))));
+        Assert.Contains("\"window\":{\"x\":200,\"y\":100,\"w\":1000,\"h\":600}", s.ToLine());
+        Assert.Contains("\"px\":{\"window\":{\"x\":300,\"y\":150,\"w\":1500,\"h\":900}", s.ToLine());
+    }
+
+    [Theory]
+    [InlineData("not_target", "not-target")]
+    [InlineData("off", "disabled")]
+    [InlineData("app_off", "disabled")]
+    [InlineData("minimized", "no-window")]
+    [InlineData("too_small", "no-window")]
+    public void Hidden_reason_uses_shared_wire_names(string detail, string wire)
+    {
+        var line = new FollowUpdate.Hide(detail, null).ToLine();
+        Assert.Contains($"\"reason\":\"{wire}\"", line);
     }
 }

@@ -18,9 +18,18 @@ public abstract record FollowUpdate
         public string ToLine() => Protocol.Geometry(App, Frame, Bubble, Scale);
     }
 
+    /// <param name="Reason">細かい理由（off / app_off / not_target / no_foreground / minimized / cloaked / too_small）。</param>
     public sealed record Hide(string Reason, string? App) : FollowUpdate
     {
-        public string ToLine() => Protocol.Hidden(Reason, App);
+        /// <summary>約束の reason（not-target / disabled / no-window）に寄せ、細かい理由は detail に入れる。</summary>
+        public string WireReason => Reason switch
+        {
+            "not_target" => "not-target",
+            "off" or "app_off" => "disabled",
+            _ => "no-window",
+        };
+
+        public string ToLine() => Protocol.Hidden(WireReason, Reason.Replace('_', '-'), App);
     }
 }
 

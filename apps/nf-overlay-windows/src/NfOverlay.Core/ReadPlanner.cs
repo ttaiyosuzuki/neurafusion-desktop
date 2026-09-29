@@ -8,20 +8,27 @@ public interface IAnswerReader
     Task<string?> ReadAsync(long window, CancellationToken ct);
 }
 
+/// <summary>画面を撮る前に、毎回本人に聞く（§8-3）。true なら撮ってよい。</summary>
+public delegate Task<bool> AskOcrConsent(string app, CancellationToken ct);
+
 public sealed record ReadAttempt(ReadMethod Method, bool Ok, int Chars, string? Reason);
 
-/// <summary>1回押したときの結果。Text はパネルに渡す分だけで、標準出力・ログには出さない。</summary>
-public sealed record ReadOutcome(string App, string? Text, IReadOnlyList<ReadAttempt> Attempts)
+/// <summary>押した1回の結果。</summary>
+public sealed record ReadOutcome(string App, string? Text, IReadOnlyList<ReadAttempt> Attempts, string? Reason, bool Allowed = true)
 {
     public bool Ok => Text is not null;
 
-    /// <summary>標準出力へ出す行（文字数だけ）。</summary>
-    public IEnumerable<string> ProtocolLines() =>
-        Attempts.Select(a => Protocol.Read(App, a.Method, a.Ok, a.Chars, a.Reason));
+    /// <summary>読めた方法。読めなかったとき（両方失敗・同意なし・オフ）は "none"。各回の中身は Attempts。</summary>
+    public string Method => Attempts.FirstOrDefault(a => a.Ok)?.Method.Wire() ?? "none";
+
+    /// <summary>標準出力へ出す1行。門を通らなかった（押していない）ときは出さない。</summary>
+    public string? ProtocolLine() =>
+        Allowed ? Protocol.Read(App, Method, Ok, Text?.Length ?? 0, Ok ? null : Reason, Text, Attempts) : null;
 }
 
 /// <summary>
-/// 押した1回の読み取りの手順: 門を通す → 記録から最初の方法を決める → 読めなければもう片方 → 記録する。
+/// 押した1回の読み取りの手順: 門を通す → 記録から最初の方法を決める → 読めなければもう片方（OCR は毎回同意を取る）→ 記録する。
+/// 記録（ReadLog）には数だけを残す。同意を断られた・読み取りがオフのときは「読めない」とは記録しない。
 /// </summary>
 public sealed class ReadPlanner
 {
@@ -36,41 +43,59 @@ public sealed class ReadPlanner
 
     public async Task<ReadOutcome> RunAsync(
         ReadTicket? ticket, long window, OverlayConfig config,
-        IAnswerReader uia, IAnswerReader? ocr, CancellationToken ct)
+        IAnswerReader uia, IAnswerReader? ocr, AskOcrConsent? askConsent, CancellationToken ct)
     {
-        var app = ticket?.App ?? "";
+        var appId = ticket?.App ?? "";
         if (!_gate.TryConsume(ticket, window, _now()))
-            return new ReadOutcome(app, null, Array.Empty<ReadAttempt>());
+            return new ReadOutcome(appId, null, Array.Empty<ReadAttempt>(), null, Allowed: false);
 
-        var order = _log.Preferred(app) == ReadMethod.Ocr
-            ? new[] { ReadMethod.Ocr, ReadMethod.Uia }
+        var mode = config.Apps.FirstOrDefault(a => a.Id == appId)?.Read ?? ReadMode.UiaThenOcr;
+        if (mode == ReadMode.Off)
+            return new ReadOutcome(appId, null, Array.Empty<ReadAttempt>(), ReadReason.ReadOff);
+
+        var order = mode == ReadMode.UiaOnly ? new[] { ReadMethod.Uia }
+            : _log.Preferred(appId) == ReadMethod.Ocr ? new[] { ReadMethod.Ocr, ReadMethod.Uia }
             : new[] { ReadMethod.Uia, ReadMethod.Ocr };
 
         var attempts = new List<ReadAttempt>();
+        string? lastReason = null;
         foreach (var method in order)
         {
             var reader = method == ReadMethod.Uia ? uia : ocr;
-            if (reader is null || (method == ReadMethod.Ocr && !config.Ocr)) continue;
+            if (reader is null) continue;
 
-            string? text = null; string? reason = null;
+            if (method == ReadMethod.Ocr && config.OcrAskEachTime)
+            {
+                var yes = askConsent is not null && await askConsent(appId, ct).ConfigureAwait(false);
+                if (!yes)
+                {
+                    lastReason = ReadReason.ConsentDeclined;
+                    continue;
+                }
+            }
+
+            string? text = null; var failed = false;
             try
             {
                 text = await reader.ReadAsync(window, ct).ConfigureAwait(false);
             }
             catch (OperationCanceledException) when (ct.IsCancellationRequested) { throw; }
-            catch (Exception ex)
+            catch (Exception)
             {
-                // 例外のメッセージは他のアプリの文字を含みうるので、型名だけを残す。
-                reason = ex.GetType().Name;
+                // 例外のメッセージは他のアプリの文字を含みうるので、残さない。
+                failed = true;
             }
 
             var trimmed = text?.Trim() ?? "";
-            var ok = trimmed.Length >= config.MinChars;
-            if (!ok && reason is null) reason = trimmed.Length == 0 ? "empty" : "too_short";
-            attempts.Add(new ReadAttempt(method, ok, trimmed.Length, ok ? null : reason));
-            _log.Record(app, method, ok, _now());
-            if (ok) return new ReadOutcome(app, trimmed, attempts);
+            var ok = !failed && trimmed.Length >= config.MinChars;
+            string? reason = ok ? null
+                : method == ReadMethod.Uia ? (failed ? ReadReason.UiaError : ReadReason.UiaEmpty)
+                : (failed ? ReadReason.OcrError : ReadReason.OcrEmpty);
+            attempts.Add(new ReadAttempt(method, ok, trimmed.Length, reason));
+            _log.Record(appId, method, ok, _now());
+            if (ok) return new ReadOutcome(appId, trimmed, attempts, null);
+            lastReason = reason;
         }
-        return new ReadOutcome(app, null, attempts);
+        return new ReadOutcome(appId, null, attempts, lastReason);
     }
 }

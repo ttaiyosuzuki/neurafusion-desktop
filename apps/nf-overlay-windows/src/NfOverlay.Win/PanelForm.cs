@@ -36,6 +36,15 @@ internal sealed class PanelForm : Form
         Controls.Add(_web);
     }
 
+    /// <summary>開いた（true）・閉じた（false）。Node へ panel の行を出すのに使う。</summary>
+    public event Action<bool>? OpenChanged;
+
+    protected override void OnVisibleChanged(EventArgs e)
+    {
+        base.OnVisibleChanged(e);
+        OpenChanged?.Invoke(Visible);
+    }
+
     protected override void OnFormClosing(FormClosingEventArgs e)
     {
         // 閉じるボタンでは隠すだけ（次に押したとき速く開く）。
@@ -48,10 +57,14 @@ internal sealed class PanelForm : Form
         base.OnFormClosing(e);
     }
 
-    public void Configure(string? panelUrl)
+    public PanelMode Mode { get; private set; } = PanelMode.Disconnected;
+
+    public void Configure(PanelMode mode, string? panelUrl)
     {
-        if (_panelUrl == panelUrl) return;
-        _panelUrl = panelUrl;
+        var url = mode == PanelMode.Url ? panelUrl : null;
+        Mode = url is null ? PanelMode.Disconnected : PanelMode.Url;
+        if (_panelUrl == url && _web.CoreWebView2 is not null) return;
+        _panelUrl = url;
         if (_web.CoreWebView2 is not null) Navigate();
     }
 
@@ -70,16 +83,13 @@ internal sealed class PanelForm : Form
         Post(new { type = "nf-overlay-status", state = "reading" });
     }
 
-    /// <summary>読み取りの結果をパネルに渡す。未接続の表示のときは渡さない。</summary>
-    public void Deliver(ReadOutcome outcome, ReadMethod? method)
-    {
-        if (outcome.Text is null)
-        {
-            Post(new { type = "nf-overlay-status", state = "unreadable", app = outcome.App });
-            return;
-        }
-        Post(new { type = "nf-overlay-read", app = outcome.App, method = method?.Wire(), text = outcome.Text });
-    }
+    /// <summary>読み取りの結果（文字数と方法だけ）をパネルに知らせる。</summary>
+    public void Status(ReadOutcome outcome) =>
+        Post(new { type = "nf-overlay-status", state = outcome.Ok ? "read" : "unreadable", app = outcome.App,
+            method = outcome.Method, chars = outcome.Text?.Length ?? 0, reason = outcome.Reason });
+
+    /// <summary>Node が PII を除いて返した本文（panel-text）。未接続の表示のときは渡さない。</summary>
+    public void ShowText(string text) => Post(new { type = "nf-overlay-text", text });
 
     private Task EnsureReady() => _init ??= InitAsync();
 

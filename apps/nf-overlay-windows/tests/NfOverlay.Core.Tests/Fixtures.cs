@@ -9,15 +9,25 @@ internal static class Fixtures
 {
     public static readonly Rect Screen = new(0, 0, 1920, 1040); // 1920x1080 からタスクバー 40px を除いた作業領域
 
-    public static OverlayConfig Config(bool enabled = true, bool alphaOn = true, bool betaOn = true, bool ocr = true) =>
+    public static OverlayConfig Config(bool enabled = true, bool alphaOn = true, bool betaOn = true,
+        ReadMode alphaRead = ReadMode.UiaThenOcr) =>
         new(enabled,
             new[]
             {
-                new OverlayApp("alpha", "Alpha AI", new[] { "alpha-ai.exe" }, alphaOn),
+                new OverlayApp("alpha", "Alpha AI", new[] { "alpha-ai.exe" }, alphaOn, alphaRead),
                 new OverlayApp("beta", "Beta AI", new[] { "Beta.exe", "beta-canary.exe" }, betaOn),
             },
             "https://example.invalid/panel",
-            BubbleSize: 44, Margin: 16, Ocr: ocr);
+            BubbleSize: 44, Margin: 16, PanelMode: PanelMode.Url);
+
+    /// <summary>OCR の同意の小窓の代わり。聞かれた回数を数える。</summary>
+    public sealed class FakeConsent
+    {
+        public FakeConsent(bool answer) { Answer = answer; }
+        public bool Answer { get; }
+        public int Asked { get; private set; }
+        public Task<bool> Ask(string app, CancellationToken ct) { Asked++; return Task.FromResult(Answer); }
+    }
 
     public static WindowState Win(long hwnd, string exe, Rect frame, double scale = 1.0,
         bool minimized = false, bool own = false, Rect? work = null) =>

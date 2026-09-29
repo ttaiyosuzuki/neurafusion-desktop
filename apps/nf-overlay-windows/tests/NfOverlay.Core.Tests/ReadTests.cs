@@ -4,7 +4,7 @@ using static NfOverlay.Core.Tests.Fixtures;
 
 namespace NfOverlay.Core.Tests;
 
-/// <summary>TS-38（Windows 分）: 押すまで読まない。「読めた・読めない」の記録が出る。</summary>
+/// <summary>TS-38（Windows 分）: 押すまで読まない。OCR は毎回同意を取る。「読めた・読めない」の記録が出る。</summary>
 public class ReadTests
 {
     private static readonly DateTimeOffset T0 = new(2026, 9, 29, 7, 0, 0, TimeSpan.Zero);
@@ -16,16 +16,21 @@ public class ReadTests
         return (gate, log, new ReadPlanner(gate, log, now ?? (() => T0)), new AppMatcher(Config()));
     }
 
+    private static readonly AskOcrConsent Yes = (_, _) => Task.FromResult(true);
+
     [Fact]
     public async Task Nothing_is_read_without_a_click()
     {
         var (_, log, planner, _) = Setup();
         var uia = new FakeReader(ReadMethod.Uia, "answer");
         var ocr = new FakeReader(ReadMethod.Ocr, "answer");
-        var r = await planner.RunAsync(null, 7, Config(), uia, ocr, default);
+        var consent = new FakeConsent(true);
+        var r = await planner.RunAsync(null, 7, Config(), uia, ocr, consent.Ask, default);
         Assert.False(r.Ok);
+        Assert.Null(r.ProtocolLine());
         Assert.Empty(uia.Calls);
         Assert.Empty(ocr.Calls);
+        Assert.Equal(0, consent.Asked);
         Assert.Empty(log.Snapshot());
     }
 
@@ -35,8 +40,8 @@ public class ReadTests
         var (gate, _, planner, m) = Setup();
         var uia = new FakeReader(ReadMethod.Uia, "the answer text");
         var ticket = gate.OnClick(m.Match("alpha-ai.exe"), 7, T0);
-        var r1 = await planner.RunAsync(ticket, 7, Config(), uia, null, default);
-        var r2 = await planner.RunAsync(ticket, 7, Config(), uia, null, default);
+        var r1 = await planner.RunAsync(ticket, 7, Config(), uia, null, Yes, default);
+        var r2 = await planner.RunAsync(ticket, 7, Config(), uia, null, Yes, default);
         Assert.True(r1.Ok);
         Assert.Equal("the answer text", r1.Text);
         Assert.False(r2.Ok);
@@ -60,11 +65,11 @@ public class ReadTests
         var uia = new FakeReader(ReadMethod.Uia, "x");
 
         var t1 = gate.OnClick(m.Match("alpha-ai.exe"), 7, T0);
-        Assert.False((await planner.RunAsync(t1, 8, Config(), uia, null, default)).Ok);
+        Assert.False((await planner.RunAsync(t1, 8, Config(), uia, null, Yes, default)).Ok);
 
         var t2 = gate.OnClick(m.Match("alpha-ai.exe"), 7, T0);
         now = T0 + ReadGate.Lifetime + TimeSpan.FromSeconds(1);
-        Assert.False((await planner.RunAsync(t2, 7, Config(), uia, null, default)).Ok);
+        Assert.False((await planner.RunAsync(t2, 7, Config(), uia, null, Yes, default)).Ok);
         Assert.Empty(uia.Calls);
     }
 
@@ -75,23 +80,54 @@ public class ReadTests
         var uia = new FakeReader(ReadMethod.Uia, "x");
         var old = gate.OnClick(m.Match("alpha-ai.exe"), 7, T0);
         var fresh = gate.OnClick(m.Match("alpha-ai.exe"), 7, T0);
-        Assert.False((await planner.RunAsync(old, 7, Config(), uia, null, default)).Ok);
-        Assert.True((await planner.RunAsync(fresh, 7, Config(), uia, null, default)).Ok);
+        Assert.False((await planner.RunAsync(old, 7, Config(), uia, null, Yes, default)).Ok);
+        Assert.True((await planner.RunAsync(fresh, 7, Config(), uia, null, Yes, default)).Ok);
     }
 
     [Fact]
-    public async Task Falls_back_to_ocr_when_uia_reads_nothing_and_records_both()
+    public async Task Falls_back_to_ocr_after_asking_consent_and_records_both()
     {
         var (gate, log, planner, m) = Setup();
         var uia = new FakeReader(ReadMethod.Uia, "   ");
         var ocr = new FakeReader(ReadMethod.Ocr, "ocr text");
-        var r = await planner.RunAsync(gate.OnClick(m.Match("alpha-ai.exe"), 7, T0), 7, Config(), uia, ocr, default);
+        var consent = new FakeConsent(true);
+        var r = await planner.RunAsync(gate.OnClick(m.Match("alpha-ai.exe"), 7, T0), 7, Config(), uia, ocr, consent.Ask, default);
 
         Assert.Equal("ocr text", r.Text);
+        Assert.Equal(1, consent.Asked);
         Assert.Equal(new[] { ReadMethod.Uia, ReadMethod.Ocr }, r.Attempts.Select(a => a.Method));
+        Assert.Equal("uia-empty", r.Attempts[0].Reason);
         var s = log.Get("alpha");
         Assert.Equal((0, 1, 1, 0), (s.UiaOk, s.UiaNg, s.OcrOk, s.OcrNg));
         Assert.Equal("ocr", s.Status);
+    }
+
+    [Fact]
+    public async Task Declined_consent_means_no_capture_and_no_unreadable_mark_for_ocr()
+    {
+        var (gate, log, planner, m) = Setup();
+        var uia = new FakeReader(ReadMethod.Uia, null);
+        var ocr = new FakeReader(ReadMethod.Ocr, "ocr text");
+        var consent = new FakeConsent(false);
+        var r = await planner.RunAsync(gate.OnClick(m.Match("alpha-ai.exe"), 7, T0), 7, Config(), uia, ocr, consent.Ask, default);
+
+        Assert.False(r.Ok);
+        Assert.Empty(ocr.Calls);
+        Assert.Equal("consent-declined", r.Reason);
+        Assert.Equal("none", r.Method);
+        Assert.Equal(0, log.Get("alpha").OcrNg);
+        Assert.Contains("\"reason\":\"consent-declined\"", r.ProtocolLine());
+    }
+
+    [Fact]
+    public async Task No_consent_callback_means_no_capture()
+    {
+        var (gate, _, planner, m) = Setup();
+        var ocr = new FakeReader(ReadMethod.Ocr, "ocr text");
+        var r = await planner.RunAsync(gate.OnClick(m.Match("alpha-ai.exe"), 7, T0), 7, Config(),
+            new FakeReader(ReadMethod.Uia, null), ocr, null, default);
+        Assert.False(r.Ok);
+        Assert.Empty(ocr.Calls);
     }
 
     [Fact]
@@ -102,22 +138,37 @@ public class ReadTests
         log.Record("alpha", ReadMethod.Ocr, true, T0);
         var uia = new FakeReader(ReadMethod.Uia, "uia text");
         var ocr = new FakeReader(ReadMethod.Ocr, "ocr text");
-        var r = await planner.RunAsync(gate.OnClick(m.Match("alpha-ai.exe"), 7, T0), 7, Config(), uia, ocr, default);
+        var r = await planner.RunAsync(gate.OnClick(m.Match("alpha-ai.exe"), 7, T0), 7, Config(), uia, ocr, Yes, default);
         Assert.Equal("ocr text", r.Text);
         Assert.Empty(uia.Calls);
     }
 
     [Fact]
-    public async Task Ocr_off_in_config_is_never_called()
+    public async Task Uia_only_app_never_captures()
     {
-        var (gate, log, planner, m) = Setup();
+        var (gate, log, planner, _) = Setup();
+        var cfg = Config(alphaRead: ReadMode.UiaOnly);
         var uia = new FakeReader(ReadMethod.Uia, null);
         var ocr = new FakeReader(ReadMethod.Ocr, "ocr text");
-        var cfg = Config(ocr: false);
-        var r = await planner.RunAsync(gate.OnClick(new AppMatcher(cfg).Match("alpha-ai.exe"), 7, T0), 7, cfg, uia, ocr, default);
+        var consent = new FakeConsent(true);
+        var r = await planner.RunAsync(gate.OnClick(new AppMatcher(cfg).Match("alpha-ai.exe"), 7, T0), 7, cfg, uia, ocr, consent.Ask, default);
         Assert.False(r.Ok);
         Assert.Empty(ocr.Calls);
+        Assert.Equal(0, consent.Asked);
         Assert.Equal("unreadable", log.Get("alpha").Status);
+    }
+
+    [Fact]
+    public async Task Read_off_app_reads_nothing_but_reports_read_off()
+    {
+        var (gate, log, planner, _) = Setup();
+        var cfg = Config(alphaRead: ReadMode.Off);
+        var uia = new FakeReader(ReadMethod.Uia, "x");
+        var r = await planner.RunAsync(gate.OnClick(new AppMatcher(cfg).Match("alpha-ai.exe"), 7, T0), 7, cfg, uia, null, Yes, default);
+        Assert.Empty(uia.Calls);
+        Assert.Equal("{\"v\":1,\"type\":\"read\",\"app\":\"alpha\",\"method\":\"none\",\"ok\":false,\"chars\":0,\"reason\":\"read-off\"}",
+            r.ProtocolLine());
+        Assert.Empty(log.Snapshot());
     }
 
     [Fact]
@@ -125,22 +176,26 @@ public class ReadTests
     {
         var (gate, log, planner, m) = Setup();
         var uia = new FakeReader(ReadMethod.Uia, null) { Throw = new InvalidOperationException("secret words") };
-        var r = await planner.RunAsync(gate.OnClick(m.Match("alpha-ai.exe"), 7, T0), 7, Config(ocr: false), uia, null, default);
+        var cfg = Config(alphaRead: ReadMode.UiaOnly);
+        var r = await planner.RunAsync(gate.OnClick(m.Match("alpha-ai.exe"), 7, T0), 7, cfg, uia, null, Yes, default);
         var a = Assert.Single(r.Attempts);
-        Assert.Equal("InvalidOperationException", a.Reason);
-        Assert.DoesNotContain("secret", string.Concat(r.ProtocolLines()));
+        Assert.Equal("uia-error", a.Reason);
+        Assert.DoesNotContain("secret", r.ProtocolLine());
         Assert.Equal(1, log.Get("alpha").UiaNg);
     }
 
     [Fact]
-    public async Task Read_lines_carry_char_count_but_not_text()
+    public async Task Read_line_carries_text_only_when_ok_and_log_never_has_text()
     {
-        var (gate, _, planner, m) = Setup();
-        var uia = new FakeReader(ReadMethod.Uia, "private answer 123");
-        var r = await planner.RunAsync(gate.OnClick(m.Match("alpha-ai.exe"), 7, T0), 7, Config(), uia, null, default);
-        var line = Assert.Single(r.ProtocolLines());
-        Assert.Equal("{\"type\":\"read\",\"app\":\"alpha\",\"method\":\"uia\",\"ok\":true,\"chars\":18}", line);
-        Assert.DoesNotContain("private", line);
+        var (gate, log, planner, m) = Setup();
+        var uia = new FakeReader(ReadMethod.Uia, "日本語の答え\n2行目");
+        var r = await planner.RunAsync(gate.OnClick(m.Match("alpha-ai.exe"), 7, T0), 7, Config(), uia, null, Yes, default);
+        Assert.Equal(
+            "{\"v\":1,\"type\":\"read\",\"app\":\"alpha\",\"method\":\"uia\",\"ok\":true,\"chars\":10," +
+            "\"attempts\":[{\"method\":\"uia\",\"ok\":true,\"chars\":10}],\"text\":\"日本語の答え\\n2行目\"}",
+            r.ProtocolLine());
+        Assert.DoesNotContain("日本語", log.ToJson());
+        Assert.DoesNotContain("日本語", Protocol.ReadLogLine(log));
     }
 
     [Fact]
@@ -155,7 +210,7 @@ public class ReadTests
         Assert.Equal("unreadable", back.Get("beta").Status);
         Assert.Equal("untested", back.Get("gamma").Status);
         Assert.Equal(ReadMethod.Ocr, back.Get("beta").LastMethod);
-        Assert.Contains("\"type\":\"readLog\"", Protocol.ReadLogLine(back));
+        Assert.Contains("\"type\":\"read-log\"", Protocol.ReadLogLine(back));
     }
 
     [Fact]
