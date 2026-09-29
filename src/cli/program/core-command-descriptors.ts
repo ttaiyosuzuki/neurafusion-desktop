@@ -12,7 +12,7 @@ type CoreCliCommandDescriptor = NamedCommandDescriptor;
 export const CORE_CLI_COMMAND_DESCRIPTORS = [
   {
     name: "setup",
-    description: "Chat with OpenClaw; onboard when setup is incomplete",
+    description: "Chat with NeuraFusion; onboard when setup is incomplete",
     hasSubcommands: false,
   },
   {
@@ -106,7 +106,7 @@ export const CORE_CLI_COMMAND_DESCRIPTORS = [
   },
   {
     name: "mcp",
-    description: "Manage OpenClaw mcp.servers config and channel bridge",
+    description: "Manage NeuraFusion mcp.servers config and channel bridge",
     hasSubcommands: true,
     parentDefaultHelp: true,
   },

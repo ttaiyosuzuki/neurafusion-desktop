@@ -48,7 +48,7 @@ function collectOption(value: string, previous: string[] | undefined): string[] 
 export function registerProxyCli(program: Command) {
   const proxy = program
     .command("proxy")
-    .description("Run the OpenClaw debug proxy and inspect captured traffic");
+    .description("Run the NeuraFusion debug proxy and inspect captured traffic");
   setCommandJsonMode(proxy, "output", ({ argv }) => isProxyMachineOutput(argv));
 
   proxy

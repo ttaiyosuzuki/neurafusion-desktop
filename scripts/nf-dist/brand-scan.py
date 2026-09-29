@@ -5,8 +5,13 @@
 #   python3 scripts/nf-dist/brand-scan.py <ファイル>...          # UTF-8（ASCII を含む）と UTF-16LE（Windows の版情報など）で探す
 #   python3 scripts/nf-dist/brand-scan.py --nsis <Setup.exe>     # NSIS の圧縮された見出し（画面の文言・「アプリと機能」の
 #                                                               # 表示名と発行元・ショートカット名）を展開して探す
+#   python3 scripts/nf-dist/brand-scan.py --allow <許可リスト.json> <ファイル>...
+#                                                               # UTF-8 の文字として読み、許可リストの名前（理由つき。
+#                                                               # brand-allow-help.json）を除いてから探す（CLI の --help 用）
 #
-# 見つからなければ何も出さず 0。見つかれば「件数 ファイル: 最初の行」を出して 1。読めなければ 2。
+# 見つからなければ何も出さず 0（--allow のときは「許可 N 件（名前 件数・…）」を出す）。見つかれば「件数 ファイル: 最初の行」を
+# 出して 1。読めない・許可リストに理由の無い項目があるときは 2。
+import json
 import lzma
 import re
 import struct
@@ -56,14 +61,45 @@ def nsis_header_text(data: bytes) -> str:
     return out[4 : 4 + min(n, header_len)].decode("utf-16-le", errors="replace")
 
 
-def hit_lines(data: bytes, nsis: bool):
+def load_allow(path: str) -> list:
+    """許可リストを読む。name・pattern・reason のどれかが空の項目があれば ValueError（理由の無い許可を入れさせない）。"""
+    with open(path, encoding="utf-8") as f:
+        items = json.load(f)["allow"]
+    allow = []
+    for i, item in enumerate(items, 1):
+        if not all(str(item.get(k, "")).strip() for k in ("name", "pattern", "reason")):
+            raise ValueError(f"許可リストの {i} 番目に name・pattern・reason のどれかが無い")
+        allow.append((item["name"], re.compile(item["pattern"])))
+    return allow
+
+
+def mask_allowed(text: str, allow: list, counts: dict) -> str:
+    """許可した名前を同じ長さの空白に置き換え、名前ごとの件数を counts に足す（行の位置は変えない）。"""
+    for name, pat in allow:
+
+        def blank(m: "re.Match[str]", name: str = name) -> str:
+            counts[name] = counts.get(name, 0) + 1
+            return " " * len(m.group(0))
+
+        text = pat.sub(blank, text)
+    return text
+
+
+def text_hits(text: str, allow: list, counts: dict):
+    """文字として探す。見つかった所の 1 行（120 文字まで。許可した名前も含めて元のまま）を返す。"""
+    for m in PATTERN.finditer(mask_allowed(text, allow, counts)):
+        start = text.rfind("\n", 0, m.start()) + 1
+        end = text.find("\n", m.end())
+        yield text[start : end if end >= 0 else len(text)].strip()[:120]
+
+
+def hit_lines(data: bytes, nsis: bool, allow: list, counts: dict):
     """見つかった所の前後の 1 行（120 文字まで）を返す。"""
     if nsis:
-        text = nsis_header_text(data)
-        for m in PATTERN.finditer(text):
-            start = text.rfind("\n", 0, m.start()) + 1
-            end = text.find("\n", m.end())
-            yield text[start : end if end >= 0 else len(text)].strip()[:120]
+        yield from text_hits(nsis_header_text(data), allow, counts)
+        return
+    if allow:
+        yield from text_hits(data.decode("utf-8", errors="replace"), allow, counts)
         return
     for enc, pat in BYTE_PATTERNS:
         nl = "\n".encode(enc)
@@ -79,24 +115,35 @@ def hit_lines(data: bytes, nsis: bool):
 
 
 def main(argv: list) -> int:
-    nsis = False
+    nsis, allow_path = False, None
     if argv and argv[0] == "--nsis":
         nsis, argv = True, argv[1:]
+    elif len(argv) >= 2 and argv[0] == "--allow":
+        allow_path, argv = argv[1], argv[2:]
     if not argv:
-        print("使い方: brand-scan.py [--nsis] <ファイル>...", file=sys.stderr)
+        print("使い方: brand-scan.py [--nsis | --allow <許可リスト.json>] <ファイル>...", file=sys.stderr)
         return 2
-    found = 0
+    try:
+        allow = load_allow(allow_path) if allow_path else []
+    except (OSError, ValueError, KeyError, TypeError, re.error) as e:
+        print(f"許可リストを読めない {allow_path}: {e}")
+        return 2
+    found, counts = 0, {}
     for path in argv:
         try:
             with open(path, "rb") as f:
-                hits = list(hit_lines(f.read(), nsis))
+                hits = list(hit_lines(f.read(), nsis, allow, counts))
         except (OSError, ValueError, lzma.LZMAError, struct.error) as e:
             print(f"読めない {path}: {e}")
             return 2
         if hits:
             found += len(hits)
             print(f"{len(hits)} {path}: {hits[0]}")
-    return 1 if found else 0
+    if found:
+        return 1
+    if allow_path:
+        print(f"許可 {sum(counts.values())} 件（" + "・".join(f"{k} {v}" for k, v in counts.items()) + "）")
+    return 0
 
 
 if __name__ == "__main__":

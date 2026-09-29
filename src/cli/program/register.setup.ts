@@ -101,7 +101,7 @@ function addSystemAgentOptions(command: Command): Command {
 export function registerSetupCommand(program: Command): void {
   const command = program
     .command("setup")
-    .description("Chat with OpenClaw; onboard when setup is incomplete")
+    .description("Chat with NeuraFusion; onboard when setup is incomplete")
     .addHelpText(
       "after",
       () =>

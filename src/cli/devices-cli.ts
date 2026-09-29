@@ -29,7 +29,7 @@ export function registerDevicesCli(program: Command) {
   const devices = program
     .command("devices")
     .description(
-      "Device pairing and auth tokens (for mobile app setup codes, use `openclaw qr` instead)",
+      "Device pairing and auth tokens (for mobile app setup codes, use `neurafusion qr` instead)",
     );
 
   devicesCallOpts(

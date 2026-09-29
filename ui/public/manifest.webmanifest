@@ -1,6 +1,6 @@
 {
-  "name": "OpenClaw Control",
-  "short_name": "OpenClaw",
+  "name": "NeuraFusion Control",
+  "short_name": "NeuraFusion",
   "description": "Multi-channel AI gateway control panel",
   "start_url": "./",
   "display": "standalone",

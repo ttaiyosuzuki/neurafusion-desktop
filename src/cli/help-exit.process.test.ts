@@ -204,7 +204,7 @@ describe("CLI help process exit", () => {
     });
 
     expect(result.stderr).toBe("");
-    expect(result.stdout).toContain("Usage: openclaw [options] [command]");
+    expect(result.stdout).toContain("Usage: neurafusion [options] [command]");
     expect(() => parseJsonLines(result.stdout)).toThrow();
   });
 

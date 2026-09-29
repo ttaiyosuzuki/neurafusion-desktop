@@ -1356,7 +1356,7 @@ describe("devices cli help", () => {
     const devices = program.commands.find((cmd) => cmd.name() === "devices");
     const joinCode = devices?.commands.find((cmd) => cmd.name() === "join-code");
 
-    expect(devices?.description()).toContain("openclaw qr");
+    expect(devices?.description()).toContain("neurafusion qr");
     expect(joinCode?.description()).toContain("openclaw qr");
   });
 });

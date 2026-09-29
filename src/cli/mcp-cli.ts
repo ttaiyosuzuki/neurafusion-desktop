@@ -654,7 +654,7 @@ const OPENCLAW_MCP_REGISTRY_SCOPE_NOTE =
 export function registerMcpCli(program: Command) {
   const mcp = program
     .command("mcp")
-    .description("Manage OpenClaw mcp.servers config and channel bridge");
+    .description("Manage NeuraFusion mcp.servers config and channel bridge");
 
   mcp
     .command("serve")

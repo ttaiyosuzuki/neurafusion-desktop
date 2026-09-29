@@ -1,0 +1,25 @@
+{
+  "note": "CLI の --help で許す上流の名前（機能上の名前・上流の外部サービス）。brand-scan.py --allow と src/cli/program/root-help.brand.test.ts が読む。1 項目ごとに理由を書く（理由の無い項目があると検査は 2 で止まる）。製品名としての OpenClaw・例のコマンド名・ロブスターはここに足さない。",
+  "allow": [
+    {
+      "name": "環境変数 OPENCLAW_*",
+      "pattern": "\\bOPENCLAW_[A-Z0-9_]+\\b",
+      "reason": "環境変数の名前は機能上の名前。変えると今の設定・スクリプトが効かなくなる"
+    },
+    {
+      "name": "設定の置き場 ~/.openclaw",
+      "pattern": "~/\\.openclaw(?:-[A-Za-z0-9_<>-]+)?",
+      "reason": "設定・状態の置き場（--dev・--profile の置き場を含む）は機能上の名前。変えると今の設定が読まれなくなる"
+    },
+    {
+      "name": "ClawHub",
+      "pattern": "\\bClawHub\\b",
+      "reason": "上流の外部サービス（スキル・プラグイン・提供の置き場）の名前。NeuraFusion の物と書くと事実と違う"
+    },
+    {
+      "name": "文書のサイト docs.openclaw.ai",
+      "pattern": "\\bdocs\\.openclaw\\.ai(?:/[A-Za-z0-9/_.#-]*)?",
+      "reason": "上流の外部サービス（文書のサイト）の URL。NeuraFusion の文書のサイトはまだ無い"
+    }
+  ]
+}
