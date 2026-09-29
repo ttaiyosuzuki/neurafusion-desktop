@@ -1,8 +1,8 @@
 // NF 右下の丸 — 押したときの読み取りの段取り（DK-02）と「読めた・読めない」の記録。
 // AX → （読めなければ）その都度の同意 → そのウィンドウだけを撮って Vision で端末内の文字認識。
 
-
 import Foundation
+
 public let overlayTextLimit = 16000 // 拡張・src/kensan と同じ上限
 
 public struct AxOutcome: Equatable, Sendable {
