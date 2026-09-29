@@ -286,6 +286,13 @@ describe("Linux（dk-linux・DK-08）の行を受ける", () => {
     expect(off.apps[0]!.enabled).toBe(false);
   });
 
+  it("既定の一覧では、Linux で確かめた Cursor（WM_CLASS cursor）だけが config に載る", () => {
+    const c = buildConfigMessage(settings(), "linux");
+    expect(c.apps.map((a) => a.id)).toEqual(["cursor"]);
+    expect(c.apps[0]).toMatchObject({ linux: ["cursor"], enabled: true });
+    expect(findOverlayApp("cursor")?.source.linux).toContain("xprop WM_CLASS");
+  });
+
   it("ready の session・Wayland の固定の geometry・atspi の read を読み、本文は記録に残さない", async () => {
     const child = fakeChild();
     const written: string[] = [];

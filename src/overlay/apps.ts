@@ -26,6 +26,7 @@ export type OverlayAppDef = {
 };
 
 const MAC_MEASURED = "2026-09-29 dk-mac が開発機（macOS 26.6.2）の /Applications で defaults read した値";
+const LINUX_MEASURED = "2026-09-29 dk-linux が VM（Ubuntu 24.04.4・GNOME 46 の Ubuntu on Xorg）で xprop WM_CLASS を読んだ値";
 
 export const OVERLAY_APPS: readonly OverlayAppDef[] = [
   {
@@ -56,8 +57,12 @@ export const OVERLAY_APPS: readonly OverlayAppDef[] = [
     tier: 1,
     mac: ["com.todesktop.230313mzl4w4u92"],
     win: [],
-    linux: [],
-    source: { mac: `${MAC_MEASURED}（Cursor.app 3.17.21）` },
+    // 実測は instance・class とも "cursor"（.desktop の StartupWMClass=Cursor とは大文字小文字が違う。比較は小文字）
+    linux: ["cursor"],
+    source: {
+      mac: `${MAC_MEASURED}（Cursor.app 3.17.21）`,
+      linux: `${LINUX_MEASURED}（Cursor-3.22.12-x86_64.AppImage）`,
+    },
     read: "ax-then-ocr",
   },
   {
