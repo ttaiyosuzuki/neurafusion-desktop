@@ -1,0 +1,5 @@
+#!/bin/sh
+# NeuraFusion.app の入口（DK-09）。同梱の Node 24 でランチャーを動かすだけ。
+R="$(cd "$(dirname "$0")/../Resources" && pwd)"
+export NF_DIST_RESOURCES="$R"
+exec "$R/node/bin/node" "$R/nf-launch.mjs" "$@"
