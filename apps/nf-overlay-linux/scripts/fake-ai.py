@@ -32,7 +32,7 @@ INPUT_SECRET = "INPUT-SECRET-入力中の下書き"
 
 GLib.set_prgname("nf-fake-ai-noa11y" if NO_A11Y else "nf-fake-ai")
 win = Gtk.Window(title="Fake AI（NF テスト）" + ("・読めない版" if NO_A11Y else ""))
-win.set_wmclass(GLib.get_prgname(), "Nf-fake-ai")
+win.set_wmclass(GLib.get_prgname(), "Nf-fake-ai-noa11y" if NO_A11Y else "Nf-fake-ai")
 win.set_default_size(820, 560)
 box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
 for m in ("start", "end", "top", "bottom"):

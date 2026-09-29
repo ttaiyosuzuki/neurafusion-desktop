@@ -265,6 +265,15 @@ class ProtocolTests(unittest.TestCase):
         obj = cfg(apps=[{"id": "x", "label": "X", "linux": {"wmClass": ["Foo"]}, "read": "uia-then-ocr"}])
         self.assertEqual((obj.apps[0].linux, obj.apps[0].read), (("foo",), "ax-then-ocr"))
 
+    def test_instance_wins_over_class(self):
+        c = cfg(apps=[
+            {"id": "a", "label": "A", "linux": ["nf-fake-ai"]},
+            {"id": "b", "label": "B", "linux": ["nf-fake-ai-noa11y"]},
+        ])
+        self.assertEqual(c.match(("nf-fake-ai-noa11y", "Nf-fake-ai")).id, "b")
+        self.assertEqual(c.match(("other", "Nf-fake-ai")).id, "a")
+        self.assertIsNone(c.match(("", "")))
+
     def test_unknown_and_broken_lines_are_skipped(self):
         for line in ["", "not json", "[]", '{"v":1,"type":"dance"}', '{"v":2,"type":"stop"}']:
             self.assertIsNone(protocol.parse_inbound(line))

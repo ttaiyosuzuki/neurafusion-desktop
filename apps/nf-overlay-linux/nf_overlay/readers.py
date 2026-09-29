@@ -73,11 +73,15 @@ class AtspiReader:
         self._title_of = title_of
 
     def read(self, window: int) -> str | None:
+        # libatspi は既定の GLib の文脈で D-Bus の返事を受けるので、主スレッドで1回だけたどる（別スレッドだと返事待ちで数秒止まる）
+        return run_on_main(lambda: self._read_main(window), timeout=60)
+
+    def _read_main(self, window: int) -> str | None:
         gi.require_version("Atspi", "2.0")
         from gi.repository import Atspi
 
-        pid = run_on_main(lambda: self._pid_of(window))
-        title = run_on_main(lambda: self._title_of(window))
+        pid = self._pid_of(window)
+        title = self._title_of(window)
         if not pid:
             return None
         Atspi.set_timeout(1000, 10000)

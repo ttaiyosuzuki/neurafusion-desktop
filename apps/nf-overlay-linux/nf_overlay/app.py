@@ -223,8 +223,9 @@ class Overlay:
         if dot is None and self.dot.get_visible():
             x, y = self.dot.get_position()
             dot = Rect(x, y, self.dot.get_size()[0], self.dot.get_size()[1])
+        # 丸を隠さないよう、丸の上に出す（題名の帯の分 56px も空ける）
         x = (dot.right - PANEL_W) if dot else 0
-        y = (dot.y - PANEL_H - 8) if dot else 0
+        y = (dot.y - PANEL_H - 56) if dot else 0
         cfg = self.config
         self.panel.open_at(x, max(0, y), cfg.panel_mode, cfg.panel_url, status)
 

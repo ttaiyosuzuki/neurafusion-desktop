@@ -62,15 +62,19 @@ def main():
     if a.fifo:
         if not os.path.exists(a.fifo):
             os.mkfifo(a.fifo)
-        while p.poll() is None:
-            with open(a.fifo, encoding="utf-8") as f:
-                for line in f:
-                    line = line.strip()
-                    if line:
-                        try:
-                            send(json.loads(line))
-                        except (ValueError, BrokenPipeError):
-                            pass
+
+        def relay():
+            while p.poll() is None:
+                with open(a.fifo, encoding="utf-8") as f:
+                    for line in f:
+                        line = line.strip()
+                        if line:
+                            try:
+                                send(json.loads(line))
+                            except (ValueError, BrokenPipeError):
+                                pass
+
+        threading.Thread(target=relay, daemon=True).start()
     code = p.wait()
     out.write(json.dumps({"type": "_exit", "code": code, "_at": round(time.time(), 3)}) + "\n")
     out.close()
