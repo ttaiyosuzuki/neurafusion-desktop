@@ -66,6 +66,11 @@ gdbus introspect --session -d org.freedesktop.impl.portal.desktop.gnome -o /org/
 gdbus call --session --timeout 90 -d org.freedesktop.portal.Desktop -o /org/freedesktop/portal/desktop \
   -m org.freedesktop.DBus.Properties.Get org.freedesktop.portal.ScreenCast version > /dev/null 2>&1
 sleep 3
+# 画面共有の確認の「Application Window」の一覧は、.desktop に結びつく窓だけを出す（本物の AI アプリは持っている）。
+# 代わりの AI にも置く（app-id = nf-fake-ai）。窓を作る前に置く
+mkdir -p ~/.local/share/applications
+printf '[Desktop Entry]\nType=Application\nName=Fake AI（NF テスト）\nExec=/bin/true\n' > ~/.local/share/applications/nf-fake-ai.desktop
+sleep 2
 # 代わりの AI 窓はネイティブの Wayland の窓（GDK_BACKEND は既定 = wayland）
 "$HERE/fake-ai.py" > /dev/null 2>&1 &
 sleep 4

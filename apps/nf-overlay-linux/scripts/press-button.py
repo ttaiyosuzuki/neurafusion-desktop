@@ -74,20 +74,19 @@ def main():
             # 何も選び直さず、最初から選ばれているもの（GNOME の既定は画面全体）のまま Share
             return 0 if press(owner, lambda n, s: n.get_role() == Atspi.Role.PUSH_BUTTON and s in ("Share", "共有")) else 1
         title = a[2] if len(a) > 2 else ""
-        # 「Application Window」のタブへ移ってその窓を選ぶ。タブが押せなければ、出ている画面（モニター）を選ぶ
+        # 「Application Window」のタブへ移ってその窓を選ぶ。一覧に無ければ「Entire Screen」のまま共有する
+        # （画面の選択ボタンは押さない。既に選ばれているものを押すと選択が外れ、Share が効かなくなる）
         picked = False
         if title and press(owner, lambda n, s: n.get_role() == Atspi.Role.PAGE_TAB and s == "Application Window", tries=10):
             time.sleep(1)
             picked = press(owner, lambda n, s: n.get_role() == Atspi.Role.TOGGLE_BUTTON and title in s, tries=10)
         if not picked:
+            print("window not listed: sharing the entire screen")
             press(owner, lambda n, s: n.get_role() == Atspi.Role.PAGE_TAB and s == "Entire Screen", tries=4)
             time.sleep(1)
-            # 既に選ばれている（CHECKED）なら押さない（押すと選択が外れる）
-            press(owner, lambda n, s: n.get_role() == Atspi.Role.TOGGLE_BUTTON
-                  and not n.get_state_set().contains(Atspi.StateType.CHECKED), tries=4)
         time.sleep(0.5)
         ok = press(owner, lambda n, s: n.get_role() == Atspi.Role.PUSH_BUTTON and s in ("Share", "共有"))
-        return 0 if ok else 1
+        return 0 if ok and picked else (2 if ok else 1)
     label = a[0]
     return 0 if press("nf-overlay", lambda n, s: n.get_role() == Atspi.Role.PUSH_BUTTON and s == label) else 1
 
