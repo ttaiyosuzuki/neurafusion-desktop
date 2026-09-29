@@ -42,6 +42,10 @@ const coreEntrySpecs: readonly CommandGroupDescriptorSpec<[ctx: ProgramContext]>
     async (program) => (await import("./register.kensan.js")).registerKensanCommand(program),
   ],
   [
+    ["overlay"],
+    async (program) => (await import("./register.overlay.js")).registerOverlayCommand(program),
+  ],
+  [
     ["database"],
     async (program) => (await import("./register.database.js")).registerDatabaseCommand(program),
   ],

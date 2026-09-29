@@ -56,6 +56,12 @@ export const CORE_CLI_COMMAND_DESCRIPTORS = [
     hasSubcommands: true,
   },
   {
+    name: "overlay",
+    description:
+      "NF 右下の丸: overlay a button on AI desktop apps; reads the answer only when pressed",
+    hasSubcommands: true,
+  },
+  {
     name: "database",
     description: "Inspect database schema compatibility and shared-state write ownership",
     hasSubcommands: true,

@@ -104,6 +104,11 @@ export const cliCommandCatalog: readonly CliCommandCatalogEntry[] = [
     policy: { ...PASSIVE_STARTUP_POLICY, hideBanner: true },
   },
   {
+    commandPath: ["overlay"],
+    // NF 右下の丸も自己完結（~/.neurafusion/overlay だけを使う）。kensan と同じ理由で Gateway と取り合わない。
+    policy: { ...PASSIVE_STARTUP_POLICY, hideBanner: true },
+  },
+  {
     commandPath: ["crestodian"], // hidden alias
     policy: { configGuard: "skip", loadPlugins: "never", ensureCliPath: false },
   },
