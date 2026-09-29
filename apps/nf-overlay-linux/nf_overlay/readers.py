@@ -2,8 +2,8 @@
 
 - AtspiReader: AT-SPI（アクセシビリティ）で、押したウィンドウの中の文書・文字の要素を読む。入力欄（編集できる要素）は読まない
 - X11CaptureOcr: そのウィンドウ1つだけを撮り（X の GetImage）、Tesseract で端末内で文字にする
-- PortalCaptureOcr: Wayland。xdg-desktop-portal の Screenshot（interactive）で撮り、同じく端末内で文字にする。
-  ポータルが書いた画像ファイルは読んだらすぐ消す
+- PortalScreenCastOcr: Wayland。押すたびに xdg-desktop-portal の ScreenCast（画面共有）の許可を取り、PipeWire から1枚だけ取り出して
+  端末内で文字にする（ファイルに置かない）。ScreenCast が無ければ PortalScreenshotOcr（Screenshot・interactive）
 
 撮った画像はメモリの中だけで扱い、Tesseract にも標準入力で渡す（ファイルに置かない）。
 """
@@ -240,77 +240,169 @@ PORTAL_BUS = "org.freedesktop.portal.Desktop"
 PORTAL_PATH = "/org/freedesktop/portal/desktop"
 
 
-def portal_screenshot_available() -> bool:
+def _portal_version(iface: str) -> int:
     try:
         bus = Gio.bus_get_sync(Gio.BusType.SESSION, None)
         r = bus.call_sync(
             PORTAL_BUS, PORTAL_PATH, "org.freedesktop.DBus.Properties", "Get",
-            GLib.Variant("(ss)", ("org.freedesktop.portal.Screenshot", "version")),
+            GLib.Variant("(ss)", (iface, "version")),
             GLib.VariantType("(v)"), Gio.DBusCallFlags.NONE, 3000, None,
         )
-        return r is not None
-    except GLib.Error:
-        return False
+        return int(r.unpack()[0])
+    except (GLib.Error, TypeError, ValueError):
+        return 0
 
 
-class PortalCaptureOcr:
-    method = "ocr"
+def portal_screencast_available() -> bool:
+    return _portal_version("org.freedesktop.portal.ScreenCast") >= 1 and shutil.which("gst-launch-1.0") is not None
 
-    def __init__(self, interactive: bool = True) -> None:
-        self.interactive = interactive
+
+def portal_screenshot_available() -> bool:
+    return _portal_version("org.freedesktop.portal.Screenshot") >= 1
+
+
+class _Portal:
+    """ポータルの「要求 → Response の信号を待つ」を1回ずつ行う（主スレッドから呼ぶ）。"""
+
+    def __init__(self) -> None:
+        self.bus = Gio.bus_get_sync(Gio.BusType.SESSION, None)
+        self.sender = self.bus.get_unique_name()[1:].replace(".", "_")
         self._n = 0
 
-    def _screenshot_uri(self) -> str:
-        """主スレッドから呼ぶ。ポータルの応答を待って URI を返す。断られたら ScreenDenied。"""
-        bus = Gio.bus_get_sync(Gio.BusType.SESSION, None)
+    def token(self) -> str:
         self._n += 1
-        token = f"nf{os.getpid()}_{self._n}"
-        sender = bus.get_unique_name()[1:].replace(".", "_")
-        req_path = f"/org/freedesktop/portal/desktop/request/{sender}/{token}"
+        return f"nf{os.getpid()}_{self._n}"
+
+    def request(self, iface: str, method: str, args: GLib.Variant, token: str, timeout_s: int = 180) -> tuple[int, dict]:
+        req_path = f"/org/freedesktop/portal/desktop/request/{self.sender}/{token}"
         loop = GLib.MainLoop()
-        box: dict[str, Any] = {}
+        box: dict[str, Any] = {"code": 2, "results": {}}
 
         def on_resp(_c, _s, _p, _i, _sig, params, *_a):
             code, results = params.unpack()
             box["code"] = code
-            box["uri"] = results.get("uri")
+            box["results"] = results
             loop.quit()
 
-        sub = bus.signal_subscribe(
+        def on_timeout() -> bool:
+            box["timeout"] = True
+            loop.quit()
+            return False
+
+        sub = self.bus.signal_subscribe(
             PORTAL_BUS, "org.freedesktop.portal.Request", "Response", req_path, None,
             Gio.DBusSignalFlags.NO_MATCH_RULE, on_resp,
         )
         try:
-            opts = {
-                "handle_token": GLib.Variant("s", token),
-                "interactive": GLib.Variant("b", self.interactive),
-                "modal": GLib.Variant("b", True),
-            }
-            bus.call_sync(
-                PORTAL_BUS, PORTAL_PATH, "org.freedesktop.portal.Screenshot", "Screenshot",
-                GLib.Variant("(sa{sv})", ("", opts)), GLib.VariantType("(o)"),
-                Gio.DBusCallFlags.NONE, 10000, None,
-            )
-            GLib.timeout_add_seconds(180, lambda: (loop.quit(), False)[1])
+            self.bus.call_sync(PORTAL_BUS, PORTAL_PATH, iface, method, args, GLib.VariantType("(o)"),
+                               Gio.DBusCallFlags.NONE, 10000, None)
+            tid = GLib.timeout_add_seconds(timeout_s, on_timeout)
             loop.run()
+            if not box.get("timeout"):
+                GLib.source_remove(tid)
         finally:
-            bus.signal_unsubscribe(sub)
-        if box.get("code") != 0 or not box.get("uri"):
-            # 1 = 本人が取り消した、2 = その他（許可なし）
+            self.bus.signal_unsubscribe(sub)
+        return box["code"], box["results"]
+
+
+class PortalScreenCastOcr:
+    """押すたびに画面共有の許可（ScreenCast。記憶させない persist_mode 0）を取り、PipeWire から1枚だけ取り出して文字にする。
+
+    共有する窓・画面は本人が GNOME の確認で選ぶ（窓1つを選べば、その窓だけが写る）。画像はファイルに置かない。
+    """
+
+    method = "ocr"
+    SOURCE_MONITOR = 1
+    SOURCE_WINDOW = 2
+
+    def _grab_png(self) -> bytes:
+        p = _Portal()
+        iface = "org.freedesktop.portal.ScreenCast"
+        t = p.token()
+        code, res = p.request(iface, "CreateSession", GLib.Variant("(a{sv})", ({
+            "handle_token": GLib.Variant("s", t),
+            "session_handle_token": GLib.Variant("s", p.token()),
+        },)), t)
+        session = res.get("session_handle")
+        if code != 0 or not session:
             raise ScreenDenied()
-        return box["uri"]
+        try:
+            t = p.token()
+            code, _ = p.request(iface, "SelectSources", GLib.Variant("(oa{sv})", (session, {
+                "handle_token": GLib.Variant("s", t),
+                "types": GLib.Variant("u", self.SOURCE_WINDOW | self.SOURCE_MONITOR),
+                "multiple": GLib.Variant("b", False),
+                "cursor_mode": GLib.Variant("u", 1),  # カーソルは写さない
+                "persist_mode": GLib.Variant("u", 0),  # 許可を覚えさせない（毎回聞く）
+            })), t)
+            if code != 0:
+                raise ScreenDenied()
+            t = p.token()
+            code, res = p.request(iface, "Start", GLib.Variant("(osa{sv})", (session, "", {
+                "handle_token": GLib.Variant("s", t),
+            })), t)
+            streams = res.get("streams") or []
+            if code != 0 or not streams:
+                raise ScreenDenied()
+            node = int(streams[0][0])
+            ret, fds = p.bus.call_with_unix_fd_list_sync(
+                PORTAL_BUS, PORTAL_PATH, iface, "OpenPipeWireRemote",
+                GLib.Variant("(oa{sv})", (session, {})), GLib.VariantType("(h)"),
+                Gio.DBusCallFlags.NONE, 10000, None, None,
+            )
+            fd = fds.get(ret.unpack()[0])
+            try:
+                r = subprocess.run(
+                    ["gst-launch-1.0", "-q", "pipewiresrc", f"fd={fd}", f"path={node}", "num-buffers=1",
+                     "always-copy=true", "!", "videoconvert", "!", "pngenc", "snapshot=true", "!", "fdsink", "fd=1"],
+                    pass_fds=(fd,), capture_output=True, timeout=30,
+                )
+            finally:
+                os.close(fd)
+            if r.returncode != 0 or not r.stdout.startswith(b"\x89PNG"):
+                raise RuntimeError("capture failed")
+            return r.stdout
+        finally:
+            try:
+                p.bus.call_sync(PORTAL_BUS, session, "org.freedesktop.portal.Session", "Close", None, None,
+                                Gio.DBusCallFlags.NONE, 3000, None)
+            except GLib.Error:
+                pass
+
+    def read(self, window: int) -> str | None:
+        png = run_on_main(self._grab_png, timeout=240)
+        return ocr_png(png)
+
+
+class PortalScreenshotOcr:
+    """ScreenCast が無いときの代わり: Screenshot（interactive。GNOME の撮影の画面が毎回出る）。
+    ポータル（シェル）が書いた画像ファイルは読んだらすぐ消す。"""
+
+    method = "ocr"
+
+    def _screenshot_uri(self) -> str:
+        p = _Portal()
+        t = p.token()
+        code, res = p.request("org.freedesktop.portal.Screenshot", "Screenshot", GLib.Variant("(sa{sv})", ("", {
+            "handle_token": GLib.Variant("s", t),
+            "interactive": GLib.Variant("b", True),
+            "modal": GLib.Variant("b", True),
+        })), t)
+        if code != 0 or not res.get("uri"):
+            # 1 = 本人が取り消した、2 = その他（許可なし・失敗）
+            raise ScreenDenied()
+        return res["uri"]
 
     def read(self, window: int) -> str | None:
         uri = run_on_main(self._screenshot_uri, timeout=200)
-        p = urlparse(uri)
-        if p.scheme != "file":
+        u = urlparse(uri)
+        if u.scheme != "file":
             return None
-        path = unquote(p.path)
+        path = unquote(u.path)
         try:
             with open(path, "rb") as f:
                 png = f.read()
         finally:
-            # ポータルが書いた画像は残さない
             try:
                 os.unlink(path)
             except OSError:

@@ -120,7 +120,7 @@ def ask_capture_consent(where: str) -> bool:
         text="画面を1枚撮って、答えを読み取りますか？",
     )
     d.format_secondary_text(
-        f"{where}を撮り、このパソコンの中だけで文字を読み取ります。画像は保存も送信もしません。"
+        f"{where}、このパソコンの中だけで文字を読み取ります。画像は保存も送信もしません。"
     )
     d.set_title("NeuraFusion — 画面の読み取り")
     d.add_button("撮らない", Gtk.ResponseType.CANCEL)

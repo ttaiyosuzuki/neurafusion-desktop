@@ -116,7 +116,7 @@ class Overlay:
                     protocol.ready(
                         self.session,
                         ax=self.session == "x11" and readers.atspi_available(),
-                        screen=self.session == "x11" or readers.portal_screenshot_available(),
+                        screen=self.session == "x11" or readers.portal_screencast_available() or readers.portal_screenshot_available(),
                         ocr=readers.ocr_available(),
                         version=VERSION,
                     )
@@ -184,13 +184,17 @@ class Overlay:
         cfg = self.config
         if self.session == "wayland":
             atspi = None
-            ocr = readers.PortalCaptureOcr(interactive=True)
-            where = "画面（次に出る確認で、撮る範囲を選べます）"
+            if readers.portal_screencast_available():
+                ocr = readers.PortalScreenCastOcr()
+                where = "次に出る「画面の共有」の確認で選んだ窓か画面を1回だけ撮り"
+            else:
+                ocr = readers.PortalScreenshotOcr()
+                where = "次に出る撮影の画面で選んだ範囲を撮り"
         else:
             w = self.watcher
             atspi = readers.AtspiReader(w.window_pid, w.window_title)
             ocr = readers.X11CaptureOcr(w.capture_rect)
-            where = "このウィンドウ1つだけ"
+            where = "このウィンドウ1つだけを撮り"
 
         def consent(_app: str) -> bool:
             return bool(readers.run_on_main(lambda: ask_capture_consent(where), timeout=600))
