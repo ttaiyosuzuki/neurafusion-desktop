@@ -26,6 +26,17 @@ require_tgz() {
 # 同梱物の一覧（ランチャーが読む）。$1=置き場 $2=丸の本体の相対パス（無ければ空）
 write_manifest() {
   local dir="$1" overlay="${2:-}"
+  if ! command -v node >/dev/null 2>&1; then
+    # node の無い組み立て機（Linux の VM など）
+    python3 -c '
+import json, os, sys
+d, version, pkg, tgz, overlay = sys.argv[1:6]
+m = {"version": version, "packageName": pkg, "tgz": tgz}
+if overlay: m["overlayBin"] = overlay
+open(os.path.join(d, "nf-dist.json"), "w").write(json.dumps(m, indent=2) + "\n")
+' "$dir" "$VERSION" "$PACKAGE_NAME" "$(basename "$TGZ")" "$overlay"
+    return
+  fi
   node -e '
     const [dir, version, pkg, tgz, overlay] = process.argv.slice(1);
     const m = { version, packageName: pkg, tgz, ...(overlay ? { overlayBin: overlay } : {}) };
