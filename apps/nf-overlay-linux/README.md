@@ -16,10 +16,15 @@
 # OS に依存しない部分（TS-38 Linux 分）。Mac でも流せる
 python3 -m unittest discover -s apps/nf-overlay-linux/tests > /tmp/nf-ovl-test.log 2>&1; echo EXIT=$?
 
-# VM の中で実物（GNOME の X11 / Wayland のセッションを立てて、その中で動かす）
-apps/nf-overlay-linux/scripts/vm-session.sh x11 apps/nf-overlay-linux/scripts/drive.py --config cfg.json --out /tmp/lines.jsonl --fifo /tmp/nf-drive.fifo
+# VM の中で実物（GNOME の X11 / Wayland のセッションを立て、確認台本を流す。手順と実測は docs/overlay-linux.md）
+apps/nf-overlay-linux/scripts/vm-session.sh x11          # 素の GNOME（wayland / down も）
+apps/nf-overlay-linux/scripts/vm-gdm-session.sh x11      # GDM の自動ログインで「Ubuntu on Xorg」（down で戻す）
+OUT=/tmp/nf-x11 apps/nf-overlay-linux/scripts/vm-x11-check.sh
 ```
+
+Node の CLI（`overlay start`）は Linux では更新の了承を `zenity` の小窓で聞く（無ければ「あとで」と同じ扱い）。
 
 `scripts/fake-ai.py` は確認用の「AI アプリの代わり」の窓（`--no-a11y` で AT-SPI に出さない版）。`scripts/drive.py` は Node の代わりに
 config を渡し、出てきた行を本文抜き（文字数と真偽だけ）で記録する。`scripts/press-button.py` は同意の小窓・画面共有の確認のボタンを
-本人の代わりに AT-SPI で押す（確認用。丸の本体は使わない）。
+本人の代わりに AT-SPI で押す（確認用。丸の本体は使わない）。`scripts/vm-node-host.ts` は Node 側（`src/overlay/host.ts`）から
+`overlay start` と同じ順で丸を起動する確認用の 1 本（esbuild でまとめて VM の Node で動かす）。
