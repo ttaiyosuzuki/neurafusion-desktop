@@ -85,7 +85,7 @@ const subCliCommandDescriptors = [
   {
     name: "devices",
     description:
-      "Device pairing and auth tokens (for mobile app setup codes, use `openclaw qr` instead)",
+      "Device pairing and auth tokens (for mobile app setup codes, use `neurafusion qr` instead)",
     hasSubcommands: true,
     machineOutput: ({ argv }) => isDevicesMachineOutput(argv),
     parentDefaultHelp: true,
@@ -103,7 +103,7 @@ const subCliCommandDescriptors = [
   },
   {
     name: "connect",
-    description: "Connect this machine to an OpenClaw Gateway as a node",
+    description: "Connect this machine to a NeuraFusion Gateway as a node",
     hasSubcommands: false,
   },
   {
@@ -173,7 +173,7 @@ const subCliCommandDescriptors = [
   },
   {
     name: "docs",
-    description: "Search the live OpenClaw docs",
+    description: "Search the live docs",
     hasSubcommands: false,
   },
   {
@@ -183,7 +183,7 @@ const subCliCommandDescriptors = [
   },
   {
     name: "proxy",
-    description: "Run the OpenClaw debug proxy and inspect captured traffic",
+    description: "Run the NeuraFusion debug proxy and inspect captured traffic",
     hasSubcommands: true,
     machineOutput: ({ argv }) => isProxyMachineOutput(argv),
   },
@@ -214,7 +214,7 @@ const subCliCommandDescriptors = [
   },
   {
     name: "plugins",
-    description: "Manage OpenClaw plugins and extensions",
+    description: "Manage NeuraFusion plugins and extensions",
     hasSubcommands: true,
     parentDefaultHelp: true,
   },
@@ -247,7 +247,7 @@ const subCliCommandDescriptors = [
   },
   {
     name: "update",
-    description: "Update OpenClaw and inspect update channel status",
+    description: "Update NeuraFusion and inspect update channel status",
     hasSubcommands: true,
   },
   {

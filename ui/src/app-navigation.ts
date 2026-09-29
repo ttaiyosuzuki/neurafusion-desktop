@@ -448,19 +448,22 @@ export function titleForRoute(routeId: NavigationRouteId): string {
   return t(titleKey);
 }
 
+/** Product name that ends window/tab titles (NeuraFusion shows its own name, not the upstream one). */
+export const DOCUMENT_TITLE_BRAND = "NeuraFusion";
+
 /** Window/tab title, markers leftmost because tabs truncate from the right.
  * A disconnected Gateway replaces the approval count (a stale queue is not
  * actionable) and carries the pending-outbox total; titles already ending in the brand
- * ("Ask OpenClaw") skip the suffix so it never reads "… OpenClaw — OpenClaw". */
+ * skip the suffix so it never reads "… NeuraFusion — NeuraFusion". */
 export function formatDocumentTitle(options: {
   context: string;
   attentionCount?: number;
   gatewayDisconnected?: boolean;
   queuedCount?: number;
 }): string {
-  const base = options.context.endsWith("OpenClaw")
+  const base = options.context.endsWith(DOCUMENT_TITLE_BRAND)
     ? options.context
-    : `${options.context} — OpenClaw`;
+    : `${options.context} — ${DOCUMENT_TITLE_BRAND}`;
   if (options.gatewayDisconnected) {
     const queued =
       options.queuedCount && options.queuedCount > 0

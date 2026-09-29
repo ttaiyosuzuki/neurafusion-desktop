@@ -69,6 +69,16 @@ no_brand_nsis() {
   local out
   if out="$(python3 "$HERE/brand-scan.py" --nsis "$2" 2>&1 || exit $?)"; then ok "$1"; else ng "$1（${out%%$'\n'*}）"; fi
 }
+# $1=説明 $2=ファイル。CLI の --help 用: 機能上の名前・上流の外部サービス（理由つきの許可リスト brand-allow-help.json）を
+# 除いて見る。ok のときは許可した件数も出す
+no_brand_allowed() {
+  local out
+  if out="$(python3 "$HERE/brand-scan.py" --allow "$HERE/brand-allow-help.json" "$2" 2>&1 || exit $?)"; then
+    ok "$1（${out%%$'\n'*}）"
+  else
+    ng "$1（${out%%$'\n'*}）"
+  fi
+}
 # $1=説明 残り=フォルダ（直下だけ）。画像がどれも packaging/installer/icons の物と同じなら ok
 images_are_ours() {
   local label="$1" d f i same bad="" n=0
@@ -152,7 +162,7 @@ smoke() {
   if [ "$again" = 0 ]; then ok "$name: 2回目は入れ直さない"; else ng "$name: 2回目も入れ直した"; fi
   env -i "${envs[@]}" "$entry" --help > "$d/help.out" 2> "$d/help.err" || true
   if [ -s "$d/help.out" ]; then
-    no_brand "$name: --help に上流の名前が無い" "$d/help.out"
+    no_brand_allowed "$name: --help に許可リスト以外の上流の名前が無い" "$d/help.out"
   else
     ng "$name: --help が何も出さない（$(tail -3 "$d/help.err" | tr '\n' ' ')）"
   fi

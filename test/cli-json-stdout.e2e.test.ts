@@ -595,7 +595,7 @@ describe("cli json stdout contract", () => {
         expect(result.stderr).not.toContain("OPENCLAW_DEBUG");
         expect(result.stderr).not.toContain("openclaw doctor");
         if (testCase.args.includes("--help")) {
-          expect(result.stdout).not.toContain("Usage: openclaw [options] [command]");
+          expect(result.stdout).not.toContain("Usage: neurafusion [options] [command]");
         }
       },
       { prefix: "openclaw-unknown-command-e2e-" },
