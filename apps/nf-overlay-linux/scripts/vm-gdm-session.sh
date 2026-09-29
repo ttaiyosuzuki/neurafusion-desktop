@@ -1,7 +1,7 @@
 #!/bin/bash
 # VM の中で、ログイン画面（GDM）から自動ログインした本物の GNOME のセッションを立てる（DK-08 の確認用。丸の本体は使わない）。
 #   vm-gdm-session.sh x11      … 「Ubuntu on Xorg」（セッション ubuntu-xorg。GDM の Wayland は切る）
-#   vm-gdm-session.sh wayland  … 「Ubuntu」（セッション ubuntu。Wayland）
+#   vm-gdm-session.sh wayland  … 「Ubuntu」（セッション ubuntu。Wayland。差し込み vm-nopulsex.c を作って入れる。要 gcc）
 #   vm-gdm-session.sh down     … GDM を止め、GDM の設定を元に戻す
 # 画面の装置が無い VM（Lima の vz・画面なし）では、仮想の画面ドライバ vkms（linux-modules-extra-$(uname -r)）を
 # 読み込んで seat0 を「画面あり」（CanGraphical=yes）にする。gnome-session が systemd --user に渡した環境を
@@ -11,11 +11,15 @@ MODE=${1:?x11|wayland|down}
 U=$(id -un)
 UID_=$(id -u)
 CONF=/etc/gdm3/custom.conf
+DROP=/etc/systemd/user/org.gnome.Shell@wayland.service.d
+SO=/usr/local/lib/nf-nopulsex.so
 export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$UID_/bus
 
 down() {
   sudo systemctl stop gdm
   [ -e $CONF.nf-orig ] && sudo cp $CONF.nf-orig $CONF
+  sudo rm -f $DROP/nf-nopulsex.conf
+  systemctl --user daemon-reload
   rm -f /tmp/nf-session.env
 }
 
@@ -55,6 +59,17 @@ gsettings set org.gnome.desktop.screensaver lock-enabled false
 systemctl --user set-environment GSK_RENDERER=cairo
 systemctl --user unset-environment DISPLAY WAYLAND_DISPLAY XAUTHORITY XDG_SESSION_TYPE XDG_CURRENT_DESKTOP 2>/dev/null
 systemctl --user restart pipewire.socket pipewire-pulse.socket 2>/dev/null
+# Wayland: この VM では GNOME Shell が起動時に止まる（libpulse の X への接続と、使われたら起こす Xwayland の待ち合わせ）。
+# libpulse からの X への接続だけをすぐ失敗させる差し込み（vm-nopulsex.c）を、シェルの user unit に LD_PRELOAD で入れる
+if [ "$MODE" = wayland ]; then
+  if ! [ -e $SO ]; then
+    command -v gcc > /dev/null || { echo "gcc が無い（sudo apt-get install -y --no-install-recommends gcc libc6-dev）"; exit 1; }
+    gcc -shared -fPIC -O2 -o /tmp/nf-nopulsex.so "$(dirname "$0")/vm-nopulsex.c" -ldl && sudo install -m 755 /tmp/nf-nopulsex.so $SO || exit 1
+  fi
+  sudo mkdir -p $DROP
+  printf '[Service]\nEnvironment=LD_PRELOAD=%s\n' $SO | sudo tee $DROP/nf-nopulsex.conf > /dev/null
+  systemctl --user daemon-reload
+fi
 
 # 4. GDM を起こし、自動ログインのセッションが seat0 の前面に出るのを待つ
 sudo systemctl start gdm

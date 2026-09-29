@@ -63,14 +63,21 @@ Claude・ChatGPT のデスクトップ版は Linux 版が無い。Notion も公�
 | X11（素の GNOME） | GNOME Shell 46.0（`--x11`・session mode ubuntu）on Xorg 21.1.12（dummy ドライバ 1920×1080） | 上と同じ項目（AT-SPI 173 字・OCR 194 字） | 通った |
 | Wayland（素の GNOME） | GNOME Shell 46.0（mutter 46.2、`--headless --wayland --virtual-monitor 1920x1080`）＋ Xwayland 23.2.6、xdg-desktop-portal 1.18.4 / -gnome 46.2、PipeWire 1.0.5 | 丸は作業領域の右下に固定（`fixed:true`）、押す → 同意を断る → 撮らない、同意 → 「Share Screen」で Share → PipeWire から1枚 → OCR 201 字（答えあり・**パネルの文字なし**）、画面全体でも同じ（190 字・パネルの文字なし）、同意 → Cancel → `screen-denied`（数えない）、全体のオフで隠れる、同意の小窓は前面 | 通った |
 | Wayland（同上）＋ Node 側 | 同上。`vm-node-host.ts` | `丸を起動しました（Wayland: 画面の右下に固定・…・画面の撮影: 使える…）` → 押す → 同意 → 画面全体で共有 → `[host] 読み取り: * ocr 読めた 190字`、記録ファイルに本文なし | 通った |
-| Wayland（GDM から入った本物のセッション） | 「Ubuntu」（logind `Type=wayland` は上がった）| **この VM では GNOME Shell が起動時に止まり、丸を確かめられなかった**（下の注） | 未確認 |
+| Wayland（GDM から入った本物のセッション） | **Ubuntu**: GDM 46.2 の自動ログイン（logind `Type=wayland`・`Class=user`、`DESKTOP_SESSION=ubuntu`）、GNOME Shell 46.0（mutter 46.2・ドックとトップバーあり）＋ Xwayland 23.2.6（使われたら起こす）、vkms 1024×768。**VM では差し込み `scripts/vm-nopulsex.c` を入れて起動した**（下の注） | 丸は作業領域（x66 y32 958×736）の右下に固定、押す前の read 0、押す → 同意を断る → 撮らない、同意 → 画面共有の確認で Share → OCR 209 字（答えあり・パネルの文字なし）、もう一度（Entire Screen）→ 209 字（パネルの文字なし）、Cancel → `screen-denied`、全体のオフで隠れる、同意の小窓は前面（4 回とも） | 通った |
+| Wayland（同上）＋ Node 側 | 同上。実物の **Cursor 3.22.12**（既定の起動で `--ozone-platform=wayland` = Wayland の窓・最大化） | `丸を起動しました（Wayland: 画面の右下に固定・AT-SPI: 使えない・画面の撮影: 使える・文字認識: ある）` → 丸は Cursor の窓の上に出た → 押す → 同意 → 画面全体で共有 → `[host] 読み取り: * ocr 読めた 43字`、記録ファイル（reads.json 9 行）に本文なし | 通った |
 
 - 本物のセッションは、画面の装置が無い VM に仮想の画面ドライバ vkms（`linux-modules-extra`）を読み込み、GDM の自動ログインで入った（`scripts/vm-gdm-session.sh`）。
   mutter は vkms を試験用として無視する（`61-mutter.rules` の `mutter-device-ignore`。後の規則で外しても TAGS に残る）ので、VM では vkms の行を抜いた同名の規則を `/etc/udev/rules.d/` に置いた。
-- GDM の Wayland が止まった理由（gdb で確認）: GNOME Shell の主スレッドが音量の部品（libgvc → libpulse の `pa_client_conf_from_x11`）の中で、
+- GDM の Wayland が止まる理由（gdb で確認）: GNOME Shell の主スレッドが音量の部品（libgvc → libpulse の `pa_client_conf_from_x11`）の中で、
   自分の X 画面（Xwayland は「使われたら起こす」）へ同期でつなぎに行き、Xwayland はシェルの応答を待つ、という待ち合わせ。丸とは関係ない。
   この VM は ubuntu-desktop を全部は入れていない（ibus も無い）。ibus を入れる・mutter の `autostart-xwayland`・KMS の simple はどれも効かなかった。
-  素の headless でも、ibus を入れた間は同じ待ち合わせになった（外すと通った）。
+  `/etc/pulse/client.conf.d/` の `auto-connect-display = no` も効かない（返事をしない偽の X 画面に対して `pa_context_new` が 6 秒の打ち切りまで戻らなかった。
+  X の設定読みは `DISPLAY` があれば必ず行う）。素の headless でも、ibus を入れた間は同じ待ち合わせになった（外すと通った）。
+- VM では、libpulse（libpulsecommon）からの `xcb_connect` だけを存在しない画面へ向けてすぐ失敗させる差し込み（`scripts/vm-nopulsex.c`）で避けた。
+  `vm-gdm-session.sh wayland` が gcc で作り、`org.gnome.Shell@wayland.service` の drop-in の `LD_PRELOAD` で入れる（`down` で外す）。差し込みは子のプロセスに
+  引き継がず、音量の部品が X の画面から読むのはリモートの X 用の設定（`PULSE_SERVER` など）だけなので、丸の確かめ方には影響しない。
+  差し込みあり → 約 10〜20 秒で上がる。外す（対照）→ シェルの主スレッドが上の場所で止まり、`ShellVersion` の問い合わせが時間切れ。
+  本物の PC でこの止まりが起きるか（なぜこの VM で起きるか）は突き止めていない。証拠の画面は `Claude outputs/dk08-linux-2026-09-29/wayland-gdm-2026-09-30/`。
 - 素のセッションでは gnome-session は logind のセッションが無いと上がらない（46 に `--builtin` は無い）ので、gnome-shell を直接動かした（`scripts/vm-session.sh`）。
 - Wayland の Screenshot（interactive）ポータルは、この VM では毎回失敗した（GNOME Shell 46 の撮影画面が、画像を書き終える前に「閉じた」を返し、ポータルが code 2 を返す。ソフトウェア描画で撮影が遅いため）。そのため ScreenCast を主にした。
 - この VM では xdg-desktop-portal-gnome が画面共有の途中で落ちることがあった（GTK4 の中で segfault。`GSK_RENDERER=cairo` と、PipeWire を gnome-shell より先に起動することで確認の流れは通った）。
@@ -80,7 +87,7 @@ Claude・ChatGPT のデスクトップ版は Linux 版が無い。Notion も公�
 
 ## 未確認（実機で確かめる）
 
-- [ ] GDM から入った「Ubuntu」（Wayland）セッション（上の注。VM では GNOME Shell の起動の待ち合わせで止まった。本物の PC で確かめる）
+- [ ] 本物の PC（差し込みなし）の GDM「Ubuntu」（Wayland）セッション。VM では差し込みで GNOME Shell の起動の待ち合わせを避けて確かめた（上の表と注）
 - [ ] 画面共有の確認で「Application Window」を選んでその窓だけを共有する流れ（一覧に出るところまでは確認。選ぶ操作は人の手で）
 - [ ] KDE Plasma・Xfce 等の他のデスクトップ
 - [ ] HiDPI（拡大率 2 など）での丸の位置。今は拡大率 1 だけを確かめた（`scale` は常に 1.0 を出す）
@@ -98,6 +105,7 @@ node scripts/run-vitest.mjs run --config test/vitest/vitest.unit.config.ts src/o
 # VM の中で（確認用の GNOME を立ててから流す。どちらも /tmp/nf-session.env を書く）
 apps/nf-overlay-linux/scripts/vm-session.sh x11        # 素の GNOME（wayland / down も）
 apps/nf-overlay-linux/scripts/vm-gdm-session.sh x11    # GDM の自動ログインで「Ubuntu on Xorg」（down で戻す）
+apps/nf-overlay-linux/scripts/vm-gdm-session.sh wayland  # 同じく「Ubuntu」（Wayland。差し込みを作って入れる。要 gcc・libc6-dev）
 OUT=/tmp/nf-x11 apps/nf-overlay-linux/scripts/vm-x11-check.sh
 OUT=/tmp/nf-wl  apps/nf-overlay-linux/scripts/vm-wayland-check.sh
 # Node 側から（Mac で 1 本にまとめ、VM の Linux 用 Node で動かす）

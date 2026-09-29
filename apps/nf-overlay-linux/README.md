@@ -19,6 +19,7 @@ python3 -m unittest discover -s apps/nf-overlay-linux/tests > /tmp/nf-ovl-test.l
 # VM の中で実物（GNOME の X11 / Wayland のセッションを立て、確認台本を流す。手順と実測は docs/overlay-linux.md）
 apps/nf-overlay-linux/scripts/vm-session.sh x11          # 素の GNOME（wayland / down も）
 apps/nf-overlay-linux/scripts/vm-gdm-session.sh x11      # GDM の自動ログインで「Ubuntu on Xorg」（down で戻す）
+apps/nf-overlay-linux/scripts/vm-gdm-session.sh wayland  # 同じく「Ubuntu」（Wayland。差し込み vm-nopulsex.c を作って入れる。要 gcc・libc6-dev）
 OUT=/tmp/nf-x11 apps/nf-overlay-linux/scripts/vm-x11-check.sh
 ```
 
