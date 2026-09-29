@@ -235,5 +235,5 @@ Windows SDK License 2.a.ii: "Add significant primary functionality to it in your
 - 別案（技術。要検証）: UI Automation を WPF の参照でなく COM の UIAutomationCore で呼べば `UseWPF` を外せ、WPF の 5 つの DLL
   （.NET Library License 3 つ・Windows SDK License 1 つ）は入らなくなる見込み。ただし単一ファイルのランタイム自体が .NET Library License の側なので、
   **利用者の同意の要件は .NET を Windows で配る限り残る**。
-- **弁護士が要る**: 「配る者と利用者に、少なくとも同じだけ保護する条件へ同意させる」の満たし方（利用規約の文面・インストーラで
-  同意を取るか・補償の範囲）。文面を書く仕事で、原文を読むだけでは決まらない → `trademark-questions.md` の 2 節。
+- 「配る者と利用者に、少なくとも同じだけ保護する条件へ同意させる」の満たし方: **弁護士には聞かず、Windows のインストーラに原文を表示して
+  「同意する」を押すまで進めない画面で対応する**（オーナー決定 2026-09-30 08:25。先に WPF の DLL を外し、残る部品について行う。dk-license-2）。

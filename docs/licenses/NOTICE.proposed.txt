@@ -1,136 +1,7 @@
-NeuraFusion Desktop
-Copyright (c) 2026 NeuraFusion
-
-このソフトウェアは OpenClaw を基に作られています。
-This software is derived from OpenClaw.
-【要: 商標の回答】NeuraFusion は OpenClaw の開発者・OpenClaw Foundation と提携しておらず、承認も受けていません。
-【要: 商標の回答】NeuraFusion is not affiliated with or endorsed by the OpenClaw developers or the OpenClaw Foundation.
-
-ライセンスの全文は同じ場所の LICENSE・THIRD_PARTY_NOTICES.md・licenses/ にあります。
-licenses/README.txt は部品・版・ファイルの一覧です。
-Full license texts are in LICENSE, THIRD_PARTY_NOTICES.md and licenses/ next to this file.
-licenses/README.txt lists every component, its version and its license file.
-
-────────────────────────────────────────────────────────
-1. 上流の著作権表示（MIT License・削除してはならない）
-   Upstream copyright notice (MIT License — must not be removed)
-────────────────────────────────────────────────────────
-
-OpenClaw
-Copyright (c) 2026 OpenClaw Foundation
-https://github.com/openclaw/openclaw
-
-2026-05-20 までの版は次の表示で同じ MIT License により公開されていました。
-Versions published up to 2026-05-20 carried the following notice under the same MIT License:
-Copyright (c) 2025 Peter Steinberger
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-
-上流に取り込まれた第三者のコードとアイコンの表示:
-Notices for third-party code and icons incorporated upstream:
-- THIRD_PARTY_NOTICES.md（Pi / pi-mono・GitHub Octicons）
-- 本体のパッケージの dist/control-ui/provider-icons/ATTRIBUTION.md
-  （CodexBar のアイコン Copyright (c) 2026 Peter Steinberger・ggml・LobeHub ほか。MIT）
-  dist/control-ui/provider-icons/ATTRIBUTION.md in the main package
-  (CodexBar icons, ggml, LobeHub and others; MIT)
-- 拡張のアイコン（extensions/*/assets/*.svg）の中の注記
-  Notices inside the extension icons (extensions/*/assets/*.svg)
-
-────────────────────────────────────────────────────────
-2. 同梱している部品（配布物ごと）
-   Bundled components (per package)
-────────────────────────────────────────────────────────
-
-すべての配布物 / All packages
-- Node.js v24.21.0 — MIT License（中の V8・OpenSSL・ICU・libuv・npm ほかの表示を含む）
-  licenses/node-LICENSE.txt, node/LICENSE
-
-Windows（Setup.exe）
-- NSIS 3.13（インストーラとアンインストーラの実行部分・プラグイン nsDialogs・System・nsExec・画像）
-  — zlib/libpng License. licenses/nsis-COPYING.txt
-- NSIS の LZMA 圧縮モジュール — Common Public License 1.0（licenses/nsis-COPYING.txt に全文と例外）。3 節。
-- Microsoft .NET 8.0.31 と Windows Desktop ランタイム（nf-overlay.exe に単一ファイルで入っている）。4 節。
-- Microsoft Edge WebView2 SDK 1.0.2903.40 — licenses/webview2-LICENSE.txt, licenses/webview2-NOTICE.txt
-
-Linux（AppImage のみ）
-- AppImage type2-runtime（AppImage ファイルの先頭の実行部分）。5 節。
-
-────────────────────────────────────────────────────────
-3. NSIS の LZMA 圧縮モジュール（Common Public License 1.0）
-   LZMA compression module for NSIS (Common Public License 1.0)
-────────────────────────────────────────────────────────
-
-Setup.exe とアンインストーラ（uninstall.exe）は、NSIS 3.13 の LZMA 圧縮モジュールを目的コードで含みます。
-NeuraFusion はこれを Common Public License 1.0 の条件で配布します。
-Setup.exe and its uninstaller (uninstall.exe) contain the LZMA compression module
-for NSIS 3.13 in object code form. NeuraFusion distributes it under the terms of
-the Common Public License version 1.0 (licenses/nsis-COPYING.txt).
-
-- NeuraFusion は、すべての Contributor のために、明示・黙示を問わず、権原・非侵害の保証と条件、
-  商品性・特定目的への適合性の黙示の保証と条件を含む、すべての保証と条件を否認します。
-  NeuraFusion, on behalf of all Contributors, disclaims all warranties and conditions,
-  express and implied, including warranties or conditions of title and
-  non-infringement, and implied warranties or conditions of merchantability and
-  fitness for a particular purpose.
-- NeuraFusion は、すべての Contributor のために、直接・間接・特別・付随的・結果的な損害（逸失利益を含む）
-  についての一切の責任を除外します。
-  NeuraFusion, on behalf of all Contributors, excludes all liability for damages,
-  including direct, indirect, special, incidental and consequential damages, such
-  as lost profits.
-- Common Public License 1.0 と異なる条件は、NeuraFusion だけが提供するもので、ほかの誰も提供しません。
-  Any provisions which differ from the Common Public License 1.0 are offered by
-  NeuraFusion alone and not by any other party.
-- このモジュールのソースコードは NeuraFusion から入手できます。【連絡先】へ申し出てください
-  （NSIS 3.13 のソース nsis-3.13-src.tar.bz2、SHA-256
-  a8ffe024602d46b6d766f9e1ce30c324ad2a24daeacd3efc2642d436a0c157ac を送ります）。
-  同じ物は https://sourceforge.net/projects/nsis/files/NSIS%203/3.13/ でも公開されています。
-  The source code for this module is available from NeuraFusion: contact 【連絡先】
-  and we will provide nsis-3.13-src.tar.bz2 (SHA-256 above). It is also published at
-  https://sourceforge.net/projects/nsis/files/NSIS%203/3.13/ .
-
-────────────────────────────────────────────────────────
-4. Microsoft .NET（Windows のみ）
-   Microsoft .NET components (Windows only)
-────────────────────────────────────────────────────────
-
-nf-overlay.exe は .NET 8.0.31 のランタイム（単一ファイルとして発行）と Windows Desktop ランタイムの部品を含みます。
-nf-overlay.exe contains the .NET 8.0.31 runtime (published as a single file) and
-components of the Windows Desktop runtime 8.0.31.
-
-- MIT License: 下の 2 つの条件のもの以外のファイル。
-  licenses/dotnet-runtime-LICENSE.txt, licenses/dotnet-runtime-THIRD-PARTY-NOTICES.txt,
-  licenses/dotnet-windowsdesktop-LICENSE.txt
-- Microsoft .NET Library License（licenses/dotnet-library-license.txt【追加する】）:
-  nf-overlay.exe に入っている .NET ランタイム（単一ファイル）、PresentationNative_cor3.dll、
-  vcruntime140_cor3.dll、wpfgfx_cor3.dll
-- Microsoft Windows SDK License（licenses/windows-sdk-license.txt【追加する】）:
-  D3DCompiler_47_cor3.dll
-- 【要: 弁護士の確認（trademark-questions.md 2 節）】これらの Microsoft の部品について、利用者は次のことをしてはなりません:
-  技術的な制限を回避すること、適用される法律が認める範囲を除きリバースエンジニアリング・逆コンパイル・逆アセンブルすること、
-  Microsoft とその供給者の表示を削除・縮小・妨害・変更すること、これらの部品を単独で共有・公開・貸与すること。
-  【Requires counsel review】For these Microsoft components you may not: work around
-  any technical limitations; reverse engineer, decompile or disassemble them, except
-  to the extent permitted by applicable law; remove, minimize, block or modify any
-  notices of Microsoft or its suppliers; or share, publish, rent or lease them as a
-  stand-alone offering.
-- Microsoft のプライバシーに関する声明 / Microsoft privacy statement:
-  https://go.microsoft.com/fwlink/?LinkID=824704
+NOTICE の案（残り: AppImage の節だけ）
+2026-09-30 dk-license-2: 1〜4 節は根の NOTICE に入れた（【連絡先】= info@taiyosuzuki.com）。
+下の 5 節は Linux の AppImage を配るときに、【版】【URL】【commit】【追加する】を埋めて NOTICE へ足す
+（docs/licenses/components.md 3.3。今の配布物に AppImage は無い）。
 
 ────────────────────────────────────────────────────────
 5. AppImage の runtime（Linux の AppImage のみ）
@@ -156,14 +27,14 @@ Lesser General Public License version 2.1 (licenses/LGPL-2.1.txt).
 ソース: libfuse の完全なソース（fuse-3.15.0.tar.xz と patch mount.c.diff）と、libfuse を変えて runtime を
 作り直せるための runtime のソース（type2-runtime【commit】と組み立ての台本）を、AppImage を取得したのと同じ場所
 【URL】に置いています。また、配布の日から少なくとも 3 年間、配布にかかる費用を超えない額で、
-【連絡先】への申し出に応じて同じ物を提供します。
+info@taiyosuzuki.comへの申し出に応じて同じ物を提供します。
 Source: the complete corresponding source code for libfuse (fuse-3.15.0.tar.xz and
 the patch mount.c.diff) and the source code of the runtime (type2-runtime 【commit】,
 including its build scripts) so that you can modify libfuse and relink the runtime
 are available from the same place you downloaded the AppImage 【URL】. For at least
 three years from the date of distribution, NeuraFusion will also provide the same
-materials on request to 【連絡先】 for a charge no more than the cost of
+materials on request to info@taiyosuzuki.com for a charge no more than the cost of
 performing this distribution.
 
 ────────────────────────────────────────────────────────
-【連絡先】【URL】【版】【追加する】は配る前に埋める／足すところ（この案の中だけの印）。
+info@taiyosuzuki.com【URL】【版】【追加する】は配る前に埋める／足すところ（この案の中だけの印）。

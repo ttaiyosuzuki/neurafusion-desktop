@@ -102,7 +102,8 @@ stage_licenses() {
   cp "$ROOT_DIR/LICENSE" "$ROOT_DIR/NOTICE" "$ROOT_DIR/THIRD_PARTY_NOTICES.md" "$dir/"
   cp "$dir/node/LICENSE" "$lic/node-LICENSE.txt"
   case "$kind" in
-    windows) cp "$ROOT_DIR/packaging/installer/licenses/nsis-COPYING.txt" "$lic/" ;;
+    windows) cp "$ROOT_DIR/packaging/installer/licenses/nsis-COPYING.txt" \
+      "$ROOT_DIR/packaging/installer/licenses/dotnet-library-license.txt" "$lic/" ;;
     appimage) cp "$ROOT_DIR/packaging/installer/licenses/appimage-type2-runtime-LICENSE.txt" "$lic/" ;;
   esac
 }
@@ -110,9 +111,10 @@ stage_licenses() {
 license_description() {
   case "$1" in
     node-LICENSE.txt) echo "Node.js（同梱の node と npm。MIT。中に入っている V8・OpenSSL・ICU・libuv・npm（Artistic-2.0）ほかの表示を含む）" ;;
-    nsis-COPYING.txt) echo "NSIS 3（インストーラの実行部分。zlib/libpng。LZMA の部分は Common Public License 1.0 と例外。ソース: https://nsis.sourceforge.io/Download）" ;;
+    nsis-COPYING.txt) echo "NSIS 3（インストーラの実行部分。zlib/libpng。LZMA の部分は Common Public License 1.0 と例外。ソースは NeuraFusion（info@taiyosuzuki.com）へ申し出れば nsis-3.13-src.tar.bz2 を送る。同じ物: https://sourceforge.net/projects/nsis/files/NSIS%203/3.13/）" ;;
     dotnet-runtime-LICENSE.txt) echo ".NET ランタイム（Microsoft.NETCore.App。丸の本体 nf-overlay.exe に同梱。MIT）" ;;
     dotnet-runtime-THIRD-PARTY-NOTICES.txt) echo ".NET ランタイムの中の第三者の表示" ;;
+    dotnet-library-license.txt) echo "Microsoft .NET Library License（英語の原文。丸の本体 nf-overlay.exe に単一ファイルで入っている .NET ランタイム（coreclr.dll ほか）の条件。https://dotnet.microsoft.com/dotnet_library_license.htm・2026-09-30 取得）" ;;
     dotnet-windowsdesktop-LICENSE.txt) echo "Windows Desktop ランタイム（WPF・Windows Forms。丸の本体に同梱。MIT）" ;;
     webview2-LICENSE.txt) echo "Microsoft Edge WebView2 SDK（丸の本体のパネル。BSD 型: 再配布では著作権表示・条件・免責を文書に入れる）" ;;
     webview2-NOTICE.txt) echo "WebView2 SDK の中の第三者の表示" ;;

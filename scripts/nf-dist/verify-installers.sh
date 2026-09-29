@@ -302,7 +302,7 @@ verify_exe() {
   fi
   control_ui_is_ours "$x/$PACKAGE_NAME-$VERSION.tgz" "$name"
   check_licenses "$x" "$name" nsis-COPYING.txt dotnet-runtime-LICENSE.txt dotnet-runtime-THIRD-PARTY-NOTICES.txt \
-    dotnet-windowsdesktop-LICENSE.txt webview2-LICENSE.txt webview2-NOTICE.txt
+    dotnet-windowsdesktop-LICENSE.txt dotnet-library-license.txt webview2-LICENSE.txt webview2-NOTICE.txt
   no_brand "$name: 丸の本体（nf-overlay.exe の製品名・会社名・中の文字）・README-ja.txt" "$x/overlay/nf-overlay.exe" "$x/README-ja.txt"
   if cmp -s "$x/neurafusion.ico" "$ICONS/neurafusion.ico"; then
     ok "$name: アイコンは NeuraFusion の物（インストーラ・スタートメニュー・「アプリと機能」）"

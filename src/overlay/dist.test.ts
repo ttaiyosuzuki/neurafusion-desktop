@@ -311,7 +311,9 @@ describe("ライセンス文書を配布物に入れる", () => {
 
   it("OS ごとの部品のライセンス（Windows は NSIS、AppImage は runtime）と一覧。ALL.txt は自分を含まない", () => {
     const win = staged("windows");
-    expect(readdirSync(path.join(win.dir, "licenses")).sort()).toEqual(["ALL.txt", "README.txt", "node-LICENSE.txt", "nsis-COPYING.txt"]);
+    expect(readdirSync(path.join(win.dir, "licenses")).sort()).toEqual(["ALL.txt", "README.txt", "dotnet-library-license.txt", "node-LICENSE.txt", "nsis-COPYING.txt"]);
+    expect(win.index).toContain("dotnet-library-license.txt: Microsoft .NET Library License");
+    expect(win.all).toContain("MICROSOFT .NET LIBRARY");
     expect(win.all).toContain("Common Public License");
     expect(win.index).toContain("nsis-COPYING.txt: NSIS 3");
     expect(win.index).toContain("Node.js v24.0.0");

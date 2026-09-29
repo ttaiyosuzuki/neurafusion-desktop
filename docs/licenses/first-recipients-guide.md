@@ -1,19 +1,33 @@
 # 最初に配る人への案内（2026-09-30）
 
 オーナーがそのまま送れる形（下の枠の中）。Windows の署名用の証明書は今は買わない（オーナー決定 2026-09-30。一般公開の前にもう一度判断する）。
+それまで **Windows 版は、スマート アプリ コントロールがオフのパソコンの人にだけ配る**（オーナー決定 2026-09-30 08:25）。
 Mac も Apple の Developer ID が無いので、アドホック署名（`build-macos-dmg.sh` 15 行目 `SIGN="${NF_SIGN_IDENTITY:--}"`）で公証なし。
 
-確かめた出典:
+確かめた出典（どれも 2026-09-30 に取得）:
 
-- Mac: Apple「Macでアプリを安全に開く」<https://support.apple.com/ja-jp/102445>（2026-09-30 取得）: 「アプリを開くことを試みた後で…
-  『プライバシーとセキュリティ』をクリックし、下にスクロールして『このまま開く』ボタンをクリック…警告メッセージが再び表示されるので…『開く』を
-  クリック…その後は…ダブルクリックして開けるようになります。」。同梱の `はじめにお読みください.txt` の「右クリック →『開く』」はこの手順に無い
-  （macOS 15 以降は効かない）→ 下の案内は設定からの手順だけにした。対応は macOS 14 以降（`Info.plist` の `LSMinimumSystemVersion` 14.0）。
-- Windows: Microsoft「Smart App Control FAQ」<https://support.microsoft.com/en-us/windows/security/threat-malware-protection/smart-app-control-frequently-asked-questions>
-  （2026-09-30 取得）: "If the security service can't make a confident prediction about the app, and the app doesn't have a valid signature, it's considered untrusted." /
-  "There is currently no way to bypass Smart App Control protection for individual apps."。
-  → **スマート アプリ コントロールが「オン」の Windows 11 では、今の Setup.exe は入れられない**（「実行」のボタンが出ない）。
-  対応は Windows 10 2004（19041）以降の 64 ビット（`NfOverlay.Win.csproj` の `net8.0-windows10.0.19041.0`）。
+- Mac: Apple「Macでアプリを安全に開く」<https://support.apple.com/ja-jp/102445>（ページの公開日 2026 年 06 月 01 日）:
+  「アプリを開くことを試みた後で、次の手順に従ってください。システム設定を開きます。『プライバシーとセキュリティ』をクリックし、下にスクロールして
+  『このまま開く』ボタンをクリックして、アプリを開く、またはインストールする意思を確認します。警告メッセージが再び表示されるので、アプリを開く意思が
+  決まっている場合は、『開く』をクリックできます。」「その後は、ほかの認証済みのアプリと同じようにダブルクリックして開けるようになります。」
+  → 下の案内の Mac の 3〜5 はこの手順と言葉に合わせた。右クリック →「開く」はこのページに無い（macOS 15 以降は効かない）。
+  対応は macOS 14 以降（`Info.plist` の `LSMinimumSystemVersion` 14.0）。
+- Windows（スマート アプリ コントロール）:
+  - Microsoft「スマート アプリ コントロールに関してよく寄せられる質問」
+    <https://support.microsoft.com/ja-jp/windows/security/threat-malware-protection/smart-app-control-frequently-asked-questions>:
+    「アプリが署名されていない場合、または署名が無効な場合、スマート アプリ コントロールは信頼できないと判断し、保護のためにブロックします。」
+    「現在、個々のアプリのスマート アプリ コントロール保護をバイパスする方法はありません。」
+    → **オンの Windows 11 では、今の無署名の Setup.exe は入れられない**。
+  - 確かめ方は Microsoft「Windows セキュリティ アプリのアプリ & ブラウザー コントロール」
+    <https://support.microsoft.com/ja-jp/windows/security/windows-security/app-browser-control-in-the-windows-security-app>:
+    「PC の Windows セキュリティ アプリ で、[アプリ & ブラウザー コントロール] > スマート アプリ コントロール設定] を選択」。モードは
+    「評価モード」「オン」「オフ」の 3 つ。「スマート アプリ コントロールは Windows 10 では使用できません。」
+    評価モードは何もブロックしないが、「あなたが良い候補者であれば、それは自動的にオンになります」→ 対象は「オフ」だけにした。
+  - オフにする操作は案内に書かない（勧めない）。戻せるかについての公式の言い方（参考。案内には書いていない）: FAQ は「スマート アプリ コントロールは、
+    Windows セキュリティ アプリの設定で無効にすることができます。最近の Windows 更新プログラムを使用すると、クリーン インストールを必要とせずに
+    スマート アプリ コントロールを再度有効にすることができます。」。一方、上のアプリ & ブラウザー コントロールのページは「手動でオンまたはオフに
+    切り替えた場合は、Windows を再インストールまたはリセットしない限り、評価モードに戻ることはできません。」
+  - 対応は Windows 10 2004（19041）以降の 64 ビット（`NfOverlay.Win.csproj` の `net8.0-windows10.0.19041.0`）。
 - インストーラは利用者の権限で入る（`neurafusion.nsi` の `RequestExecutionLevel user`）。入れる途中で初回の準備（`nf-launch.mjs --install-only`）が走り、
   インターネットを使う。
 
@@ -23,33 +37,36 @@ Mac も Apple の Developer ID が無いので、アドホック署名（`build-
 件名: NeuraFusion Desktop（試用版）の入れ方
 
 NeuraFusion Desktop の試用版をお送りします。
-今の版にはまだ Apple と Microsoft の「署名」が付いていないため、入れるときに警告が出ます。
+今の版は Apple と Microsoft の「署名」をしていない（無署名の）ため、入れるときに警告が出ます。
 下の手順で進めてください。途中で分からなくなったら、無理に進めずにご連絡ください。
 
 ■ Windows（Windows 10 バージョン 2004 以降・64 ビット）
+今の Windows 版は無署名です。「スマート アプリ コントロール」がオフのパソコンだけが対象です。
+0. Windows 11 のときは、先に確かめてください（Windows 10 にはこの機能はありません）。
+   Windows セキュリティ アプリで「アプリ & ブラウザー コントロール」→
+   「スマート アプリ コントロール設定」を選びます。
+   「オフ」なら 1 へ進みます。「オン」または「評価モード」のときは入れられないので、
+   設定は変えずに、そのままご連絡ください。
 1. NeuraFusion-Desktop-2026.9.6-windows-x64-Setup.exe をダウンロードします。
    ブラウザが「一般的にダウンロードされていません」などと止めたときは、
    ダウンロードの一覧のその行のメニュー（…）から「保存」または「保持する」を選びます。
 2. ファイルを開くと、青い画面「Windows によって PC が保護されました」が出ます。
    「詳細情報」を押し、「発行元: 不明な発行元」と出たら「実行」を押します。
-3. あとは画面の指示に従います。管理者の権限は要りません。
+3. あとは画面の指示に従います。途中の「使用許諾契約」の画面（Microsoft の部品の条件）で
+   内容を確かめ、「同意する」を押します。管理者の権限は要りません。
    途中で必要な部品をインターネットから取るため、数分かかることがあります。
-
-※「スマート アプリ コントロール」の画面が出て「実行」のボタンが無いとき:
-  Windows 11 のこの機能がオンになっていると、署名の無いアプリは個別に許可できません。
-  そのまま閉じて、ご連絡ください。
 
 ■ Mac（macOS 14 以降）
 1. お使いの Mac に合う方の .dmg を開きます。
    Apple のメニュー →「この Mac について」の「チップ」が「Apple M…」なら arm64、
    「プロセッサ」が「Intel」なら x64 です。
 2. NeuraFusion を「アプリケーション」フォルダへドラッグします。
-3. 「アプリケーション」の NeuraFusion をダブルクリックします。
-   「Apple は…を検証できませんでした」という警告が出たら「完了」を押します
-   （「ゴミ箱に入れる」は押さないでください）。
-4. システム設定 →「プライバシーとセキュリティ」を開き、下の方の「セキュリティ」の所にある
-   NeuraFusion の「このまま開く」を押します。パスワード（または Touch ID）を求められたら入れます。
-5. もう一度出る確認で「開く」を押します。次からは普通にダブルクリックで開けます。
+3. 「アプリケーション」の NeuraFusion をダブルクリックして、開くことを試みます。
+   警告が出たら「完了」を押して閉じます（「ゴミ箱に入れる」は押さないでください）。
+4. システム設定を開きます。「プライバシーとセキュリティ」をクリックし、下にスクロールして
+   「このまま開く」ボタンをクリックします（パスワードを求められたら入れます）。
+5. 警告メッセージが再び表示されるので、「開く」をクリックします。
+   その後は、ダブルクリックして開けるようになります。
    同じ警告がもう一度出たときは（丸の部品など）、同じ 3〜5 の手順で進めます。
 6. 「アクセシビリティ」の許可を求められたら、システム設定で NeuraFusion をオンにします。
    初回だけ、本体の準備に数分かかり、インターネットを使います。
@@ -58,9 +75,9 @@ NeuraFusion Desktop の試用版をお送りします。
   Mac: ターミナルで  shasum -a 256 ファイル名
   Windows: PowerShell で  Get-FileHash ファイル名
   次の値と同じなら、こちらで作った物のままです。
-  Windows  501f843ad033d70916ee2a9cbbee8df1a31c9897468788b17c8f74ed0d47d5e5
-  Mac arm64 488aca26eb15a409894e9d3ced78cbfdff5298f6ef17cea30d4ac29ede50d5af
-  Mac x64   49318c57fcaf02b89c7397ca8fee2db36d115596ac9e7f9c3c45694f527d0c77
+  Windows  9d1594d9925e7f4dd412b650e00f4ce45f2b4f9f485fe333a9770c047d0560c6
+  Mac arm64 5212a95be8a1acc48f48cd0ce069191773fa6d22c4192c74e807bce0d7bb5747
+  Mac x64   c6b3bb39d267d8667431beb4ac2c420f265a7ec60ac6f5b7913c57e9c2611441
 
 ライセンスの表示は、Mac はディスクイメージの「ライセンス.txt」、Windows は入れた先のフォルダの
 LICENSE・NOTICE・licenses フォルダにあります。
@@ -70,7 +87,7 @@ LICENSE・NOTICE・licenses フォルダにあります。
 
 ## 送る前にオーナーが確かめること
 
-- 値（SHA-256）は 2026-09-29 に作り直した物（`.artifacts/installers/SHA256SUMS.txt`）。作り直したら差し替える。
+- 値（SHA-256）は `.artifacts/installers/SHA256SUMS.txt` の物（2026-09-30 dk-dist-3 が b025592bb から作り直した物）。
+  **この 3 つは直す前の物**（はじめにお読みくださいの「署名について」が古く、Windows の同意の画面も無い）。dk-license-2 のあとに作り直した物を配り、値を差し替える。
+- Windows の 3 の「使用許諾契約」の画面は dk-license-2 で足す物（作り直した Setup.exe から出る）。
 - arm64 の .dmg はこの Mac（Intel）では動かしていない（cloud-build の担当）。arm64 を配るなら、その実行の確認のあとに。
-- 同梱の `packaging/installer/はじめにお読みください.txt` の「署名について」の 2 か所は今の決定と食い違う（配布の担当へ。この文書では変えていない）:
-  「Windows のコード署名の証明書は…購入の手続き中」（→ 今は買わない）、「Mac: NeuraFusion を右クリック →『開く』」（→ macOS 15 以降は設定の「このまま開く」）。
