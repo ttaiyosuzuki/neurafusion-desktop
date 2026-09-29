@@ -1,0 +1,27 @@
+NeuraFusion Desktop
+====================
+
+使い方の流れ
+  1. 入れる
+       Mac      : NeuraFusion.dmg を開き、NeuraFusion を「アプリケーション」へドラッグする
+       Windows  : NeuraFusion-Setup.exe を実行する（管理者の権限は要りません）
+       Linux    : .deb を入れる（sudo apt install ./neurafusion-desktop_*.deb）か、
+                  AppImage に実行の権限を付けて開く
+  2. 最初に 1 回だけ許可する
+       Mac      : 「アクセシビリティ」の許可を求められたら、システム設定で NeuraFusion をオンにする。
+                  読めないアプリで文字認識を使うときは、その時に「画面収録」の許可も聞かれます
+       Windows  : 許可は要りません（文字認識で撮るときは、そのたびに本人に聞きます）
+       Linux    : 画面共有の許可（Wayland のとき。押すたびに聞かれます）
+  3. AI アプリ（Claude・ChatGPT・Cursor など）の右下に丸が出る
+  4. 丸を押すと、7 区画のパネル（最初の問い・捨てる選択肢・次の一手など）が開く
+
+初回だけ、本体の準備（数分）でインターネットを使います。次からはすぐに開きます。
+Node.js を別に入れる必要はありません（Node.js 24 を同梱しています。MIT ライセンス。node/LICENSE）。
+
+署名について（2026-09-29 時点）
+  Apple と Windows のコード署名の証明書は、登録・購入の手続き中です。それまでの版は、
+  Mac では「開発元を確認できません」、Windows では SmartScreen の警告が出ます。
+  Mac: NeuraFusion を右クリック →「開く」。Windows:「詳細情報」→「実行」。
+
+読んだ文字は、押したときだけ、この端末の中で読みます。記録に本文は残しません。
+鍵はこの端末（Keychain 等）に入ります。当社は預かりません。
