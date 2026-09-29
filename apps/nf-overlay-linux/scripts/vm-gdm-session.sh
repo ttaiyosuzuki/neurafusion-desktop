@@ -28,10 +28,11 @@ sudo systemctl stop gdm
 sleep 2
 
 # 1. 画面の装置（vkms）。mutter は vkms を試験用として無視する（61-mutter.rules の mutter-device-ignore。Wayland が
-#    「No GPUs found」で上がらず GDM が X11 に戻す）ので、この VM ではタグを外す。タグは一度付くと残るので装置を作り直す
-R=/etc/udev/rules.d/62-nf-vkms-mutter.rules
+#    「No GPUs found」で上がらず GDM が X11 に戻す）。タグは後の規則で外しても TAGS に残るので、この VM では
+#    /etc に同名の規則を置いて vkms の行だけ抜き、装置を作り直す
+R=/etc/udev/rules.d/61-mutter.rules
 if ! [ -e $R ]; then
-  echo 'ENV{ID_PATH}=="platform-vkms", TAG-="mutter-device-ignore"' | sudo tee $R > /dev/null
+  grep -v 'platform-vkms' /usr/lib/udev/rules.d/61-mutter.rules | sudo tee $R > /dev/null
   sudo udevadm control --reload
 fi
 if [ -e /dev/dri/card0 ] && udevadm info /dev/dri/card0 | grep -q 'TAGS=.*mutter-device-ignore'; then sudo modprobe -r vkms; fi
