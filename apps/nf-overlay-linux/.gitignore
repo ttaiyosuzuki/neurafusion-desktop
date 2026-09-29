@@ -1,2 +1,5 @@
 __pycache__/
 *.pyc
+# ルートの .gitignore の `Core/`（Xcode 用）は、大文字小文字を区別しない Mac（core.ignorecase=true）では
+# nf_overlay/core/ まで無視してしまい、中核のファイルが commit に入らなかった。ここで戻す
+!nf_overlay/core/
