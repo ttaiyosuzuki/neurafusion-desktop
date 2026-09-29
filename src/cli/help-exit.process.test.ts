@@ -214,7 +214,7 @@ describe("CLI help process exit", () => {
     const result = await runCliProcess({ args: ["backup", "--help"], keepAlive: true });
 
     expect(result.stderr).toBe("");
-    expect(result.stdout).toContain("Usage: openclaw backup [options] [command]");
+    expect(result.stdout).toContain("Usage: neurafusion backup [options] [command]");
   });
   it("flushes explicitly requested entry traces on precomputed help", async () => {
     const result = await runCliProcess({
