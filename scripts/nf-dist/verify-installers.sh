@@ -154,6 +154,24 @@ check_licenses() {
   fi
 }
 
+# ---- はじめにお読みくださいの署名の記述が今の決定どおりか（Windows は今は無署名・Mac は Apple の今の手順「このまま開く」）
+# $1=名前 残り=ファイル
+readme_is_current() {
+  local name="$1" f bad=""
+  shift
+  for f in "$@"; do
+    if [ ! -s "$f" ] || ! grep -q -F '今は無署名' "$f" || ! grep -q -F 'このまま開く' "$f" ||
+      grep -q -F '購入の手続き中' "$f" || grep -q -F '右クリック' "$f"; then
+      bad="$bad ${f##*/}"
+    fi
+  done
+  if [ -z "$bad" ]; then
+    ok "$name: はじめにお読みくださいの署名の記述（今は無署名・「このまま開く」）"
+  else
+    ng "$name: はじめにお読みくださいの署名の記述が古い・無い（${bad}）"
+  fi
+}
+
 # ---- 同梱の Node で本体を入れて --version・--help を動かす（NF_DIST_SMOKE=1 のときだけ）。$1=入口 $2=名前
 # 本人の HOME・npm のキャッシュ・設定の置き場・通知に触れないよう、環境を空にし、使い捨ての HOME とデータの置き場で動かす。
 smoke() {
@@ -246,6 +264,7 @@ verify_one_dmg() {
   no_brand "$name: 窓と .app に見える名前（ボリューム名「${vol}」・ファイル名）" "$t/visible-names.txt"
   no_brand "$name: Info.plist（入口と丸の名前・許可の理由・著作権の欄）" "$app/Contents/Info.plist" "$res/NFOverlay.app/Contents/Info.plist"
   no_brand "$name: はじめにお読みください.txt・README-ja.txt" "$mnt/はじめにお読みください.txt" "$res/README-ja.txt"
+  readme_is_current "$name" "$mnt/はじめにお読みください.txt" "$res/README-ja.txt"
   no_brand "$name: 入口と丸の本体の中の文字" "$app/Contents/MacOS/NeuraFusion" "$res/NFOverlay.app/Contents/MacOS/nf-overlay"
   iconf="$(/usr/libexec/PlistBuddy -c "Print :CFBundleIconFile" "$app/Contents/Info.plist" 2>/dev/null || true)"
   if [ -n "$iconf" ] && cmp -s "$res/${iconf%.icns}.icns" "$ICONS/neurafusion.icns"; then
@@ -283,6 +302,12 @@ verify_exe() {
   no_brand_nsis "$name: インストーラの文言・「アプリと機能」の表示名と発行元・ショートカット名" "$exe"
   head -c 131072 "$exe" > "$t/stub.bin"
   no_brand "$name: インストーラの版情報（製品名・説明・著作権）" "$t/stub.bin"
+  # 同意の画面（MUI_PAGE_LICENSE）: Microsoft .NET Library License の英語の原文と対象のファイル（docs/licenses/components.md 4 節）
+  if python3 "$ROOT_DIR/scripts/nf-dist/nsis-license-text.py" "$exe" "MICROSOFT .NET LIBRARY" "PresentationNative_cor3.dll" > "$t/license-page.txt" 2>&1; then
+    ok "$name: 同意の画面（.NET Library License の英語の原文と対象のファイル。「同意する」まで進めない）"
+  else
+    ng "$name: 同意の画面に .NET Library License の原文・対象のファイルが無い（$(head -1 "$t/license-page.txt")）"
+  fi
   z="$(command -v 7zz || command -v 7z || true)"
   if [ -z "$z" ]; then
     echo "--   $name: 7z が無いので、同梱物・ライセンス文書・丸の本体は見ない（形と文言だけ）"
@@ -304,6 +329,20 @@ verify_exe() {
   check_licenses "$x" "$name" nsis-COPYING.txt dotnet-runtime-LICENSE.txt dotnet-runtime-THIRD-PARTY-NOTICES.txt \
     dotnet-windowsdesktop-LICENSE.txt dotnet-library-license.txt webview2-LICENSE.txt webview2-NOTICE.txt
   no_brand "$name: 丸の本体（nf-overlay.exe の製品名・会社名・中の文字）・README-ja.txt" "$x/overlay/nf-overlay.exe" "$x/README-ja.txt"
+  readme_is_current "$name" "$x/README-ja.txt"
+  # WPF の使っていないネイティブ DLL（NfOverlay.Win.csproj の NfRemoveUnusedWpfNative）。単一ファイルの目録で見る
+  if python3 "$ROOT_DIR/scripts/nf-dist/bundle-files.py" "$x/overlay/nf-overlay.exe" > "$t/bundle.txt" 2>&1 &&
+    grep -q -x -F 'nf-overlay.dll' "$t/bundle.txt" &&
+    ! grep -q -i -E '(^|/)(wpfgfx_cor3|D3DCompiler_47_cor3|vcruntime140_cor3|PenImc_cor3)\.dll$' "$t/bundle.txt"; then
+    ok "$name: 丸の本体に WPF の使っていないネイティブ DLL が無い（wpfgfx_cor3・D3DCompiler_47_cor3・vcruntime140_cor3・PenImc_cor3。目録 $(wc -l < "$t/bundle.txt" | tr -d ' ') 件）"
+  else
+    ng "$name: 丸の本体に WPF の使っていないネイティブ DLL がある・目録が読めない（$(grep -i -E '_cor3' "$t/bundle.txt" | tr '\n' ' ')）"
+  fi
+  if python3 -c 'import sys; sys.exit(0 if "Copyright (c) 2026 NeuraFusion".encode("utf-16-le") in open(sys.argv[1], "rb").read() else 1)' "$x/overlay/nf-overlay.exe"; then
+    ok "$name: 丸の本体の版情報に著作権表示（Copyright (c) 2026 NeuraFusion）"
+  else
+    ng "$name: 丸の本体の版情報に著作権表示が無い（NfOverlay.Win.csproj の <Copyright>）"
+  fi
   if cmp -s "$x/neurafusion.ico" "$ICONS/neurafusion.ico"; then
     ok "$name: アイコンは NeuraFusion の物（インストーラ・スタートメニュー・「アプリと機能」）"
   else

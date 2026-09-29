@@ -22,7 +22,26 @@
     <Version>0.1.0</Version>
     <Product>NeuraFusion Overlay</Product>
     <Company>NeuraFusion</Company>
+    <!-- 版情報の LegalCopyright（.NET Library License の「自分の著作権表示」。docs/licenses/components.md 4 節） -->
+    <Copyright>Copyright (c) 2026 NeuraFusion</Copyright>
   </PropertyGroup>
+
+  <!--
+    UseWPF は System.Windows.Automation のためだけ。WPF の描画・文字・印刷・ペン入力のネイティブ DLL は使わないので、
+    書き出し（単一ファイルの中身）と .deps.json の両方から外す（.deps.json は RuntimePackAsset、書き出す物は同じ target で
+    RuntimePackAsset から足される ReferenceCopyLocalPaths から作られる）。
+    PresentationNative_cor3.dll は UIAutomationClient・UIAutomationTypes・WindowsBase が P/Invoke で呼ぶ
+    （GetWindowLongWrapper・MapWindowPointsWrapper・IsWindows10OrGreater など）ので残す。
+    wpfgfx_cor3・PenImc_cor3 は PresentationCore、D3DCompiler_47_cor3 は wpfgfx_cor3、vcruntime140_cor3 は
+    DirectWriteForwarder・System.Printing だけが読む。docs/licenses/components.md 4 節
+  -->
+  <Target Name="NfRemoveUnusedWpfNative" AfterTargets="ResolveRuntimePackAssets">
+    <ItemGroup>
+      <_NfUnusedWpfNative Include="@(RuntimePackAsset)" Condition="'%(Filename)%(Extension)' == 'wpfgfx_cor3.dll' or '%(Filename)%(Extension)' == 'D3DCompiler_47_cor3.dll' or '%(Filename)%(Extension)' == 'vcruntime140_cor3.dll' or '%(Filename)%(Extension)' == 'PenImc_cor3.dll'" />
+      <RuntimePackAsset Remove="@(_NfUnusedWpfNative)" />
+      <ReferenceCopyLocalPaths Remove="@(_NfUnusedWpfNative)" />
+    </ItemGroup>
+  </Target>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2903.40" />

@@ -25,8 +25,9 @@ Windows のインストーラに原文を表示して「同意する」を押し
 
 1. 済（dk-license-2）: NOTICE を案の形にした（【連絡先】= info@taiyosuzuki.com）。
 2. 済（dk-license-2）: `licenses/` に .NET Library License の原文（`packaging/installer/licenses/dotnet-library-license.txt`）を足した。
-   Windows SDK License は、その対象の `D3DCompiler_47_cor3.dll` を配布物から外すので足さない（B の作業）。
-3. `NfOverlay.Win.csproj` に `<Copyright>` を足す（`nf-overlay.exe` の `LegalCopyright` が空）。
+   Windows SDK License は、その対象の `D3DCompiler_47_cor3.dll` を配布物から外したので足さない（`components.md` 4.4）。
+   Windows のインストーラに .NET Library License の同意の画面を足した（`components.md` 4.4）。
+3. 済（dk-license-2）: `NfOverlay.Win.csproj` に `<Copyright>` を足した。
 4. `nsis-3.13-src.tar.bz2`（SHA-256 `a8ffe024602d46b6d766f9e1ce30c324ad2a24daeacd3efc2642d436a0c157ac`）を配布物と一緒に保管する。
 5. Linux 版を出す前: type2-runtime の版を固定（`--runtime-file`）・musl／squashfuse／zstd／LGPL-2.1 の全文を足す・ソースを同じ場所に置く・
    `NOTICE.proposed.txt` の 5 節を埋めて NOTICE へ足す。

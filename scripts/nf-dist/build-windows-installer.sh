@@ -6,7 +6,7 @@
 # 要るもの: makensis（NSIS 3。zlib/libpng ライセンス。Mac は brew install makensis）、
 #           .NET 8 SDK（丸の本体 nf-overlay.exe を win-x64・自己完結・1ファイルで書き出す。NF_DOTNET で場所を指定）
 # 中身: Node 24（win-x64）・ランチャー・npm tarball・丸の本体（.NET ランタイムごと。別に入れる物を無くす）
-# 署名はしない（証明書の購入待ち。docs/overlay-windows-signing.md）。
+# 署名はしない（今は無署名。docs/overlay-windows-signing.md）。
 set -euo pipefail
 source "$(dirname "$0")/common.sh"
 require_tgz
@@ -75,10 +75,18 @@ done <<< "$PACKS"
 LICENSE_VERSIONS+=("$("$MAKENSIS" -VERSION | sed 's/^v/NSIS /')")
 finish_licenses "$STAGE" "${LICENSE_VERSIONS[@]}"
 
+# 同意の画面（MUI の license ページ）の文: 対象のファイルの一覧＋.NET Library License の英語の原文。
+# 入れた先には licenses/dotnet-library-license.txt（原文だけ）が入る。NSIS（Unicode）は BOM つき UTF-8・CRLF の文を読む
+LICENSE_PAGE="$STAGE_ROOT/windows-license-page.txt"
+{
+  printf '\xEF\xBB\xBF'
+  cat "$ROOT_DIR/packaging/installer/windows/dotnet-license-page-header.txt" "$STAGE/licenses/dotnet-library-license.txt"
+} | awk '{ sub(/\r$/, ""); printf "%s\r\n", $0 }' > "$LICENSE_PAGE"
+
 OUT="$OUT_DIR/NeuraFusion-Desktop-$VERSION-windows-x64-Setup.exe"
 rm -f "$OUT"
 # makensis（POSIX 版）はロケールが無いと日本語の行で落ちる
 LC_ALL=en_US.UTF-8 "$MAKENSIS" -V2 -INPUTCHARSET UTF8 \
-  "-DSTAGE=$STAGE" "-DOUTFILE=$OUT" "-DVERSION=$VERSION" \
+  "-DSTAGE=$STAGE" "-DOUTFILE=$OUT" "-DVERSION=$VERSION" "-DLICENSE_PAGE=$LICENSE_PAGE" \
   "$ROOT_DIR/packaging/installer/windows/neurafusion.nsi"
 record_artifact "$OUT"

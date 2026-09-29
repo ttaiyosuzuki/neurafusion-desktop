@@ -1,0 +1,16 @@
+Microsoft .NET Library License
+
+対象のファイル / Files covered by these terms:
+- overlay\nf-overlay.exe に入っている .NET 8 ランタイム（単一ファイルとして発行。coreclr ほか）
+  The .NET 8 runtime included in overlay\nf-overlay.exe (published as a single file; coreclr and others)
+- overlay\nf-overlay.exe に入っている PresentationNative_cor3.dll
+  PresentationNative_cor3.dll included in overlay\nf-overlay.exe
+
+NeuraFusion Desktop のほかの部分は、それぞれの条件（LICENSE・NOTICE・licenses フォルダ）で提供されます。
+The rest of NeuraFusion Desktop is provided under its own terms (LICENSE, NOTICE and the licenses folder).
+下は英語の原文です。入れた先の licenses\dotnet-library-license.txt にも同じ物があります。
+The original English text follows. The same text is installed as licenses\dotnet-library-license.txt.
+Source: https://dotnet.microsoft.com/dotnet_library_license.htm (retrieved 2026-09-30)
+
+────────────────────────────────────────────────────────
+

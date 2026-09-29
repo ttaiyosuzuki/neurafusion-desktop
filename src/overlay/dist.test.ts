@@ -352,6 +352,12 @@ describe("ライセンス文書を配布物に入れる", () => {
       expect(win).toContain(f);
     }
     expect(read("packaging/installer/windows/neurafusion.nsi")).toContain('File /r "${STAGE}\\*.*"');
+    expect(read("packaging/installer/windows/neurafusion.nsi")).toContain('!insertmacro MUI_PAGE_LICENSE "${LICENSE_PAGE}"');
+    expect(win).toContain("dotnet-license-page-header.txt");
+    expect(win).toContain('"-DLICENSE_PAGE=$LICENSE_PAGE"');
+    const csproj = read("apps/nf-overlay-windows/src/NfOverlay.Win/NfOverlay.Win.csproj");
+    for (const f of ["wpfgfx_cor3.dll", "D3DCompiler_47_cor3.dll", "vcruntime140_cor3.dll", "PenImc_cor3.dll"]) expect(csproj).toContain(f);
+    expect(csproj).toContain("<Copyright>Copyright (c) 2026 NeuraFusion</Copyright>");
     const linux = read("scripts/nf-dist/build-linux-packages.sh");
     expect(linux).toContain("usr/share/doc/neurafusion-desktop/copyright");
     expect(linux).toContain('stage_payload "$appdir/opt/neurafusion" appimage');

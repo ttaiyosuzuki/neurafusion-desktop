@@ -116,11 +116,10 @@ components of the Windows Desktop runtime 8.0.31.
   licenses/dotnet-runtime-LICENSE.txt, licenses/dotnet-runtime-THIRD-PARTY-NOTICES.txt,
   licenses/dotnet-windowsdesktop-LICENSE.txt
 - Microsoft .NET Library License（licenses/dotnet-library-license.txt）:
-  nf-overlay.exe に入っている .NET ランタイム（単一ファイル。coreclr.dll ほか）、PresentationNative_cor3.dll、
-  vcruntime140_cor3.dll、wpfgfx_cor3.dll
-  The .NET runtime included in nf-overlay.exe (single file; coreclr.dll and others),
-  PresentationNative_cor3.dll, vcruntime140_cor3.dll and wpfgfx_cor3.dll.
-- Microsoft Windows SDK License（https://learn.microsoft.com/legal/windows-sdk/license）:
-  D3DCompiler_47_cor3.dll
+  nf-overlay.exe に入っている .NET ランタイム（単一ファイル。coreclr ほか）と PresentationNative_cor3.dll。
+  Windows のインストーラは、この条件の英語の原文と対象のファイルを表示し、「同意する」を押すまで進みません。
+  The .NET runtime included in nf-overlay.exe (single file; coreclr and others) and
+  PresentationNative_cor3.dll. The Windows installer shows the original English terms
+  and the covered files, and does not continue until you click "I Agree".
 - Microsoft のプライバシーに関する声明 / Microsoft privacy statement:
   https://go.microsoft.com/fwlink/?LinkID=824704

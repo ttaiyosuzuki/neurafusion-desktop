@@ -237,3 +237,24 @@ Windows SDK License 2.a.ii: "Add significant primary functionality to it in your
   **利用者の同意の要件は .NET を Windows で配る限り残る**。
 - 「配る者と利用者に、少なくとも同じだけ保護する条件へ同意させる」の満たし方: **弁護士には聞かず、Windows のインストーラに原文を表示して
   「同意する」を押すまで進めない画面で対応する**（オーナー決定 2026-09-30 08:25。先に WPF の DLL を外し、残る部品について行う。dk-license-2）。
+
+### 4.4 直したこと（dk-license-2・2026-09-30）
+
+- **WPF の使っていないネイティブ DLL を外した**: `wpfgfx_cor3.dll`・`D3DCompiler_47_cor3.dll`・`vcruntime140_cor3.dll`・`PenImc_cor3.dll`
+  （`NfOverlay.Win.csproj` の target `NfRemoveUnusedWpfNative`。`RuntimePackAsset` と、同じ target で足される `ReferenceCopyLocalPaths` から除く）。
+  win-x64 の単一ファイルの目録は 456 → 452 件、`.deps.json`（単一ファイル用と複数ファイルの書き出し）からも消えた。
+- 使っていない根拠（runtime pack 8.0.31 の中で、名前を持つ物を探した）: `wpfgfx_cor3` を呼ぶ managed は `PresentationCore.dll` だけ、
+  `vcruntime140_cor3` は `DirectWriteForwarder.dll`・`System.Printing.dll` だけ、`D3DCompiler_47_cor3` は `wpfgfx_cor3.dll` の import だけ（`objdump -p`）、
+  `PenImc_cor3` は `PresentationCore.dll`（ペン入力）。丸の UI Automation が読むのは `UIAutomationClient`・`UIAutomationTypes`・`UIAutomationProvider`・
+  `WindowsBase` で、`PresentationCore` は使わない（丸の画面は WinForms）。
+- **`PresentationNative_cor3.dll` は残した（使っている）**: `UIAutomationClient.dll`・`UIAutomationTypes.dll`・`WindowsBase.dll` が P/Invoke で呼ぶ
+  （`GetWindowLongWrapper`・`GetWindowWrapper`・`MapWindowPointsWrapper`・`GetMenuBarInfoWrapper`・`GlobalDeleteAtomWrapper`・`IsWindows10OrGreater` など。
+  export 199 個と突き合わせた）。外すには UI Automation を COM（UIAutomationCore）で呼ぶ書き換えが要る。
+- 残る Microsoft の条件の部品: **.NET Library License = 単一ファイルに入る .NET ランタイム（coreclr ほか）と `PresentationNative_cor3.dll`**。
+  Windows SDK License の部品は無くなった（`D3DCompiler_47_cor3.dll` を外したので）。`Microsoft.DiaSymReader.Native.*` は元から無い。
+- **同意の画面**: Windows のインストーラに NSIS の `MUI_PAGE_LICENSE` を足した（ようこそ → 使用許諾契約 → インストール → 完了）。
+  文は `packaging/installer/windows/dotnet-license-page-header.txt`（対象のファイル）＋ `licenses/dotnet-library-license.txt`（英語の原文）。
+  「同意する」を押すまで先へ進めない。BOM つき UTF-8・CRLF で渡すと makensis が UTF-16LE にして入れる（試しに作った物をほどいて確かめた）。
+- `nf-overlay.exe` の版情報の `LegalCopyright` = `Copyright (c) 2026 NeuraFusion`（csproj の `<Copyright>`）。
+- verify に足した: 丸の本体の目録に 4 つが無い（`scripts/nf-dist/bundle-files.py`）・同意の画面の文（`scripts/nf-dist/nsis-license-text.py`）・
+  版情報の著作権表示・はじめにお読みくださいの署名の記述（.dmg と .exe）。

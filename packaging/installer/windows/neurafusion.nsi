@@ -1,8 +1,8 @@
 ﻿; NeuraFusion Desktop — Windows のインストーラ（DK-09）。NSIS 3（zlib/libpng ライセンス）で作る。
-;   makensis -DSTAGE=<同梱物の置き場> -DOUTFILE=<出力> -DVERSION=<版> neurafusion.nsi
+;   makensis -DSTAGE=<同梱物の置き場> -DOUTFILE=<出力> -DVERSION=<版> -DLICENSE_PAGE=<同意の画面の文> neurafusion.nsi
 ; 管理者の権限は要らない（本人の %LOCALAPPDATA%\Programs に入れる）。
 ; 入れる途中で、同梱の Node 24 で本体（npm tarball）を本人のデータの置き場に入れる（初回の準備）。
-; 署名はしない（コード署名の証明書は購入待ち。docs/overlay-windows-signing.md）。
+; 署名はしない（今は無署名。docs/overlay-windows-signing.md）。
 
 Unicode true
 SetCompressor /SOLID lzma
@@ -29,7 +29,14 @@ VIAddVersionKey /LANG=1041 "LegalCopyright" "NeuraFusion"
 !define MUI_FINISHPAGE_RUN_TEXT "NeuraFusion を起動する（AI アプリの右下に丸が出ます）"
 !define MUI_FINISHPAGE_SHOWREADME "$INSTDIR\README-ja.txt"
 
+!ifndef LICENSE_PAGE
+  !error "LICENSE_PAGE（同意の画面に出す文のファイル。build-windows-installer.sh が作る）を -DLICENSE_PAGE= で渡す"
+!endif
+
 !insertmacro MUI_PAGE_WELCOME
+; Microsoft .NET Library License（丸の本体 nf-overlay.exe に入る .NET ランタイムと PresentationNative_cor3.dll）の
+; 英語の原文と対象のファイルを出し、「同意する」を押すまで先へ進めない（docs/licenses/components.md 4 節）
+!insertmacro MUI_PAGE_LICENSE "${LICENSE_PAGE}"
 !insertmacro MUI_PAGE_INSTFILES
 !insertmacro MUI_PAGE_FINISH
 !insertmacro MUI_UNPAGE_CONFIRM
