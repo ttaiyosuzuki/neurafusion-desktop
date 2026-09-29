@@ -4,6 +4,7 @@
     press-button.py 撮らない|撮って読む                   … 丸（nf-overlay）の同意の小窓
     press-button.py --portal share [窓の題名の一部]       … 画面共有の確認で「Application Window」→ その窓 → Share
     press-button.py --portal share-default                … 画面共有の確認で、選ばれているもののまま Share
+    press-button.py --portal share-screen                 … 画面共有の確認で「Entire Screen」へ移って Share
     press-button.py --portal cancel                        … 画面共有の確認で Cancel
 
 見るのは、その2つのアプリの押せる部品の名前だけ。見つかったら do_action(0)（クリックと同じ）。
@@ -64,6 +65,11 @@ def main():
         owner = "xdg-desktop-portal-gnome"
         if a[1] == "cancel":
             return 0 if press(owner, lambda n, s: n.get_role() == Atspi.Role.PUSH_BUTTON and s in ("Cancel", "キャンセル")) else 1
+        if a[1] == "share-screen":
+            # 「Entire Screen」のタブへ移り（前回の選び方が残っていることがある）、選ばれている画面のまま Share
+            press(owner, lambda n, s: n.get_role() == Atspi.Role.PAGE_TAB and s == "Entire Screen", tries=6)
+            time.sleep(1)
+            return 0 if press(owner, lambda n, s: n.get_role() == Atspi.Role.PUSH_BUTTON and s in ("Share", "共有")) else 1
         if a[1] == "share-default":
             # 何も選び直さず、最初から選ばれているもの（GNOME の既定は画面全体）のまま Share
             return 0 if press(owner, lambda n, s: n.get_role() == Atspi.Role.PUSH_BUTTON and s in ("Share", "共有")) else 1

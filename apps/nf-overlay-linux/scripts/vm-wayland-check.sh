@@ -39,8 +39,16 @@ consent() {
   if [ "$(xdotool getactivewindow 2>/dev/null)" = "$cw" ]; then echo "consent-focused=yes"; else echo "consent-focused=no"; fi
   if [ "$1" = decline ]; then "$HERE/press-button.py" 撮らない; else "$HERE/press-button.py" 撮って読む; fi
 }
-# 画面共有の確認（xdg-desktop-portal-gnome の「Share Screen」）で、本人の代わりに Share / Cancel を押す
-portal_ui() { if [ "$1" = accept ]; then "$HERE/press-button.py" --portal share-default; else "$HERE/press-button.py" --portal cancel; fi; }
+# 画面共有の確認（xdg-desktop-portal-gnome の「Share Screen」）で、本人の代わりに選んで押す
+#   window = 「Application Window」で代わりの AI の窓を選んで Share、screen = 「Entire Screen」のまま Share、cancel = Cancel
+portal_ui() {
+  case "$1" in
+    window) "$HERE/press-button.py" --portal share "Fake AI" ;;
+    screen) "$HERE/press-button.py" --portal share-screen ;;
+    *) "$HERE/press-button.py" --portal cancel ;;
+  esac
+}
+last_read() { grep '"type": "read"' "$LINES" | tail -1 | python3 -c "import json,sys;r=json.loads(sys.stdin.read());print(r.get('method'),r.get('ok'),r.get('reason'),r.get('chars'),json.dumps(r.get('textProbe'),ensure_ascii=False))"; }
 wait_read() { local n=$1; for _ in $(seq 1 90); do [ "$(count '"type": "read"')" -ge "$n" ] && return 0; sleep 1; done; return 1; }
 
 cat > "$OUT/cfg.json" <<'JSON'
@@ -73,25 +81,33 @@ set -- $(last_dot); xdotool mousemove "$1" "$2" click 1
 consent decline w02-consent-dialog; wait_read 1
 echo "read=$(count '"type": "read"')"
 
-echo "--- 2 押す → 同意 → 画面共有の確認で Share"
+echo "--- 2 押す → 同意 → 画面共有の確認で「Application Window」から代わりの AI の窓を選んで Share"
 set -- $(last_dot); xdotool mousemove "$1" "$2" click 1
 consent accept
 sleep 3; shot w03-portal-dialog
-portal_ui accept > "$OUT/portal-accept.log" 2>&1
-wait_read 2; sleep 1; shot w04-ocr-done
-echo "read=$(count '"type": "read"')"
+portal_ui window > "$OUT/portal-window.log" 2>&1
+wait_read 2; sleep 1; shot w04-ocr-window-done
+echo "read=$(count '"type": "read"') last=$(last_read)"
 
-echo "--- 3 押す → 同意 → 画面共有の確認で Cancel"
+echo "--- 3 押す → 同意 → 画面共有の確認で「Entire Screen」のまま Share（撮る間は丸のパネルが隠れること）"
+set -- $(last_dot); xdotool mousemove "$1" "$2" click 1
+consent accept
+sleep 3
+portal_ui screen > "$OUT/portal-screen.log" 2>&1
+wait_read 3; sleep 1; shot w05-ocr-screen-done
+echo "read=$(count '"type": "read"') last=$(last_read)"
+
+echo "--- 4 押す → 同意 → 画面共有の確認で Cancel"
 set -- $(last_dot); xdotool mousemove "$1" "$2" click 1
 consent accept
 sleep 3
 portal_ui cancel > "$OUT/portal-cancel.log" 2>&1
-wait_read 3; sleep 1; shot w05-portal-cancelled
-echo "read=$(count '"type": "read"')"
+wait_read 4; sleep 1; shot w06-portal-cancelled
+echo "read=$(count '"type": "read"') last=$(last_read)"
 
-echo "--- 4 全体のオフ"
+echo "--- 5 全体のオフ"
 send "$(python3 -c "import json;c=json.load(open('$OUT/cfg.json'));c['enabled']=False;print(json.dumps(c,ensure_ascii=False))")"
-sleep 2; shot w06-all-off
+sleep 2; shot w07-all-off
 send '{"v":1,"type":"get-read-log"}'; sleep 1
 send '{"v":1,"type":"stop"}'; sleep 2
 wait $DRV 2>/dev/null
