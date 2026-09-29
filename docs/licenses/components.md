@@ -173,6 +173,8 @@ musl（MIT）: 表示の義務がある。免除は "all public header files (`i
   - 同じ pack の `runtimes/win-x64/native/` にネイティブ DLL 5 つ: `D3DCompiler_47_cor3.dll`・`PenImc_cor3.dll`・`PresentationNative_cor3.dll`・
     `vcruntime140_cor3.dll`・`wpfgfx_cor3.dll`。
   - `~/.nuget/packages/microsoft.netcore.app.runtime.win-x64/8.0.31/` の `LICENSE.TXT`・`THIRD-PARTY-NOTICES.TXT`（nuspec は MIT）。
+    THIRD-PARTY-NOTICES.TXT は 1,272 行（SHA-256 `b60b2912da28eaa6…`）、"License notice for" が 44 件、GPL・LGPL の語は 0 件。
+    今の配布物は両方を `licenses/` に写している（足りている）。
 - .NET の公式のライセンスの説明（dotnet/core main `44927bc821d3`・2026-09-28）:
   - <https://github.com/dotnet/core/blob/main/license-information.md>: "Product distributions use the following license: … On Windows: [.NET Library License]" /
     "Product distributions include downloadable assets and runtime packs (<https://www.nuget.org/packages/Microsoft.NETCore.App.Runtime.win-x64/>)."
