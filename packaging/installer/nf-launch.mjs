@@ -9,7 +9,7 @@
 // 読んだ文字はここを通らない（ログには段階と終了コードだけ書く）。
 
 import { spawn } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, writeFileSync, appendFileSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -151,8 +151,18 @@ export async function main({ resourcesDir, argv = process.argv.slice(2) }) {
   return code;
 }
 
+/** 直接起動されたか（/var と /private/var のようなシンボリックリンク越しでも同じと見る） */
+export function isDirectRun(argv1, selfPath) {
+  if (!argv1) return false;
+  try {
+    return realpathSync(argv1) === realpathSync(selfPath);
+  } catch {
+    return path.resolve(argv1) === selfPath;
+  }
+}
+
 const self = fileURLToPath(import.meta.url);
-if (process.argv[1] && path.resolve(process.argv[1]) === self) {
+if (isDirectRun(process.argv[1], self)) {
   const resourcesDir = process.env.NF_DIST_RESOURCES || path.dirname(self);
   main({ resourcesDir }).then(
     (code) => process.exit(code),

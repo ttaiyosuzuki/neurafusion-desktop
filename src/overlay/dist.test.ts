@@ -3,7 +3,7 @@
 // 実物の書き出し・中身の確認は scripts/nf-dist/verify-installers.sh（docs/desktop-installers.md）。
 
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, symlinkSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
@@ -12,7 +12,7 @@ import { describe, expect, it } from "vitest";
 import * as launcher from "../../packaging/installer/nf-launch.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
-const LAUNCHER = path.join(ROOT, "packaging", "installer", "nf-launch.mjs");
+const LAUNCHER_SRC = path.join(ROOT, "packaging", "installer", "nf-launch.mjs");
 const read = (rel: string) => readFileSync(path.join(ROOT, rel), "utf8");
 
 describe("ランチャーの置き場（管理者権限なし）", () => {
@@ -50,6 +50,19 @@ describe("ランチャーの置き場（管理者権限なし）", () => {
   });
 });
 
+describe("直接起動の判定", () => {
+  it("シンボリックリンク越し（/var → /private/var など）でも自分と見る", () => {
+    const tmp = mkdtempSync(path.join(os.tmpdir(), "nf-dist-link-"));
+    const real = path.join(tmp, "real.mjs");
+    writeFileSync(real, "");
+    const link = path.join(tmp, "link.mjs");
+    symlinkSync(real, link);
+    expect(launcher.isDirectRun(link, realpathSync(real))).toBe(true);
+    expect(launcher.isDirectRun(undefined, real)).toBe(false);
+    expect(launcher.isDirectRun(path.join(tmp, "other.mjs"), real)).toBe(false);
+  });
+});
+
 describe("ランチャーを実際に動かす（偽の小さな tarball）", () => {
   it("初回だけ入れ、2回目は入れずに overlay start を丸の本体つきで起動する", () => {
     const tmp = mkdtempSync(path.join(os.tmpdir(), "nf-dist-"));
@@ -77,7 +90,9 @@ describe("ランチャーを実際に動かす（偽の小さな tarball）", ()
     const data = path.join(tmp, "data");
     const out = path.join(tmp, "out.jsonl");
     const env = { ...process.env, NF_DIST_RESOURCES: res, NF_DIST_DATA_DIR: data, NF_TEST_OUT: out, npm_config_cache: path.join(tmp, "cache"), npm_config_offline: "true" };
-    const run = () => spawnSync(process.execPath, [LAUNCHER], { env, encoding: "utf8" });
+    // 同梱と同じく、リソースの置き場にあるランチャーを（リンクを含むかもしれない）そのパスで動かす
+    copyFileSync(LAUNCHER_SRC, path.join(res, "nf-launch.mjs"));
+    const run = () => spawnSync(process.execPath, [path.join(res, "nf-launch.mjs")], { env, encoding: "utf8" });
 
     const first = run();
     expect(first.status).toBe(0);

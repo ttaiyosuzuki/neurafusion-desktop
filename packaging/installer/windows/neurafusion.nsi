@@ -27,7 +27,7 @@ VIAddVersionKey /LANG=1041 "LegalCopyright" "NeuraFusion"
 !define MUI_FINISHPAGE_RUN "$INSTDIR\node\node.exe"
 !define MUI_FINISHPAGE_RUN_PARAMETERS '"$INSTDIR\nf-launch.mjs"'
 !define MUI_FINISHPAGE_RUN_TEXT "NeuraFusion を起動する（AI アプリの右下に丸が出ます）"
-!define MUI_FINISHPAGE_SHOWREADME "$INSTDIR\はじめにお読みください.txt"
+!define MUI_FINISHPAGE_SHOWREADME "$INSTDIR\README-ja.txt"
 
 !insertmacro MUI_PAGE_WELCOME
 !insertmacro MUI_PAGE_INSTFILES

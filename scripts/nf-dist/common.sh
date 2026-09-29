@@ -42,7 +42,8 @@ stage_common() {
   for f in LICENSE NOTICE THREAT_MODEL.md; do
     [ -f "$ROOT_DIR/$f" ] && cp "$ROOT_DIR/$f" "$dir/"
   done
-  cp "$ROOT_DIR/packaging/installer/はじめにお読みください.txt" "$dir/"
+  # 中に置く名前は ASCII（Mac の HFS+ は日本語の名前を NFD に変え、.app の署名の封と食い違うため）
+  cp "$ROOT_DIR/packaging/installer/はじめにお読みください.txt" "$dir/README-ja.txt"
 }
 
 sha256_of() {
