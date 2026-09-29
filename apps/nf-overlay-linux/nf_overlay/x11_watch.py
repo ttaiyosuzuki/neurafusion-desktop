@@ -56,6 +56,7 @@ class X11Watcher:
         self._cur: Wnck.Window | None = None
         self._handlers: list[int] = []
         self._own_pid = os.getpid()
+        self._own_active = False
         self._started = False
 
     def start(self) -> None:
@@ -109,9 +110,14 @@ class X11Watcher:
 
     def _active_changed(self) -> None:
         w = self._screen.get_active_window()
-        # 自分の窓（丸・パネル・同意の小窓）が前面になっても、前の対象のままにする
+        # 自分の窓（丸・パネル・同意の小窓）が前面になっても、前の対象のままにする。
+        # 自分の窓を閉じた直後の「前面なし」も同じ（ウィンドウマネージャーが前の窓に戻すまでの間）
         if w is not None and w.get_pid() == self._own_pid:
+            self._own_active = True
             return
+        if w is None and self._own_active:
+            return
+        self._own_active = False
         self._disconnect()
         if w is None or w.get_window_type() in (Wnck.WindowType.DESKTOP, Wnck.WindowType.DOCK):
             self._on_active(None)

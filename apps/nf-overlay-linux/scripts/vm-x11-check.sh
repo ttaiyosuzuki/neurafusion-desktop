@@ -22,6 +22,14 @@ d=g[-1]["dot"]; print(d["x"]+d["w"]//2, d["y"]+d["h"]//2)
 PY
 }
 count() { grep -c "$1" "$LINES"; }
+# 同意の小窓のボタンを押す（左 = 撮らない、右 = 撮って読む）。ボタンの列は小窓の下端から 18px
+press_consent() {
+  # 小窓が前面（フォーカスあり）になるのを待ち、キーボードで押す。decline = Esc（撮らない）、accept = Tab で「撮って読む」へ移って Space
+  local D; D=$(xdotool search --sync --onlyvisible --classname "^nf-overlay-consent$" | head -1)
+  for _ in $(seq 1 20); do [ "$(xdotool getactivewindow)" = "$D" ] && break; sleep 0.3; done
+  sleep 0.5; [ -n "${2:-}" ] && shot "$2"
+  if [ "$1" = decline ]; then xdotool key Escape; else xdotool key Tab; sleep 0.3; xdotool key space; fi
+}
 wid() { xdotool search --sync --onlyvisible --classname "$1" | head -1; }
 
 cat > "$OUT/cfg.json" <<'JSON'
@@ -64,16 +72,14 @@ echo "read=$(count '"type":"read"') clicked=$(count '"clicked"')"
 echo "--- 4 読めない版: 同意を断る"
 xdotool windowactivate --sync "$B"; sleep 1.5
 set -- $(last_dot); xdotool mousemove "$1" "$2" click 1
-D=$(xdotool search --sync --name "画面の読み取り" | head -1); sleep 1; shot 06-consent-dialog
-xdotool windowactivate --sync "$D"; xdotool key --window "$D" Escape; sleep 3
+press_consent decline 06-consent-dialog; sleep 3
 echo "read=$(count '"type":"read"')"
 
 echo "--- 5 読めない版: 同意して撮る"
 xdotool windowactivate --sync "$B"; sleep 1.5
 set -- $(last_dot); xdotool mousemove "$1" "$2" click 1
-D=$(xdotool search --sync --name "画面の読み取り" | head -1); sleep 1
-xdotool windowactivate --sync "$D"; xdotool key --window "$D" Tab; sleep 0.3; xdotool key --window "$D" Return
-for _ in $(seq 1 60); do [ "$(count '"method":"ocr","ok":true')" != 0 ] && break; sleep 1; done; sleep 1; shot 07-ocr-done
+press_consent accept 07a-consent-accept
+for _ in $(seq 1 60); do [ "$(count '"method": "ocr", "ok": true')" != 0 ] && break; sleep 1; done; sleep 1; shot 07-ocr-done
 
 echo "--- 6 アプリのオフ"
 send "$(python3 -c "import json;c=json.load(open('$OUT/cfg.json'));c['apps'][0]['enabled']=False;print(json.dumps(c,ensure_ascii=False))")"
