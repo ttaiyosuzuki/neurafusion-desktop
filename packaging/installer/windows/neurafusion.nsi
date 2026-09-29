@@ -1,4 +1,4 @@
-; NeuraFusion Desktop — Windows のインストーラ（DK-09）。NSIS 3（zlib/libpng ライセンス）で作る。
+﻿; NeuraFusion Desktop — Windows のインストーラ（DK-09）。NSIS 3（zlib/libpng ライセンス）で作る。
 ;   makensis -DSTAGE=<同梱物の置き場> -DOUTFILE=<出力> -DVERSION=<版> neurafusion.nsi
 ; 管理者の権限は要らない（本人の %LOCALAPPDATA%\Programs に入れる）。
 ; 入れる途中で、同梱の Node 24 で本体（npm tarball）を本人のデータの置き場に入れる（初回の準備）。
@@ -24,8 +24,8 @@ VIAddVersionKey /LANG=1041 "LegalCopyright" "NeuraFusion"
 
 !define MUI_ICON "${STAGE}\neurafusion.ico"
 !define MUI_UNICON "${STAGE}\neurafusion.ico"
-!define MUI_FINISHPAGE_RUN "$INSTDIR\node\node.exe"
-!define MUI_FINISHPAGE_RUN_PARAMETERS '"$INSTDIR\nf-launch.mjs"'
+!define MUI_FINISHPAGE_RUN
+!define MUI_FINISHPAGE_RUN_FUNCTION LaunchNeuraFusion
 !define MUI_FINISHPAGE_RUN_TEXT "NeuraFusion を起動する（AI アプリの右下に丸が出ます）"
 !define MUI_FINISHPAGE_SHOWREADME "$INSTDIR\README-ja.txt"
 
@@ -35,6 +35,10 @@ VIAddVersionKey /LANG=1041 "LegalCopyright" "NeuraFusion"
 !insertmacro MUI_UNPAGE_CONFIRM
 !insertmacro MUI_UNPAGE_INSTFILES
 !insertmacro MUI_LANGUAGE "Japanese"
+
+Function LaunchNeuraFusion
+  Exec '"$INSTDIR\node\node.exe" "$INSTDIR\nf-launch.mjs"'
+FunctionEnd
 
 Section "NeuraFusion" SecMain
   SetOutPath "$INSTDIR"

@@ -66,7 +66,7 @@ verify_exe() {
   if [ -n "$z" ]; then
     local list; list="$("$z" l "$exe" 2>/dev/null)"
     for f in "node/node.exe" "nf-launch.mjs" "nf-dist.json" "overlay/nf-overlay.exe" "$PACKAGE_NAME-$VERSION.tgz"; do
-      echo "$list" | grep -q "${f//\//[\\/]}" && ok "$name: 同梱 $f" || ng "$name: $f が無い"
+      grep -qF -- "$f" <<<"$list" && ok "$name: 同梱 $f" || ng "$name: $f が無い"
     done
   else
     echo "--   $name: 7z が無いので同梱物の一覧は飛ばす（形だけ確かめた）"

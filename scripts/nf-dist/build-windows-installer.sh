@@ -21,12 +21,14 @@ stage_common "$STAGE"
 cp "$ROOT_DIR/packaging/installer/icons/neurafusion.ico" "$STAGE/"
 bash "$ROOT_DIR/scripts/nf-dist/fetch-node.sh" win-x64 "$STAGE/node" >/dev/null
 
-# 丸の本体（Mac でも EnableWindowsTargeting で書き出せる）
-"$DOTNET" publish "$ROOT_DIR/apps/nf-overlay-windows/src/NfOverlay.Win/NfOverlay.Win.csproj" \
+# 丸の本体（Mac でも EnableWindowsTargeting で書き出せる）。途中で止まった前回の中間物が残ると
+# runtimeconfig.json が無いと言って落ちるので、先に同じ構成で掃除する
+CSPROJ="$ROOT_DIR/apps/nf-overlay-windows/src/NfOverlay.Win/NfOverlay.Win.csproj"
+"$DOTNET" clean "$CSPROJ" -c Release -r win-x64 -p:EnableWindowsTargeting=true >/dev/null 2>&1 || true
+"$DOTNET" publish "$CSPROJ" \
   -c Release -r win-x64 --self-contained true \
   -p:EnableWindowsTargeting=true -p:PublishSingleFile=true \
   -p:IncludeNativeLibrariesForSelfExtract=true -p:EnableCompressionInSingleFile=true \
-  -p:DebugType=none -p:GenerateDocumentationFile=false \
   -o "$STAGE_ROOT/windows-overlay" >"$STAGE_ROOT/windows-overlay.log" 2>&1 \
   || { tail -20 "$STAGE_ROOT/windows-overlay.log" >&2; exit 1; }
 mkdir -p "$STAGE/overlay"
@@ -35,7 +37,8 @@ write_manifest "$STAGE" "overlay/nf-overlay.exe"
 
 OUT="$OUT_DIR/NeuraFusion-Desktop-$VERSION-windows-x64-Setup.exe"
 rm -f "$OUT"
-"$MAKENSIS" -V2 -INPUTCHARSET UTF8 \
+# makensis（POSIX 版）はロケールが無いと日本語の行で落ちる
+LC_ALL=en_US.UTF-8 "$MAKENSIS" -V2 -INPUTCHARSET UTF8 \
   "-DSTAGE=$STAGE" "-DOUTFILE=$OUT" "-DVERSION=$VERSION" \
   "$ROOT_DIR/packaging/installer/windows/neurafusion.nsi"
 record_artifact "$OUT"
