@@ -9,15 +9,21 @@ import { loadSettings } from "../../../src/overlay/settings.js";
 
 const seconds = Number(process.argv[2] ?? "60");
 const platform = currentPlatform();
-if (!platform) throw new Error("右下の丸は macOS・Windows・Linux だけです");
+if (!platform) {
+  throw new Error("右下の丸は macOS・Windows・Linux だけです");
+}
 const settings = await loadSettings();
 const binary = resolveNativeBinary(platform);
-if (!binary) throw new Error("丸の本体（Linux）が見つかりません（NF_OVERLAY_BIN を指定）");
+if (!binary) {
+  throw new Error("丸の本体（Linux）が見つかりません（NF_OVERLAY_BIN を指定）");
+}
 const host = startOverlayHost({ binary, platform, settings, deps: realHostDeps((l) => console.log(`[host] ${l}`)) });
 console.log(`[e2e] platform=${platform} apps=${host.config.apps.map((a) => `${a.id}:${a.linux.join("|")}`).join(",") || "(なし)"}`);
 const timer = setTimeout(() => host.stop(), seconds * 1000);
 const code = await host.exited;
 clearTimeout(timer);
 const kinds: Record<string, number> = {};
-for (const m of host.seen) kinds[m.type] = (kinds[m.type] ?? 0) + 1;
+for (const m of host.seen) {
+  kinds[m.type] = (kinds[m.type] ?? 0) + 1;
+}
 console.log(`[e2e] exited=${code} seen=${JSON.stringify(kinds)}`);
