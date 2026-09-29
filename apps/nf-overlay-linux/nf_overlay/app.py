@@ -61,6 +61,7 @@ class Overlay:
         self._xid = 0
         self._app: str | None = None
         self._reading = False
+        self._panel_pos: tuple[int, int] | None = None
         self._buf = b""
 
     # ---- 出す ----
@@ -198,7 +199,12 @@ class Overlay:
             where = "このウィンドウ1つだけを撮り"
 
         def consent(_app: str) -> bool:
-            return bool(readers.run_on_main(lambda: ask_capture_consent(where, event_time, self.panel), timeout=600))
+            yes = bool(readers.run_on_main(lambda: ask_capture_consent(where, event_time, self.panel), timeout=600))
+            if yes and self.session == "wayland":
+                # 画面全体を共有されたときに自分のパネルが写らないよう、撮る間は隠す（_done で戻す）。
+                # X11 は対象の窓そのものの中身を撮るので、重なったパネルは写らない
+                readers.run_on_main(self._hide_panel_for_capture)
+            return yes
 
         def work() -> None:
             try:
@@ -209,8 +215,18 @@ class Overlay:
 
         threading.Thread(target=work, daemon=True).start()
 
+    def _hide_panel_for_capture(self) -> None:
+        if self.panel.get_visible():
+            self._panel_pos = self.panel.get_position()
+            self.panel.hide()
+
     def _done(self, out) -> bool:
         self._reading = False
+        if self._panel_pos is not None:
+            x, y = self._panel_pos
+            self._panel_pos = None
+            self.panel.move(x, y)
+            self.panel.show_all()
         if out is None:
             self.emit(protocol.error("read-failed", "読み取りの途中で失敗しました"))
             self.panel.show_status("読み取れませんでした。")

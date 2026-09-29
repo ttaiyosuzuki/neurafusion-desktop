@@ -27,6 +27,8 @@ def redact(obj):
             "chars": len(t),
             "hasInputSecret": "INPUT-SECRET" in t or "入力中の下書き" in t,
             "hasAnswer": any(p in t for p in ANSWER_PROBES),
+            # 丸自身のパネル（未接続の表示）が写り込んでいないか
+            "hasPanelText": "検品パネル" in t or "未接続" in t,
         }
     return obj
 

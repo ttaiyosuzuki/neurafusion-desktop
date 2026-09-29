@@ -12,7 +12,11 @@ MODE=${1:?x11|wayland|down}
 down() {
   pkill -f "[n]f-session-keep"
   pkill -x gnome-shell; pkill -x pipewire; pkill -x wireplumber; pkill -f "[x]dg-desktop-portal"; pkill -f "[g]sd-"
-  sleep 2
+  # 止まったシェル（Xwayland との待ち合わせ等）は TERM で終わらない。残ると wayland-0 を持ったままになり、
+  # 次のセッションの窓が古い方に出る
+  for _ in $(seq 1 10); do pgrep -x gnome-shell > /dev/null || break; sleep 0.5; done
+  pkill -9 -x gnome-shell; pkill -x Xwayland
+  sleep 1
   pkill -f "[d]bus-run-session"
   sudo pkill -x Xorg
   sleep 1
@@ -72,7 +76,6 @@ EOF
 else
   export XDG_CURRENT_DESKTOP=GNOME XDG_SESSION_TYPE=wayland
   unset GNOME_SHELL_SESSION_MODE XDG_SESSION_DESKTOP
-  before=$(ls /tmp/.X11-unix 2>/dev/null | sort | tr '\n' ' ')
   setsid nohup dbus-run-session -- bash -c '
     # この VM（GPU なし）では xdg-desktop-portal-gnome の GTK4 が GL の描画で落ちることがあった → cairo で描かせる
     dbus-update-activation-environment GSK_RENDERER=cairo
@@ -84,14 +87,13 @@ else
     gnome-shell --headless --wayland --virtual-monitor 1920x1080 --unsafe-mode > /tmp/nf-gnome-shell-wl.log 2>&1 &
     for _ in $(seq 1 60); do gdbus call --session -d org.gnome.Shell -o /org/gnome/Shell -m org.freedesktop.DBus.Properties.Get org.gnome.Shell ShellVersion > /dev/null 2>&1 && break; sleep 1; done
     sleep 2
-    export WAYLAND_DISPLAY=wayland-0
-    # Xwayland の番号は mutter が決める（起動前に無かった番号）
-    n=$(comm -13 <(echo "$1" | tr " " "\n" | sort) <(ls /tmp/.X11-unix | sort) | head -1)
-    export DISPLAY=:${n#X}
+    # wayland-N と Xwayland の番号は mutter が空いている番号から決める。起動の記録から読む
+    export WAYLAND_DISPLAY=$(sed -n "s/.*Using Wayland display name .\(wayland-[0-9]*\).*/\1/p" /tmp/nf-gnome-shell-wl.log | tail -1)
+    export DISPLAY=$(sed -n "s/.*Using public X11 display \(:[0-9]*\).*/\1/p" /tmp/nf-gnome-shell-wl.log | tail -1)
     export XAUTHORITY=$(tr "\0" "\n" < /proc/$(pgrep -f "Xwayland $DISPLAY " | head -1)/cmdline | grep -A1 -- -auth | tail -1)
     dbus-update-activation-environment WAYLAND_DISPLAY DISPLAY XAUTHORITY XDG_CURRENT_DESKTOP XDG_SESSION_TYPE
     env | grep -E "^(DISPLAY|WAYLAND_DISPLAY|XAUTHORITY|DBUS_SESSION_BUS_ADDRESS|XDG_)" > /tmp/nf-session.env
     exec -a nf-session-keep sleep infinity
-  ' _ "$before" > /tmp/nf-session.out 2>&1 < /dev/null &
+  ' > /tmp/nf-session.out 2>&1 < /dev/null &
   wait_env
 fi
