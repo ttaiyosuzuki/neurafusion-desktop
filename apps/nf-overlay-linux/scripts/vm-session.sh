@@ -57,7 +57,8 @@ EndSection
 EOF
   fi
   sudo rm -f /tmp/.X11-unix/X1 /tmp/.X1-lock
-  sudo sh -c 'nohup Xorg :1 -config /etc/X11/nf-dummy.conf -noreset -nolisten tcp > /tmp/nf-xorg.log 2>&1 &'
+  # ログは利用者の側で開く（/tmp の他人のファイルには root も書けない: fs.protected_regular）
+  sudo nohup Xorg :1 -config /etc/X11/nf-dummy.conf -noreset -nolisten tcp > /tmp/nf-xorg.log 2>&1 < /dev/null &
   for _ in $(seq 1 50); do [ -e /tmp/.X11-unix/X1 ] && break; sleep 0.2; done
   DISPLAY=:1 xhost +local: > /dev/null
   export XDG_CURRENT_DESKTOP=ubuntu:GNOME XDG_SESSION_DESKTOP=ubuntu GNOME_SHELL_SESSION_MODE=ubuntu XDG_SESSION_TYPE=x11 DISPLAY=:1
