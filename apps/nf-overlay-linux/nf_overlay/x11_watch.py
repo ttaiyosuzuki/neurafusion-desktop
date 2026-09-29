@@ -75,6 +75,15 @@ class X11Watcher:
         w = Wnck.Window.get(xid)
         return (w.get_name() or "") if w is not None else ""
 
+    def capture_rect(self, xid: int) -> tuple[int, int, int, int]:
+        """撮る範囲（そのウィンドウの中の座標）。見えない影の分を除いた中身だけ。"""
+        w = Wnck.Window.get(xid)
+        if w is None:
+            return (0, 0, 0, 0)
+        _x, _y, width, height = w.get_client_window_geometry()
+        left, right, top, bottom = _frame_extents(xid)
+        return (left, top, max(1, width - left - right), max(1, height - top - bottom))
+
     def current_frame(self) -> Rect | None:
         return self._frame(self._cur) if self._cur is not None else None
 
