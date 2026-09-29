@@ -36,11 +36,11 @@ bash scripts/nf-dist/build-macos-dmg.sh
 # 3. Windows（Mac でも作れる。要るもの: makensis（NSIS 3、zlib/libpng）と .NET 8 SDK）
 bash scripts/nf-dist/build-windows-installer.sh
 
-# 4. Linux（Linux の上で。dpkg-deb と appimagetool（MIT。無ければ公式の continuous 版を取る））
+# 4. Linux（GitHub Actions の Linux ランナーで。Mac では止まる。入口・パッケージ・出力は README の「Linux 版の作り方」）
 bash scripts/nf-dist/build-linux-packages.sh          # 丸の本体は apps/nf-overlay-linux（DK-08）。無ければ NF_LINUX_OVERLAY_DIR
 
 # 5. 中身の確認（TS-38 配布形式。NF_DIST_SMOKE=1 で、同梱の Node で本体を実際に入れて --version まで）
-NF_DIST_SMOKE=1 bash scripts/nf-dist/verify-installers.sh            # Mac: dmg と exe、Linux: deb・appimage・exe
+NF_DIST_SMOKE=1 bash scripts/nf-dist/verify-installers.sh            # Mac: dmg と exe、Linux: deb と appimage
 ```
 
 出力は `.artifacts/installers/`（ignore 下）と `SHA256SUMS.txt`。リリースへの上げは取りまとめ役・本人の確認のあと。

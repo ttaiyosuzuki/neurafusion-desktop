@@ -15,7 +15,7 @@ has() { [ -e "$1" ] && ok "$2" || ng "$2（無い: $1）"; }
 
 KINDS=("$@")
 if [ ${#KINDS[@]} -eq 0 ]; then
-  case "$(uname -s)" in Darwin) KINDS=(dmg exe) ;; Linux) KINDS=(deb appimage exe) ;; *) KINDS=(exe) ;; esac
+  case "$(uname -s)" in Darwin) KINDS=(dmg exe) ;; Linux) KINDS=(deb appimage) ;; *) KINDS=(exe) ;; esac
 fi
 
 smoke() { # $1=入口 $2=名前

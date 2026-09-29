@@ -141,6 +141,13 @@ describe("3 OS の組み立ての約束", () => {
     expect(sh).toContain('"$HERE/opt/neurafusion/node/bin/node" "$HERE/opt/neurafusion/nf-launch.mjs"');
   });
 
+  it.skipIf(process.platform === "linux")("Linux 版は Linux の上でだけ作る（Mac では組み立て前に止まる）", () => {
+    const r = spawnSync("bash", [path.join(ROOT, "scripts/nf-dist/build-linux-packages.sh")], { encoding: "utf8" });
+    expect(r.status).toBe(2);
+    expect(r.stderr).toContain("Linux（x86_64）の上で作ります");
+    expect(existsSync(path.join(ROOT, ".artifacts/installers-stage/linux-deb"))).toBe(false);
+  });
+
   it("同梱の Node は公式配布物を SHA-256 で照らしてから使う", () => {
     const sh = read("scripts/nf-dist/fetch-node.sh");
     expect(sh).toContain("SHASUMS256.txt");

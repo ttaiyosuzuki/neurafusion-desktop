@@ -106,3 +106,26 @@ OS別のインストーラを使う場合は [リリースのページ](https://
 お使いのOSのファイルを取ってください。**署名がまだ無いので、macOS は右クリック →「開く」、
 Windows は「詳細情報」→「実行」が要ります。** 警告が出るのは正常です。
 各アーカイブの「はじめにお読みください」に同じことを書いてあります。
+
+## Linux 版（.deb・AppImage）の作り方
+
+Linux 版は **GitHub Actions の Linux ランナー（ubuntu-24.04、x86_64）で作ります**。Mac では作りません（スクリプトが止まります）。
+workflow はこのリポジトリではなく別のリポジトリ側に置きます（このリポジトリの Actions は使いません）。
+
+- **必要なパッケージ**: `sudo apt-get install -y dpkg curl tar xz-utils file`、Node 24 と pnpm（本体の tarball を作るため）。
+  Node 24.x（公式配布物、SHA-256 を照合）と appimagetool（MIT、公式の continuous 版）はスクリプトが取ってきます。FUSE は要りません
+- **入口**（リポジトリの一番上で）:
+
+```sh
+pnpm install --frozen-lockfile
+node scripts/package-openclaw-for-docker.mjs --allow-unreleased-changelog --pnpm-pack   # 本体の tarball（NF_DIST_TGZ=<パス> で既存の物も使える）
+bash scripts/nf-dist/build-linux-packages.sh            # 既定で deb と appimage の両方。片方だけなら引数に deb / appimage
+NF_DIST_SMOKE=1 bash scripts/nf-dist/verify-installers.sh   # Linux では deb と appimage を確かめる。EXIT=0 で合格
+```
+
+- **出力の場所**: `.artifacts/installers/neurafusion-desktop_<版>_amd64.deb`、`.artifacts/installers/NeuraFusion-Desktop-<版>-x86_64.AppImage`、
+  `.artifacts/installers/SHA256SUMS.txt`（`.artifacts/` は ignore 下）
+- 丸の本体は `apps/nf-overlay-linux`（DK-08）から入れます。main にまだ無いときは `NF_LINUX_OVERLAY_DIR=<場所>` で渡します。
+  無いまま作ると CLI だけの物になり、`verify-installers.sh` が「丸の本体」の項目で NG を出します
+
+詳しくは [docs/desktop-installers.md](docs/desktop-installers.md)。

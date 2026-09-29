@@ -7,7 +7,16 @@
 # 中身: /opt/neurafusion に Node 24（linux-x64）・ランチャー・npm tarball・丸の本体（apps/nf-overlay-linux。
 #       Python + GTK は OS の物を使う＝.deb の Depends、AppImage は同じ物が入っている前提）
 # 丸の本体は apps/nf-overlay-linux（DK-08）。まだ main に無ければ NF_LINUX_OVERLAY_DIR で場所を渡す。
+# Mac では作らない（オーナー 2026-09-29: Linux 版は GitHub Actions の Linux ランナーで作る。入口は README の「Linux 版の作り方」）。
 set -euo pipefail
+if [ "$(uname -s)" != Linux ] || [ "$(uname -m)" != x86_64 ]; then
+  echo "Linux 版は Linux（x86_64）の上で作ります。この機械は $(uname -s)/$(uname -m) です（CI の Linux ランナーで動かす）" >&2
+  exit 2
+fi
+for c in dpkg-deb curl tar xz file; do
+  command -v "$c" >/dev/null 2>&1 || { echo "要るコマンドがありません: $c（Ubuntu: sudo apt-get install -y dpkg curl tar xz-utils file）" >&2; exit 2; }
+done
+command -v node >/dev/null 2>&1 || command -v python3 >/dev/null 2>&1 || { echo "node か python3 が要ります" >&2; exit 2; }
 source "$(dirname "$0")/common.sh"
 require_tgz
 
