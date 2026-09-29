@@ -5,13 +5,14 @@ import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { scrubPii } from "../kensan/pii.js";
 import type { NativeMessage, OverlayConfigMessage, ReadFailureReason } from "./protocol.js";
+import type { OverlayPlatform } from "./apps.js";
 import { overlayStateDir, type OverlaySettings } from "./settings.js";
 
 export type OverlayReadRecord = {
   at: string;
-  platform: "macos" | "windows";
+  platform: OverlayPlatform;
   app: string;
-  method: "ax" | "ocr" | "uia" | "none";
+  method: "ax" | "ocr" | "uia" | "atspi" | "none";
   ok: boolean;
   reason?: ReadFailureReason;
   chars: number;
@@ -19,7 +20,7 @@ export type OverlayReadRecord = {
   masked?: number;
 };
 
-export type ReadVerdict = "ax" | "uia" | "ocr" | "unreadable" | "untried";
+export type ReadVerdict = "ax" | "uia" | "atspi" | "ocr" | "unreadable" | "untried";
 
 export type AppReadTally = {
   app: string;
@@ -39,7 +40,7 @@ type ReadMsg = Extract<NativeMessage, { type: "read" }>;
 /** ネイティブの read から記録を作る（本文は入れない）。 */
 export function toReadRecord(
   msg: ReadMsg,
-  platform: "macos" | "windows",
+  platform: OverlayPlatform,
   now: Date = new Date(),
   masked?: number,
 ): OverlayReadRecord {
@@ -97,7 +98,7 @@ export function tallyReads(records: readonly OverlayReadRecord[]): AppReadTally[
     by.set(r.app, t);
   }
   for (const t of by.values()) {
-    t.verdict = t.byMethod.ax ? "ax" : t.byMethod.uia ? "uia" : t.byMethod.ocr ? "ocr" : t.failed ? "unreadable" : "untried";
+    t.verdict = t.byMethod.ax ? "ax" : t.byMethod.uia ? "uia" : t.byMethod.atspi ? "atspi" : t.byMethod.ocr ? "ocr" : t.failed ? "unreadable" : "untried";
   }
   return [...by.values()].sort((a, b) => a.app.localeCompare(b.app));
 }

@@ -109,6 +109,7 @@ export function buildConfigMessage(
         label: a.label,
         mac: [...a.mac],
         win: [...a.win],
+        linux: [...a.linux],
         enabled: isEnabled(a, s, platform),
         read: s.read[a.id] ?? a.read,
       })),

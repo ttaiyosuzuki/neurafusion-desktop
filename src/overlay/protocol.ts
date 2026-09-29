@@ -12,6 +12,8 @@ export type OverlayConfigApp = {
   label: string;
   mac: string[];
   win: string[];
+  /** Linux（dk-linux）: X11 の WM_CLASS（小文字で比較） */
+  linux: string[];
   enabled: boolean;
   read: OverlayReadMode;
 };
@@ -42,11 +44,25 @@ export type ReadFailureReason =
   // Windows（dk-win）: Mac の ax-… に対応する分は uia-…、文字認識の失敗は ocr-error
   | "uia-empty"
   | "uia-error"
-  | "ocr-error";
+  | "ocr-error"
+  // Linux（dk-linux）: アクセシビリティは AT-SPI
+  | "atspi-empty"
+  | "atspi-error";
 
 export type NativeMessage =
   // Mac は ax（アクセシビリティの許可）、Windows は uia（UI Automation。許可は要らないので常に true）
-  | { v: number; type: "ready"; platform: "macos" | "windows"; ax?: boolean; uia?: boolean; screen: boolean; version?: string }
+  // Linux は session（x11 / wayland）と ocr（端末内の文字認識があるか）も付ける
+  | {
+      v: number;
+      type: "ready";
+      platform: "macos" | "windows" | "linux";
+      ax?: boolean;
+      uia?: boolean;
+      screen: boolean;
+      version?: string;
+      session?: "x11" | "wayland";
+      ocr?: boolean;
+    }
   // window・dot は論理座標。Windows は拡大率 scale と物理ピクセルの px も付ける
   | {
       v: number;
@@ -56,6 +72,8 @@ export type NativeMessage =
       dot: OverlayRect;
       scale?: number;
       px?: { window: OverlayRect; dot: OverlayRect };
+      /** Linux の Wayland: 画面の右下に固定（app は "*"、window は作業領域） */
+      fixed?: boolean;
     }
   | { v: number; type: "hidden"; reason: "not-target" | "disabled" | "no-window" }
   | { v: number; type: "clicked"; app: string }
@@ -63,7 +81,7 @@ export type NativeMessage =
       v: number;
       type: "read";
       app: string;
-      method: "ax" | "ocr" | "uia" | "none";
+      method: "ax" | "ocr" | "uia" | "atspi" | "none";
       ok: boolean;
       chars: number;
       reason?: ReadFailureReason;
