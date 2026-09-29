@@ -3,8 +3,8 @@
 #   OUT=/tmp/nf-linux-vm/share/wayland vm-wayland-check.sh
 # 前提: /tmp/nf-session.env に WAYLAND_DISPLAY・DISPLAY（Xwayland）・DBUS_SESSION_BUS_ADDRESS がある。
 # 確認用の画面は org.gnome.Shell.Screenshot で撮る（--unsafe-mode のときだけ呼べる。丸の本体はこれを使わない）。
-# ポータルの確認（GNOME Shell の撮影の画面。Selection / Screen / Window を本人が選ぶ）は、本人の代わりに
-# Eval で「Screen」を選んで撮影ボタンを押す／閉じる（portal_ui）。丸の本体はこれを使わない。
+# ポータルの確認（画面共有 = ScreenCast の「Share Screen」。共有する窓・画面を本人が選ぶ）は、本人の代わりに
+# AT-SPI で Share / Cancel を押す（press-button.py --portal）。丸の本体はこれを使わない。
 set -u
 HERE=$(cd "$(dirname "$0")" && pwd)
 OUT=${OUT:-/tmp/nf-wayland-check}
@@ -31,15 +31,8 @@ consent() {
   sleep 0.8; [ -n "${2:-}" ] && shot "$2"
   if [ "$1" = decline ]; then "$HERE/press-button.py" 撮らない; else "$HERE/press-button.py" 撮って読む; fi
 }
-shell_eval() { gdbus call --session -d org.gnome.Shell -o /org/gnome/Shell -m org.gnome.Shell.Eval "$1"; }
-portal_ui() {
-  for _ in $(seq 1 20); do shell_eval 'Main.screenshotUI.visible' | grep -q "'true'" && break; sleep 0.5; done
-  if [ "$1" = accept ]; then
-    shell_eval 'Main.screenshotUI._screenButton.checked = true; Main.screenshotUI._onCaptureButtonClicked(); "ok"'
-  else
-    shell_eval 'Main.screenshotUI.close(); "ok"'
-  fi
-}
+# 画面共有の確認（xdg-desktop-portal-gnome の「Share Screen」）で、本人の代わりに Share / Cancel を押す
+portal_ui() { if [ "$1" = accept ]; then "$HERE/press-button.py" --portal share-default; else "$HERE/press-button.py" --portal cancel; fi; }
 wait_read() { local n=$1; for _ in $(seq 1 90); do [ "$(count '"type": "read"')" -ge "$n" ] && return 0; sleep 1; done; return 1; }
 
 cat > "$OUT/cfg.json" <<'JSON'
@@ -51,6 +44,9 @@ JSON
 # headless の GNOME は起動直後にアクティビティ画面（Overview）になるので閉じる（--unsafe-mode の Eval。確認用だけ）
 gdbus call --session -d org.gnome.Shell -o /org/gnome/Shell -m org.gnome.Shell.Eval 'Main.overview.hide()' > /dev/null
 sleep 1
+# ポータルの GNOME 側を先に起こしておく（起動直後は ScreenCast がまだ出ていないことがある）
+gdbus introspect --session -d org.freedesktop.impl.portal.desktop.gnome -o /org/freedesktop/portal/desktop > /dev/null 2>&1
+sleep 3
 # 代わりの AI 窓はネイティブの Wayland の窓（GDK_BACKEND は既定 = wayland）
 "$HERE/fake-ai.py" > /dev/null 2>&1 &
 sleep 4
@@ -66,7 +62,7 @@ set -- $(last_dot); xdotool mousemove "$1" "$2" click 1
 consent decline w02-consent-dialog; wait_read 1
 echo "read=$(count '"type": "read"')"
 
-echo "--- 2 押す → 同意 → ポータルの確認で撮る"
+echo "--- 2 押す → 同意 → 画面共有の確認で Share"
 set -- $(last_dot); xdotool mousemove "$1" "$2" click 1
 consent accept
 sleep 3; shot w03-portal-dialog
@@ -74,7 +70,7 @@ portal_ui accept > "$OUT/portal-accept.log" 2>&1
 wait_read 2; sleep 1; shot w04-ocr-done
 echo "read=$(count '"type": "read"')"
 
-echo "--- 3 押す → 同意 → ポータルで取り消す"
+echo "--- 3 押す → 同意 → 画面共有の確認で Cancel"
 set -- $(last_dot); xdotool mousemove "$1" "$2" click 1
 consent accept
 sleep 3
