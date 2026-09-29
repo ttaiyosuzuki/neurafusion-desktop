@@ -356,7 +356,7 @@ function renderLoginGate(props: LoginGateProps, refreshAction: RefreshAction) {
       <div class="login-gate__card" data-mode=${feedback?.placement ?? "form"}>
         <header class="login-gate__brand">
           <img class="login-gate__logo" src=${faviconSrc} alt="" />
-          <span class="login-gate__brand-name">OpenClaw</span>
+          <span class="login-gate__brand-name">NeuraFusion</span>
         </header>
         ${body}
       </div>

@@ -423,3 +423,52 @@ describe("verify-installers.sh はロケールに左右されず、止まって�
     expect(desktop).not.toMatch(/openclaw/i);
   });
 });
+
+describe("CLI の --help と管理画面の名前・アイコン（NeuraFusion）", () => {
+  const brandScan = (args: string[]) =>
+    spawnSync("python3", [path.join(ROOT, "scripts", "nf-dist", "brand-scan.py"), ...args], { encoding: "utf8" });
+
+  it.skipIf(spawnSync("python3", ["--version"]).status !== 0)("--help の検査は理由つきの許可リストの名前だけを許す", () => {
+    const dir = mkdtempSync(path.join(os.tmpdir(), "nf-brand-allow-"));
+    const allow = path.join(ROOT, "scripts", "nf-dist", "brand-allow-help.json");
+    const help = (name: string, text: string) => {
+      writeFileSync(path.join(dir, name), text);
+      return path.join(dir, name);
+    };
+    const allowedOnly = help(
+      "allowed.txt",
+      "Usage: neurafusion [options] [command]\n  --dev  state under ~/.openclaw-dev (env OPENCLAW_CONTAINER)\n" +
+        "  promos *  offers from ClawHub\nDocs: https://docs.openclaw.ai/cli\n",
+    );
+    const ok = brandScan(["--allow", allow, allowedOnly]);
+    expect(ok.status).toBe(0);
+    expect(ok.stdout).toMatch(/^許可 4 件/);
+    expect(brandScan(["--allow", allow, help("product.txt", "  plugins *  Manage OpenClaw plugins\n")]).status).toBe(1);
+    expect(brandScan(["--allow", allow, help("usage.txt", "Usage: openclaw [options] [command]\n")]).status).toBe(1);
+    expect(brandScan(["--allow", allow, help("lobster.txt", "NeuraFusion 🦞\n")]).status).toBe(1);
+    // 許可リストが無ければ、許可リストの名前も見つける（許可は --help の検査だけ）
+    expect(brandScan([allowedOnly]).status).toBe(1);
+    const noReason = path.join(dir, "no-reason.json");
+    writeFileSync(noReason, JSON.stringify({ allow: [{ name: "x", pattern: "OpenClaw", reason: " " }] }));
+    expect(brandScan(["--allow", noReason, allowedOnly]).status).toBe(2);
+  });
+
+  it("管理画面のアイコンは packaging/installer/icons の NeuraFusion の物と同じ・題名とアプリの名前は NeuraFusion", () => {
+    for (const [ui, icon] of [
+      ["favicon.svg", "neurafusion.svg"],
+      ["favicon.ico", "neurafusion.ico"],
+      ["favicon-32.png", "neurafusion-32.png"],
+      ["apple-touch-icon.png", "neurafusion-180.png"],
+    ]) {
+      const a = readFileSync(path.join(ROOT, "ui", "public", ui));
+      expect(a.equals(readFileSync(path.join(ROOT, "packaging", "installer", "icons", icon))), ui).toBe(true);
+    }
+    expect(read("ui/public/favicon.svg")).not.toMatch(/lobster|openclaw/i);
+    expect(read("ui/index.html")).toContain("<title>NeuraFusion Control</title>");
+    const manifest = JSON.parse(read("ui/public/manifest.webmanifest")) as { name: string; short_name: string };
+    expect([manifest.name, manifest.short_name]).toEqual(["NeuraFusion Control", "NeuraFusion"]);
+    const sh = read("scripts/nf-dist/verify-installers.sh");
+    expect(sh.match(/^  control_ui_is_ours "/gm)).toHaveLength(4);
+    expect(sh).toContain('no_brand_allowed "$name: --help に許可リスト以外の上流の名前が無い" "$d/help.out"');
+  });
+});
