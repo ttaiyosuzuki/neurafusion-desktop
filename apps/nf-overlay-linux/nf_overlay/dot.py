@@ -25,7 +25,7 @@ def _mix(a, b, t):
 
 
 class DotWindow(Gtk.Window):
-    def __init__(self, on_click: Callable[[], None]) -> None:
+    def __init__(self, on_click: Callable[[int], None]) -> None:
         super().__init__(type=Gtk.WindowType.POPUP)
         self._on_click = on_click
         self._pressed = False
@@ -73,7 +73,9 @@ class DotWindow(Gtk.Window):
             self.queue_draw()
             alloc = self.get_allocation()
             if 0 <= ev.x <= alloc.width and 0 <= ev.y <= alloc.height:
-                self._on_click()
+                # 押した時刻は、あとで出す同意の小窓に渡す（丸はフォーカスを取らないので、時刻が無いと
+                # ウィンドウマネージャーがフォーカスを断り、小窓は後ろ・「準備ができました」の通知になる）
+                self._on_click(ev.time)
         return True
 
     def _draw(self, _w, ctx: cairo.Context) -> bool:

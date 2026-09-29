@@ -173,7 +173,7 @@ class Overlay:
         return Rect(wa.x, wa.y, wa.width, wa.height)
 
     # ---- 押したとき ----
-    def on_click(self) -> None:
+    def on_click(self, event_time: int = 0) -> None:
         if self._reading or self.config is None or not self._app:
             return
         app, xid = self._app, self._xid
@@ -197,7 +197,7 @@ class Overlay:
             where = "このウィンドウ1つだけを撮り"
 
         def consent(_app: str) -> bool:
-            return bool(readers.run_on_main(lambda: ask_capture_consent(where), timeout=600))
+            return bool(readers.run_on_main(lambda: ask_capture_consent(where, event_time, self.panel), timeout=600))
 
         def work() -> None:
             try:

@@ -32,8 +32,11 @@ PY
 }
 consent() {
   # 同意の小窓が出るのを待ち、AT-SPI でボタンを押す（本人の代わり。decline = 撮らない、accept = 撮って読む）
-  xdotool search --sync --onlyvisible --classname "^nf-overlay-consent$" > /dev/null
+  local cw
+  cw=$(xdotool search --sync --onlyvisible --classname "^nf-overlay-consent$" | head -1)
   sleep 0.8; [ -n "${2:-}" ] && shot "$2"
+  # 小窓が前面（フォーカスあり）で出たか。断られると後ろに回り、GNOME は「準備ができました」の通知を出す
+  if [ "$(xdotool getactivewindow 2>/dev/null)" = "$cw" ]; then echo "consent-focused=yes"; else echo "consent-focused=no"; fi
   if [ "$1" = decline ]; then "$HERE/press-button.py" 撮らない; else "$HERE/press-button.py" 撮って読む; fi
 }
 # 画面共有の確認（xdg-desktop-portal-gnome の「Share Screen」）で、本人の代わりに Share / Cancel を押す

@@ -112,8 +112,11 @@ class PanelWindow(Gtk.Window):
         return True
 
 
-def ask_capture_consent(where: str) -> bool:
-    """撮る前に毎回聞く（§8-3）。既定のボタンは「撮らない」。GTK の主スレッドで呼ぶ。"""
+def ask_capture_consent(where: str, event_time: int = 0, parent: Gtk.Window | None = None) -> bool:
+    """撮る前に毎回聞く（§8-3）。既定のボタンは「撮らない」。GTK の主スレッドで呼ぶ。
+
+    event_time は丸を押した時刻（X のイベント時刻）。これで出すと、ウィンドウマネージャーが
+    フォーカスの横取りとみなさず、小窓が前面で受け付けになる。parent（開いているパネル）の上に出す。"""
     d = Gtk.MessageDialog(
         message_type=Gtk.MessageType.QUESTION,
         buttons=Gtk.ButtonsType.NONE,
@@ -128,6 +131,11 @@ def ask_capture_consent(where: str) -> bool:
     d.set_default_response(Gtk.ResponseType.CANCEL)
     d.set_keep_above(True)
     d.set_wmclass("nf-overlay-consent", "NeuraFusion")
+    if parent is not None and parent.get_visible():
+        d.set_transient_for(parent)
+        d.set_position(Gtk.WindowPosition.CENTER_ON_PARENT)
+    if event_time:
+        d.present_with_time(event_time)
     r = d.run()
     d.destroy()
     return r == Gtk.ResponseType.OK

@@ -27,8 +27,11 @@ wait_read() { local n=$1; for _ in $(seq 1 90); do [ "$(count '"type": "read"')"
 # 同意の小窓のボタンを押す（左 = 撮らない、右 = 撮って読む）。ボタンの列は小窓の下端から 18px
 press_consent() {
   # 同意の小窓が出るのを待ち、AT-SPI でボタンを押す（本人の代わり。decline = 撮らない、accept = 撮って読む）
-  xdotool search --sync --onlyvisible --classname "^nf-overlay-consent$" > /dev/null
+  local cw
+  cw=$(xdotool search --sync --onlyvisible --classname "^nf-overlay-consent$" | head -1)
   sleep 0.8; [ -n "${2:-}" ] && shot "$2"
+  # 小窓が前面（フォーカスあり）で出たか。断られると後ろに回り、GNOME は「準備ができました」の通知を出す
+  if [ "$(xdotool getactivewindow 2>/dev/null)" = "$cw" ]; then echo "consent-focused=yes"; else echo "consent-focused=no"; fi
   if [ "$1" = decline ]; then "$HERE/press-button.py" 撮らない; else "$HERE/press-button.py" 撮って読む; fi
 }
 wid() { xdotool search --sync --onlyvisible --classname "$1" | head -1; }
