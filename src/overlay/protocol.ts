@@ -38,11 +38,25 @@ export type ReadFailureReason =
   | "screen-denied"
   | "consent-declined"
   | "ocr-empty"
-  | "read-off";
+  | "read-off"
+  // Windows（dk-win）: Mac の ax-… に対応する分は uia-…、文字認識の失敗は ocr-error
+  | "uia-empty"
+  | "uia-error"
+  | "ocr-error";
 
 export type NativeMessage =
-  | { v: number; type: "ready"; platform: "macos" | "windows"; ax: boolean; screen: boolean }
-  | { v: number; type: "geometry"; app: string; window: OverlayRect; dot: OverlayRect }
+  // Mac は ax（アクセシビリティの許可）、Windows は uia（UI Automation。許可は要らないので常に true）
+  | { v: number; type: "ready"; platform: "macos" | "windows"; ax?: boolean; uia?: boolean; screen: boolean; version?: string }
+  // window・dot は論理座標。Windows は拡大率 scale と物理ピクセルの px も付ける
+  | {
+      v: number;
+      type: "geometry";
+      app: string;
+      window: OverlayRect;
+      dot: OverlayRect;
+      scale?: number;
+      px?: { window: OverlayRect; dot: OverlayRect };
+    }
   | { v: number; type: "hidden"; reason: "not-target" | "disabled" | "no-window" }
   | { v: number; type: "clicked"; app: string }
   | {

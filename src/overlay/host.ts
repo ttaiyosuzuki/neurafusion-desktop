@@ -89,7 +89,11 @@ export function startOverlayHost(opts: {
     seen.push(redactForLog(msg));
     switch (msg.type) {
       case "ready":
-        deps.log(`丸を起動しました（アクセシビリティ: ${msg.ax ? "許可あり" : "未許可"}・画面収録: ${msg.screen ? "許可あり" : "未許可"}）`);
+        deps.log(
+          msg.platform === "windows"
+            ? `丸を起動しました（UI Automation: ${msg.uia === false ? "使えない" : "使える"}・画面の撮影: ${msg.screen ? "使える" : "使えない"}）`
+            : `丸を起動しました（アクセシビリティ: ${msg.ax ? "許可あり" : "未許可"}・画面収録: ${msg.screen ? "許可あり" : "未許可"}）`,
+        );
         break;
       case "read": {
         let masked: number | undefined;

@@ -232,6 +232,43 @@ describe("ネイティブのプロセスとのやりとり（偽物）", () => {
   });
 });
 
+describe("Windows（dk-win）の行を受ける", () => {
+  it("ready の uia・geometry の scale と px・read の uia と uia- の理由を読み、記録する", async () => {
+    const child = fakeChild();
+    const records: unknown[] = [];
+    const logs: string[] = [];
+    startOverlayHost({
+      binary: "/fake",
+      platform: "windows",
+      settings: settings(),
+      deps: {
+        spawnNative: () => child as never,
+        appendRecord: async (r) => {
+          records.push(r);
+          return records.length;
+        },
+        log: (l) => logs.push(l),
+        now: () => new Date("2026-09-29T08:00:00Z"),
+      },
+    });
+    child.stdout.write('{"v":1,"type":"ready","platform":"windows","uia":true,"screen":true,"version":"0.1.0"}\n');
+    const geo =
+      '{"v":1,"type":"geometry","app":"claude","window":{"x":0,"y":0,"w":800,"h":600},"dot":{"x":740,"y":540,"w":44,"h":44},"scale":1.5,"px":{"window":{"x":0,"y":0,"w":1200,"h":900},"dot":{"x":1110,"y":810,"w":66,"h":66}}}';
+    expect(parseNativeLine(geo)).toMatchObject({ type: "geometry", scale: 1.5, px: { dot: { w: 66 } } });
+    child.stdout.write('{"v":1,"type":"read","app":"claude","method":"uia","ok":true,"chars":3,"text":"abc"}\n');
+    child.stdout.write('{"v":1,"type":"read","app":"chatgpt","method":"uia","ok":false,"chars":0,"reason":"uia-empty"}\n');
+    await new Promise((r) => setTimeout(r, 20));
+    expect(logs[0]).toContain("UI Automation: 使える");
+    expect(records).toMatchObject([
+      { platform: "windows", app: "claude", method: "uia", ok: true },
+      { platform: "windows", app: "chatgpt", method: "uia", ok: false, reason: "uia-empty" },
+    ]);
+    const t = tallyReads(records as never);
+    expect(t.find((x) => x.app === "claude")?.verdict).toBe("uia");
+    expect(t.find((x) => x.app === "chatgpt")).toMatchObject({ verdict: "unreadable", lastReason: "uia-empty" });
+  });
+});
+
 describe("自動更新（DK-07）", () => {
   const release = {
     tag_name: "v2026.9.10",
