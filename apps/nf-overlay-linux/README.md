@@ -25,6 +25,31 @@ OUT=/tmp/nf-x11 apps/nf-overlay-linux/scripts/vm-x11-check.sh
 
 Node の CLI（`overlay start`）は Linux では更新の了承を `zenity` の小窓で聞く（無ければ「あとで」と同じ扱い）。
 
+## FF 先読み（ff-*。約束は docs/overlay-protocol.md「FF 先読み」）
+
+キーを押すまで何も出さない。手を選ぶのは Node、ここは**キーの受け取りと行の描画だけ**（`nf_overlay/core/ff.py`・`ff_keys.py`・`ff_strip.py`）。
+
+- キーの範囲は ff-config の `scopes`（無ければ trigger が `global`、adopt・close が `overlay-only`）。
+- X11: libX11 を ctypes で使い（GDK とは別の接続）、ルートウィンドウに `XGrabKey` で `global` のキーを取る。
+  `overlay-only` のキー（adopt・Esc）は行が出ている間だけ取り、隠したら `XUngrabKey` で外す。
+  CapsLock・NumLock が付いていても効くよう、それらのマスクを足した組でも取る。他のアプリが先に取っていると
+  `BadAccess` になり、`ff-keys` の `failed` に入る（そのとき取ろうとしたキーの分。行を出すたびに overlay-only の結果も出す）。
+- Wayland: xdg-desktop-portal の `GlobalShortcuts`（CreateSession → BindShortcuts の `preferred_trigger` → `Activated`）。
+  `global` のキー（既定は trigger）だけ登録する。`overlay-only`（既定は adopt・close）は登録せず、ff-config のあと
+  1回だけ `ff-keys` の `failed` に入れる（行を出すたびには試さない。`core/ff.py` の `key_plan`）。
+  ポータルが無い（例: Ubuntu 24.04 の GNOME 46）と登録するはずだった分も `failed`、標準エラーに診断1行。
+- 行の窓: `POPUP`・`set_accept_focus(False)`・`set_keep_above(True)`・マウス素通し（空の入力の形）・`set_opacity`。主画面の作業領域の下寄り中央。
+  `ff-drawn.ms` は `time.monotonic()` でキーを受けた時刻から、窓の draw の後の空き時間（描いた分を X へ送った後）まで。
+- 画面共有から隠す API は使わない（FF-07。`tests/test_ff.py` が静的に見張る）。
+
+限り:
+- X11 のキーは US 配列の位置ではなく、今の配列で keysym（`period` など）が乗っているキーを取る。Super は Mod4 と決め打ち。
+- Wayland ではポータルに「表示中だけ」の登録が無く、行の窓はフォーカスを取らないので、adopt（これで行く）・close（Esc）は使えない
+  （Esc・Alt+Shift+. を他のアプリから奪わないため）。行は Node の ff-hide で閉じる。trigger のキーはデスクトップの確認の画面で
+  本人が変えられる（実際に付いたキーは見ていない）。
+- Wayland の丸・行の窓は XWayland。合成の無い X11 では半透明にならない。
+- VM（`nf-linux`）での実測（キー → 描画の ms・BadAccess・ポータル）はまだ（重い処理の順番待ち）。
+
 `scripts/fake-ai.py` は確認用の「AI アプリの代わり」の窓（`--no-a11y` で AT-SPI に出さない版）。`scripts/drive.py` は Node の代わりに
 config を渡し、出てきた行を本文抜き（文字数と真偽だけ）で記録する。`scripts/press-button.py` は同意の小窓・画面共有の確認のボタンを
 本人の代わりに AT-SPI で押す（確認用。丸の本体は使わない）。`scripts/vm-node-host.ts` は Node 側（`src/overlay/host.ts`）から

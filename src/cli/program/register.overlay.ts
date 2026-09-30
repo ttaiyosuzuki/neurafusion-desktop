@@ -159,6 +159,97 @@ export function registerOverlayCommand(program: Command) {
       });
     });
 
+  const ff = overlay
+    .command("ff")
+    .description("先読み（FF）: 全体キーを押したときだけ、同じ状態から本物が実際に打った次の手を半透明の行で出す。引数なしで今の設定を出す")
+    .option("--json", "JSON で出す", false)
+    .action(async (opts: { json: boolean }) => {
+      await runCommandWithRuntime(defaultRuntime, async () => {
+        const { loadSettings } = await import("../../overlay/settings.js");
+        const { currentPlatform } = await import("../../overlay/host.js");
+        const { buildFfConfig } = await import("../../ff/settings.js");
+        const { loadEngine, loadProductionIndex } = await import("../../ff/engine.js");
+        const s = (await loadSettings()).ff;
+        const { msg, problems } = buildFfConfig(s, currentPlatform() ?? "macos");
+        const idx = await loadProductionIndex();
+        const eng = await loadEngine();
+        const out = {
+          enabled: s.enabled,
+          keys: msg.labels,
+          scopes: msg.scopes,
+          target: s.target,
+          openclawDraft: s.openclawDraft,
+          engineBundled: eng.bundled,
+          index: idx.check.ok ? "ok" : idx.check.reason,
+          problems: problems.map((p) => `${p.action}:${p.code}`),
+        };
+        if (opts.json) {
+          defaultRuntime.log(JSON.stringify(out, null, 2));
+          return;
+        }
+        defaultRuntime.log(`先読み: ${out.enabled ? "オン" : "オフ"}`);
+        defaultRuntime.log(`  起動（もう一度押す）: ${out.keys.trigger}（いつでも）`);
+        defaultRuntime.log(`  これで行く: ${out.keys.adopt}（行が出ている間だけ）`);
+        defaultRuntime.log(`  閉じる: ${out.keys.close}（行が出ている間だけ）`);
+        defaultRuntime.log(`  指示文の宛先: ${out.target}・OpenClaw の入力欄へも入れる: ${out.openclawDraft ? "はい" : "いいえ（クリップボードだけ）"}`);
+        defaultRuntime.log(`  索引: ${out.index === "ok" ? "実在の記録あり" : `なし（${out.index}）＝押しても「記録なし」だけ`}`);
+        if (out.problems.length) defaultRuntime.log(`  キーの設定に問題があるので既定を使っています: ${out.problems.join("・")}`);
+      });
+    });
+
+  ff.command("keys")
+    .description("先読みのキーを変える（例: --trigger \"Ctrl+Alt+J\"）。⌘P・Ctrl+P・既存の NF のキーは使えない")
+    .option("--trigger <keys>", "起動（もう一度押す も同じキー）")
+    .option("--adopt <keys>", "これで行く")
+    .option("--close <keys>", "閉じる")
+    .option("--reset", "既定に戻す", false)
+    .action(async (opts: { trigger?: string; adopt?: string; close?: string; reset: boolean }) => {
+      await runCommandWithRuntime(defaultRuntime, async () => {
+        const { loadSettings, saveSettings } = await import("../../overlay/settings.js");
+        const { FF_DEFAULT_KEYS, validateBinding } = await import("../../ff/keys.js");
+        const s = await loadSettings();
+        const keys = opts.reset ? {} : { ...s.ff.keys, ...(opts.trigger ? { trigger: opts.trigger } : {}), ...(opts.adopt ? { adopt: opts.adopt } : {}), ...(opts.close ? { close: opts.close } : {}) };
+        const problems = validateBinding({ ...FF_DEFAULT_KEYS, ...keys });
+        if (problems.length) throw new Error(`使えないキーです: ${problems.map((p) => `${p.action}:${p.code}`).join("・")}`);
+        await saveSettings({ ...s, ff: { ...s.ff, keys } });
+        defaultRuntime.log("保存しました（起動中の丸には次の起動から効きます）");
+      });
+    });
+
+  ff.command("target <target>")
+    .description("指示文の宛先（openclaw・claude-code・cursor・generic）。書式だけが変わる")
+    .action(async (target: string) => {
+      await runCommandWithRuntime(defaultRuntime, async () => {
+        const { loadSettings, saveSettings } = await import("../../overlay/settings.js");
+        if (!["openclaw", "claude-code", "cursor", "generic"].includes(target)) throw new Error("openclaw・claude-code・cursor・generic のどれかです");
+        const s = await loadSettings();
+        await saveSettings({ ...s, ff: { ...s.ff, target: target as typeof s.ff.target } });
+        defaultRuntime.log(`宛先: ${target}`);
+      });
+    });
+
+  for (const [name, on] of [["openclaw-draft-on", true], ["openclaw-draft-off", false], ["enable", true], ["disable", false]] as const) {
+    ff.command(name)
+      .description(
+        name.startsWith("openclaw")
+          ? on
+            ? "これで行く のとき、OpenClaw の会話の入力欄にも指示文を入れる（送信はご自身で押す）"
+            : "OpenClaw の入力欄には入れない（クリップボードだけ）"
+          : on
+            ? "先読みのキーを使う"
+            : "先読みのキーを使わない（全体キーを登録しない）",
+      )
+      .action(async () => {
+        await runCommandWithRuntime(defaultRuntime, async () => {
+          const { loadSettings, saveSettings } = await import("../../overlay/settings.js");
+          const s = await loadSettings();
+          const ffNext = name.startsWith("openclaw") ? { ...s.ff, openclawDraft: on } : { ...s.ff, enabled: on };
+          await saveSettings({ ...s, ff: ffNext });
+          defaultRuntime.log("保存しました（起動中の丸には次の起動から効きます）");
+        });
+      });
+  }
+
   overlay
     .command("check-update")
     .description("新しい版を確かめ、了承したときだけ更新する")

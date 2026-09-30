@@ -13,6 +13,12 @@ final class AppController {
     private lazy var io = StdioBridge(onMessage: { [weak self] m in self?.inbound(m) },
                                       onEOF: { NSApp.terminate(nil) })
     private var started = false
+    // FF 先読み
+    private let ffKeys = FfHotKeys()
+    private let ffStrip = FfStrip()
+    private var ffState = FfStripState()
+    private var ffConfig: FfConfig?
+    private var ffKeyAt: [Int: TimeInterval] = [:]
     private var reading = false
     private var currentPid: pid_t = 0
 
@@ -34,7 +40,21 @@ final class AppController {
                                                object: nil, queue: .main) { [weak self] _ in
             MainActor.assumeIsolated { self?.tracker.refresh() }
         }
+        ffKeys.onKey = { [weak self] action, at in
+            guard let self else { return }
+            let press = self.ffState.nextPress()
+            self.ffKeyAt[press] = at
+            if self.ffKeyAt.count > 64, let oldest = self.ffKeyAt.keys.min() { self.ffKeyAt[oldest] = nil }
+            self.io.send(.ffKey(action: action, press: press))
+        }
         io.start()
+    }
+
+    /// 登録しておくべきキーにそろえる（trigger はいつでも・adopt と close は行が出ている間だけ）
+    private func ffSyncKeys(report: Bool) {
+        guard let cfg = ffConfig else { return }
+        let failed = ffKeys.sync(actions: ffState.activeActions(cfg), config: cfg)
+        if report || !failed.isEmpty { io.send(.ffKeys(ok: failed.isEmpty, failed: failed)) }
     }
 
     private func inbound(_ m: InboundMessage) {
@@ -54,6 +74,22 @@ final class AppController {
             NSApp.terminate(nil)
         case let .panelText(text):
             panel.deliver(text: text)
+        case let .ffConfig(cfg):
+            ffConfig = cfg
+            ffKeys.unregisterAll()
+            ffSyncKeys(report: true)
+        case let .ffLine(line):
+            let r = ffState.add(line)
+            ffStrip.show(lines: ffState.lines, opacity: ffConfig?.opacity ?? 0.72)
+            if r.becameVisible { ffSyncKeys(report: false) }
+            if r.shouldReportDrawn, let at = ffKeyAt[line.press] {
+                let ms = (ProcessInfo.processInfo.systemUptime - at) * 1000
+                io.send(.ffDrawn(press: line.press, seq: line.seq, ms: ms))
+            }
+        case .ffHide:
+            ffState.hide()
+            ffStrip.hide()
+            ffSyncKeys(report: false)
         case .unknown, .malformed:
             break
         }

@@ -30,8 +30,15 @@ internal static class Native
     public const int WS_EX_TOOLWINDOW = 0x00000080;
     public const int WS_EX_LAYERED = 0x00080000;
     public const int WS_EX_NOACTIVATE = 0x08000000;
+    public const int WS_EX_TRANSPARENT = 0x00000020;
     public const int WM_MOUSEACTIVATE = 0x0021;
     public const int MA_NOACTIVATE = 3;
+    public const int WM_NCHITTEST = 0x0084;
+    public const int HTTRANSPARENT = -1;
+    public const int WM_HOTKEY = 0x0312;
+
+    /// <summary>メッセージ専用の窓の親（FF の全体キーの受け口）。</summary>
+    public static readonly IntPtr HWND_MESSAGE = new(-3);
 
     public static readonly IntPtr HWND_TOPMOST = new(-1);
     public const uint SWP_NOACTIVATE = 0x0010;
@@ -100,6 +107,13 @@ internal static class Native
 
     [DllImport("user32.dll")]
     public static extern bool SetWindowPos(IntPtr hwnd, IntPtr after, int x, int y, int cx, int cy, uint flags);
+
+    /// <summary>FF の全体キー。他のアプリが先に取っていれば false（GetLastError = ERROR_HOTKEY_ALREADY_REGISTERED）。</summary>
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern bool RegisterHotKey(IntPtr hwnd, int id, uint modifiers, uint vk);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    public static extern bool UnregisterHotKey(IntPtr hwnd, int id);
 
     [DllImport("user32.dll")]
     public static extern bool PrintWindow(IntPtr hwnd, IntPtr hdc, uint flags);

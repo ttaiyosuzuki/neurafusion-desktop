@@ -60,6 +60,10 @@ public enum InboundMessage: Equatable, Sendable {
     case config(OverlayConfig)
     case stop
     case panelText(String)
+    /// FF 先読み
+    case ffConfig(FfConfig)
+    case ffLine(FfLine)
+    case ffHide
     case unknown(String)
     case malformed
 }
@@ -80,6 +84,14 @@ public func decodeInbound(_ line: String) -> InboundMessage {
     case "panel-text":
         guard let m = try? JSONDecoder().decode(PanelTextMsg.self, from: data) else { return .malformed }
         return .panelText(m.text)
+    case "ff-config":
+        guard let m = try? JSONDecoder().decode(FfConfig.self, from: data) else { return .malformed }
+        return .ffConfig(m)
+    case "ff-line":
+        guard let m = try? JSONDecoder().decode(FfLine.self, from: data) else { return .malformed }
+        return .ffLine(m)
+    case "ff-hide":
+        return .ffHide
     default:
         return .unknown(probe.type)
     }
@@ -115,6 +127,10 @@ public enum OutboundMessage: Equatable, Sendable {
     case read(app: String, method: ReadMethod, ok: Bool, chars: Int, reason: ReadFailure?, text: String?)
     case panel(open: Bool, mode: PanelMode)
     case error(code: String, message: String)
+    /// FF 先読み: キーを受けた／その押下の最初の行を描いた（キーから ms）／全体キーの登録の結果
+    case ffKey(action: FfAction, press: Int)
+    case ffDrawn(press: Int, seq: Int, ms: Double)
+    case ffKeys(ok: Bool, failed: [FfAction])
 }
 
 private func rectDict(_ r: Rect) -> [String: Any] {
@@ -140,6 +156,12 @@ public func encodeOutbound(_ msg: OutboundMessage) -> String {
         d["type"] = "panel"; d["open"] = open; d["mode"] = mode.rawValue
     case let .error(code, message):
         d["type"] = "error"; d["code"] = code; d["message"] = message
+    case let .ffKey(action, press):
+        d["type"] = "ff-key"; d["action"] = action.rawValue; d["press"] = press
+    case let .ffDrawn(press, seq, ms):
+        d["type"] = "ff-drawn"; d["press"] = press; d["seq"] = seq; d["ms"] = (ms * 100).rounded() / 100
+    case let .ffKeys(ok, failed):
+        d["type"] = "ff-keys"; d["ok"] = ok; d["failed"] = failed.map(\.rawValue)
     }
     guard let data = try? JSONSerialization.data(withJSONObject: d, options: [.sortedKeys]),
           let s = String(data: data, encoding: .utf8)

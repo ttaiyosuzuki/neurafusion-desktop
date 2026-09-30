@@ -11,6 +11,10 @@ import type { OverlayPlatform } from "./apps.js";
 import { encodeInbound, parseNativeLine, redactForLog, type NativeMessage, type OverlayConfigMessage } from "./protocol.js";
 import { appendReadRecord, decidePanelText, toReadRecord } from "./reads.js";
 import { buildConfigMessage, type OverlaySettings } from "./settings.js";
+import { parseFfLine } from "../ff/protocol.js";
+import { startFf, type FfWire } from "../ff/wire.js";
+import type { FfSessionDeps } from "../ff/session.js";
+import type { FfEngine } from "../ff/engine.js";
 
 export type OverlayHostDeps = {
   spawnNative: (binary: string) => Pick<ChildProcess, "stdin" | "stdout" | "stderr" | "on" | "kill">;
@@ -28,6 +32,8 @@ export type OverlayHostHandle = {
   exited: Promise<number | null>;
   /** 受け取ったもの（テストと status 用。本文は入らない） */
   seen: NativeMessage[];
+  /** FF 先読み（全体キー）。ff:false で起動したときは null */
+  ff: Promise<FfWire> | null;
 };
 
 export function currentPlatform(): OverlayPlatform | null {
@@ -78,6 +84,8 @@ export function startOverlayHost(opts: {
   platform: OverlayPlatform;
   settings: OverlaySettings;
   deps: OverlayHostDeps;
+  /** FF 先読み。false で使わない。overrides はテスト用 */
+  ff?: false | { overrides?: Partial<FfSessionDeps> & { engine?: FfEngine } };
 }): OverlayHostHandle {
   const { deps, platform } = opts;
   let settings = opts.settings;
@@ -127,7 +135,12 @@ export function startOverlayHost(opts: {
     const rl = createInterface({ input: child.stdout });
     rl.on("line", (line) => {
       const msg = parseNativeLine(line);
-      if (msg) void onMessage(msg);
+      if (msg) {
+        void onMessage(msg);
+        return;
+      }
+      const ffMsg = parseFfLine(line);
+      if (ffMsg && ff) void ff.then((w) => w.onNative(ffMsg));
     });
   }
   child.stderr?.on("data", () => {
@@ -141,13 +154,22 @@ export function startOverlayHost(opts: {
 
   send(encodeInbound(config));
 
+  // FF 先読み: 丸の config のあとに ff-config（全体キー）を送る
+  const ff =
+    opts.ff === false
+      ? null
+      : startFf({ platform, settings: settings.ff, write: send, log: deps.log, overrides: opts.ff?.overrides });
+  ff?.catch(() => deps.log("先読みを起動できませんでした"));
+
   return {
     get config() {
       return config;
     },
     reconfigure(s) {
+      const ffChanged = JSON.stringify(s.ff) !== JSON.stringify(settings.ff);
       settings = s;
       config = buildConfigMessage(s, platform);
+      if (ffChanged) void ff?.then((w) => w.reconfigure(s.ff));
       send(encodeInbound(config));
     },
     stop() {
@@ -157,5 +179,6 @@ export function startOverlayHost(opts: {
     },
     exited,
     seen,
+    ff,
   };
 }

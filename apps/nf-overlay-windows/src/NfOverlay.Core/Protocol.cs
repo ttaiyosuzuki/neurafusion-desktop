@@ -28,7 +28,7 @@ public sealed record OverlayConfig(
 }
 
 /// <summary>Node から来る1行の種類。</summary>
-public abstract record InboundMessage
+public abstract partial record InboundMessage
 {
     public sealed record Config(OverlayConfig Value) : InboundMessage;
     public sealed record Stop : InboundMessage;
@@ -56,7 +56,7 @@ public static class ReadReason
 /// 標準入出力の JSON 1行ずつの約束。dk-mac の docs/overlay-protocol.md と同じ形（差は README「Mac 版との差」）。
 /// 読んだ文字（text）を載せるのは、読めたときの read 1行だけ。Node はこれをログに書かず、PII を除いてパネルへ返す。
 /// </summary>
-public static class Protocol
+public static partial class Protocol
 {
     public const int Version = 1;
     private const int MaxLineBytes = 1024 * 1024;
@@ -78,6 +78,10 @@ public static class Protocol
                 "panel-text" => Str(root, "text") is { } t
                     ? new InboundMessage.PanelText(t) : new InboundMessage.Malformed("no-text"),
                 "getReadLog" or "get-read-log" => new InboundMessage.GetReadLog(),
+                // FF 先読み（FfProtocol.cs）
+                "ff-config" => ParseFfConfig(root),
+                "ff-line" => ParseFfLine(root),
+                "ff-hide" => new InboundMessage.FfHide(),
                 null => new InboundMessage.Malformed("no-type"),
                 _ => new InboundMessage.Unknown(type),
             };

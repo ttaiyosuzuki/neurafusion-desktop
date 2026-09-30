@@ -27,6 +27,23 @@ Windows 版の設計と、約束との差は [docs/overlay-windows.md](../../doc
 - 読んだ生の文字は、読めたときの `read` の1行でだけ Node に渡す。Node が PII を除いて `panel-text` で返したものだけをパネルに出す。
   ネイティブ側の記録（`read-log.json`）と標準エラーには文字数だけで、本文を書かない。
 
+## FF 先読み（FF-01〜08）
+
+約束は [docs/overlay-protocol.md「FF 先読み」](../../docs/overlay-protocol.md)。手を選ぶのは Node で、ここは**全体キーの受け取りと行の描画だけ**。
+
+- 受け取る: `ff-config`（キー・`scopes`・`opacity`）/ `ff-line`（1行。`reset:true` なら前の行を消す）/ `ff-hide`。出す: `ff-key` / `ff-drawn` / `ff-keys`。
+- キーは `RegisterHotKey`（見えないメッセージ専用の窓で `WM_HOTKEY` を受ける。キーボードのフックは使わない）。
+  `{mods, key}` → `MOD_*`（必ず `MOD_NOREPEAT`）・仮想キーの対応は `FfHotkey`（US 配列の位置。`.` = `VK_OEM_PERIOD` など）。
+- `scopes` の `global`（既定は trigger だけ）は ff-config のあいだずっと、`overlay-only`（既定は adopt・close）は**行が出ている間だけ**登録し、隠したら外す。
+  試して登録できなかった役目は `ff-keys.failed`（ff-config のたび・行が出て表示中だけのキーを試したとき）。
+- 押下の番号 `press` は起動から1ずつ増える。`WM_HOTKEY` を受けた瞬間に `Stopwatch` で刻み、その押下の最初の行を描き終えたら（`OnPaint` の終わり）1回だけ
+  `ff-drawn.ms` を出す（FF-08 の 0.8 秒はこの値）。close は Node の `ff-hide` を待たずにすぐ隠して Esc を返す。
+- 行の窓（`FfStripForm`）: 常に前面・フォーカスを奪わない・マウス素通し（`WS_EX_NOACTIVATE | WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_TRANSPARENT | WS_EX_LAYERED`、
+  `ShowWithoutActivation`）、半透明は `opacity`、主画面の作業領域の下寄り中央。
+- 画面共有・録画から隠す API は使わない（FF-07）。
+- 状態（押下の番号・行・押下ごとに1回の ff-drawn・scope ごとの登録）は `NfOverlay.Core/FfStrip.cs` で、テストは `FfTests.cs`。
+  Windows の実機では未実測（キーの登録・描画の時間・前面の挙動）。
+
 ## 守ること（指示書 §8）
 
 - 押す前は読まない。常時監視しない（ウィンドウの位置の変化だけを OS のイベントで受け、中身は読まない）。

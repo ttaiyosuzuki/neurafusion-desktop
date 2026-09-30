@@ -6,6 +6,7 @@ import os from "node:os";
 import path from "node:path";
 import { OVERLAY_APPS, isSupportedOn, type OverlayAppDef, type OverlayPlatform, type OverlayReadMode } from "./apps.js";
 import type { OverlayConfigMessage } from "./protocol.js";
+import { FF_DEFAULT_SETTINGS, normalizeFfSettings, type FfSettings } from "../ff/settings.js";
 
 export type OverlaySettings = {
   version: 1;
@@ -19,6 +20,8 @@ export type OverlaySettings = {
   checkUpdates: boolean;
   /** 読み取った本文をパネルへ渡すこと（SB-01 の同意）。既定オフ＝文字数だけ示す */
   sendTextToPanel: boolean;
+  /** FF 先読み（全体キー・宛先など。src/ff/settings.ts） */
+  ff: FfSettings;
 };
 
 export const DEFAULT_SETTINGS: OverlaySettings = {
@@ -27,6 +30,7 @@ export const DEFAULT_SETTINGS: OverlaySettings = {
   read: {},
   checkUpdates: true,
   sendTextToPanel: false,
+  ff: FF_DEFAULT_SETTINGS,
 };
 
 export function overlayStateDir(): string {
@@ -38,7 +42,7 @@ export function overlaySettingsPath(dir = overlayStateDir()): string {
 }
 
 export function normalizeSettings(raw: unknown): OverlaySettings {
-  const s = { ...DEFAULT_SETTINGS, enabled: {}, read: {} } as OverlaySettings;
+  const s = { ...DEFAULT_SETTINGS, enabled: {}, read: {}, ff: normalizeFfSettings(undefined) } as OverlaySettings;
   if (!raw || typeof raw !== "object") return s;
   const r = raw as Partial<OverlaySettings>;
   if (r.enabled && typeof r.enabled === "object") {
@@ -52,6 +56,7 @@ export function normalizeSettings(raw: unknown): OverlaySettings {
   if (typeof r.panelUrl === "string" && isAllowedPanelUrl(r.panelUrl)) s.panelUrl = r.panelUrl;
   if (typeof r.checkUpdates === "boolean") s.checkUpdates = r.checkUpdates;
   if (typeof r.sendTextToPanel === "boolean") s.sendTextToPanel = r.sendTextToPanel;
+  s.ff = normalizeFfSettings(r.ff);
   return s;
 }
 

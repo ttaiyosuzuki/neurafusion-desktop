@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -29,6 +31,12 @@ internal sealed class OverlayHost : ApplicationContext
     private CancellationTokenSource? _reading;
     private bool _ready;
 
+    // FF 先読み: 全体キーの受け取りと行の描画だけ（手を選ぶのは Node）。
+    private readonly FfStrip _ff = new();
+    private readonly FfStripForm _ffForm = new();
+    private FfHotkeyWindow? _ffKeys;
+    private FfConfig? _ffConfig;
+
     public OverlayHost()
     {
         _ui = SynchronizationContext.Current ?? new WindowsFormsSynchronizationContext();
@@ -43,6 +51,7 @@ internal sealed class OverlayHost : ApplicationContext
         _bubble.BubbleClicked += () => _ = OnClickedAsync();
         _watcher.ForegroundChanged += s => Apply(_tracker.Update(s));
         _watcher.TargetMoved += s => Apply(_tracker.OnMoved(s));
+        _ffForm.LinesPainted += OnFfPainted;
 
         new Thread(ReadStdin) { IsBackground = true, Name = "nf-overlay-stdin" }.Start();
     }
@@ -82,6 +91,15 @@ internal sealed class OverlayHost : ApplicationContext
                 break;
             case InboundMessage.GetReadLog:
                 Emit(Protocol.ReadLogLine(_log));
+                break;
+            case InboundMessage.FfConfigMsg f:
+                ApplyFfConfig(f.Value);
+                break;
+            case InboundMessage.FfLineMsg l:
+                ShowFfLine(l.Value);
+                break;
+            case InboundMessage.FfHide:
+                HideFf();
                 break;
             case InboundMessage.Stop:
                 ExitThread();
@@ -154,6 +172,86 @@ internal sealed class OverlayHost : ApplicationContext
         return tcs.Task;
     }
 
+    // ---- FF 先読み ----
+
+    private static readonly FfAction[] FfActions = { FfAction.Trigger, FfAction.Adopt, FfAction.Close };
+
+    /// <summary>
+    /// ff-config: キーを全部外してから、今登録すべきもの（Global は常に、OverlayOnly は表示中だけ。既定では trigger だけが全体キー）を
+    /// 登録し直し、試して登録できなかった役目を ff-keys で返す。
+    /// </summary>
+    private void ApplyFfConfig(FfConfig c)
+    {
+        _ffConfig = c;
+        _ff.Configure(c);
+        _ffForm.SetOpacity(c.Opacity);
+        if (!c.Enabled) _ffForm.Conceal();
+        if (_ffKeys is null)
+        {
+            _ffKeys = new FfHotkeyWindow();
+            _ffKeys.Pressed += OnFfKey;
+        }
+        _ffKeys.UnregisterAll(); // キーが変わっていれば新しいキーで取り直す
+        SyncFfKeys(out var failed);
+        Emit(Protocol.FfKeys(failed));
+    }
+
+    /// <summary>WM_HOTKEY（UI スレッド）。at は受けた瞬間の Stopwatch のタイムスタンプ。</summary>
+    private void OnFfKey(FfAction action, long at)
+    {
+        if (!_ff.Wants(action)) return; // 外す直前に届いたキー（隠したあとの Esc など）は数えない
+        var press = _ff.OnKey(at);
+        Emit(Protocol.FfKey(action, press));
+        // close はすぐ隠して Esc を返す（Node の ff-hide を待たない。あとから来た ff-hide は何もしない）。
+        if (action == FfAction.Close) HideFf();
+    }
+
+    /// <summary>ff-line: 先に描き（FF-08 の時間を縮める）、出たばかりなら表示中だけのキー（adopt・close）を登録する。</summary>
+    private void ShowFfLine(FfLine line)
+    {
+        var wasVisible = _ff.Visible;
+        if (!_ff.OnLine(line)) return;
+        _ffForm.ShowLines(_ff.Lines);
+        // 出たときに登録を試したら、その結果を ff-keys で知らせる（Esc などを他のアプリが先に取っていれば failed）。
+        if (!wasVisible && SyncFfKeys(out var failed)) Emit(Protocol.FfKeys(failed));
+    }
+
+    private void HideFf()
+    {
+        _ff.Hide();
+        _ffForm.Conceal();
+        SyncFfKeys(out _);
+    }
+
+    /// <summary>
+    /// 登録を今の状態（FfStrip.Wants）に合わせる。要らないキーは外し、要るのにまだのキーは登録を試す。
+    /// failed は試して登録できなかった役目。1つでも試したら true。
+    /// </summary>
+    private bool SyncFfKeys(out List<FfAction> failed)
+    {
+        failed = new List<FfAction>();
+        if (_ffKeys is null) return false;
+        var tried = false;
+        foreach (var a in FfActions)
+        {
+            if (!_ff.Wants(a) || _ffConfig is null || !_ffConfig.Keys.TryGetValue(a, out var chord))
+            {
+                _ffKeys.Unregister(a);
+                continue;
+            }
+            if (_ffKeys.IsRegistered(a)) continue;
+            tried = true;
+            if (!_ffKeys.Register(a, chord)) failed.Add(a);
+        }
+        return tried;
+    }
+
+    /// <summary>行の窓が描き終えた。その押下の最初の行なら1回だけ ff-drawn（キーを受けてからの ms）。</summary>
+    private void OnFfPainted(FfLine[] painted, long at)
+    {
+        foreach (var r in _ff.OnPainted(painted, at, Stopwatch.Frequency)) Emit(Protocol.FfDrawn(r));
+    }
+
     private void SaveLog()
     {
         try
@@ -188,6 +286,8 @@ internal sealed class OverlayHost : ApplicationContext
         _watcher.Dispose();
         _bubble.Dispose();
         _panel.Dispose();
+        _ffKeys?.Dispose(); // 全体キーを外してから終わる
+        _ffForm.Dispose();
         base.ExitThreadCore();
     }
 }

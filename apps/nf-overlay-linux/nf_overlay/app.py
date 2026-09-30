@@ -2,6 +2,7 @@
 
 X11: 前面の対応アプリのウィンドウの右下に丸を重ね、ついていく。押したら AT-SPI → だめなら同意を取って撮影＋文字認識。
 Wayland: 丸は画面の右下に固定。押したら同意を取り、ポータルの許可を取って撮影＋文字認識。
+FF 先読み（ff-*）: 全体キーを受けて ff-key を出し、Node から来た行を半透明の窓に出す（ff_keys.py・ff_strip.py）。
 """
 
 from __future__ import annotations
@@ -33,7 +34,7 @@ gi.require_version("Gdk", "3.0")
 from gi.repository import Gdk, GLib, Gtk  # noqa: E402
 
 from . import readers  # noqa: E402
-from .core import protocol  # noqa: E402
+from .core import ff, protocol  # noqa: E402
 from .core.follow import FollowTracker, fixed_decision  # noqa: E402
 from .core.geometry import Rect  # noqa: E402
 from .core.reading import ReadGate, ReadLog, ReadPlanner  # noqa: E402
@@ -63,6 +64,11 @@ class Overlay:
         self._reading = False
         self._panel_pos: tuple[int, int] | None = None
         self._buf = b""
+        # FF 先読み（ff-config を受けるまで全体キーは取らない）
+        self.ff_state = ff.StripState()
+        self.ff_cfg: ff.FfConfig | None = None
+        self.ff_keys = None
+        self.ff_strip = None
 
     # ---- 出す ----
     def emit(self, line: str | None) -> None:
@@ -105,6 +111,10 @@ class Overlay:
     def handle(self, line: bytes) -> None:
         msg = protocol.parse_inbound(line)
         if msg is None:
+            # 丸の行でなければ FF 先読みの行か見る。どちらでもない type は読み飛ばす
+            ffm = ff.parse_inbound(line)
+            if ffm is not None:
+                self.handle_ff(ffm)
             return
         if msg.type == "stop":
             self.quit(0)
@@ -145,6 +155,76 @@ class Overlay:
         d = self.tracker.set_config(self.config)
         if d is not None:
             self._apply(d)
+
+    # ---- FF 先読み ----
+    def handle_ff(self, m: ff.FfInbound) -> None:
+        if m.type == "ff-config":
+            self._apply_ff_config(m.config)
+        elif m.type == "ff-line":
+            if self.ff_cfg is not None and not self.ff_cfg.enabled:
+                return
+            self.ff_state.on_line(m.line)
+            self._ff_strip().show_lines(self.ff_state.lines, self._primary_work_area())
+            self._ff_sync_overlay()
+        elif m.type == "ff-hide":
+            self._ff_hide()
+
+    def _ff_strip(self):
+        if self.ff_strip is None:
+            from .ff_strip import FfStrip
+
+            self.ff_strip = FfStrip(self._on_ff_drawn)
+            if self.ff_cfg is not None:
+                self.ff_strip.set_level(self.ff_cfg.opacity)
+        return self.ff_strip
+
+    def _apply_ff_config(self, cfg: ff.FfConfig) -> None:
+        self.ff_cfg = cfg
+        self.ff_state.enabled = cfg.enabled
+        if self.ff_strip is not None:
+            self.ff_strip.set_level(cfg.opacity)
+        if not cfg.enabled:
+            self._ff_hide()
+        if self.ff_keys is None:
+            from .ff_keys import make_keys
+
+            self.ff_keys = make_keys(self.session, self._on_ff_key, self.diag)
+
+        def done(_ok: bool, failed: list[str]) -> None:
+            # 取ろうとしたキーのうち取れなかった分（読めなかったキーも含む）
+            self.emit(ff.ff_keys(not failed, failed))
+
+        # 行が出ていれば overlay-only のキーも取り直す（ff-keys は1行にまとめる）
+        self.ff_keys.apply(cfg, done, overlay=self.ff_state.overlay_keys_wanted())
+
+    def _on_ff_key(self, action: str, t: float) -> None:
+        # t はキーを受けた時刻（time.monotonic()）。ff-drawn.ms の起点
+        # overlay-only のキー（adopt・close）は行が出ている間だけ受ける（念のため、受けた側でも落とす）
+        if not self.ff_state.accepts(action, self.ff_cfg):
+            return
+        press = self.ff_state.on_key(action, t)
+        self.emit(ff.ff_key(action, press))
+        if action == "close":
+            # 閉じるは待たずに隠す（Esc をすぐ返す）。Node の ff-hide が後から来ても同じ
+            self._ff_hide()
+
+    def _on_ff_drawn(self, t: float) -> None:
+        for line in self.ff_state.on_drawn(t):
+            self.emit(line)
+
+    def _ff_hide(self) -> None:
+        self.ff_state.hide()
+        if self.ff_strip is not None:
+            self.ff_strip.hide_strip()
+        self._ff_sync_overlay()
+
+    def _ff_sync_overlay(self) -> None:
+        # overlay-only のキー（既定は adopt・Esc の close）は行が出ている間だけ取る。取ろうとしたときは結果を ff-keys で知らせる
+        if self.ff_keys is None:
+            return
+        failed = self.ff_keys.set_overlay(self.ff_state.overlay_keys_wanted())
+        if failed is not None:
+            self.emit(ff.ff_keys(not failed, failed))
 
     # ---- X11 の追従 ----
     def _on_active(self, info) -> None:
@@ -274,6 +354,10 @@ class Overlay:
     def quit(self, code: int) -> None:
         self.dot.hide()
         self.panel.hide()
+        if self.ff_strip is not None:
+            self.ff_strip.hide_strip()
+        if self.ff_keys is not None:
+            self.ff_keys.stop()
         Gtk.main_quit()
         self._exit = code
 

@@ -66,3 +66,39 @@ AI アプリ（Claude・ChatGPT のデスクトップ版、Cursor など）の�
 1. 丸が押される前に他のアプリの中身を読まない。常時の監視をしない（`geometry` のための AX の位置・大きさの通知だけ受ける。本文は読まない）。
 2. 画面を撮るのは押したとき、しかも毎回本人の同意（確認の小窓）を取ってから。撮るのは対象のウィンドウ1つだけ。
 3. 許可（アクセシビリティ・画面収録）のダイアログを勝手に出さない・押さない。無いときは `ready` の `ax:false` / `screen:false` で知らせる。
+
+## FF 先読み（FF-01〜08。丸と同じ通り道・同じ `v:1`。知らない type は読み飛ばす）
+
+キーを押すまで何も出さない。押したら、今の作業の状態から「本物が実際に打った次の手」を半透明の行で1行ずつ出す。
+手を選ぶのは Node（`src/ff/`・エンジンは `engine/ff` のバンドル）。ネイティブは**全体キーの受け取りと行の描画だけ**。
+
+### Node → ネイティブ
+
+| type | いつ | 例 |
+|---|---|---|
+| `ff-config` | config の直後に1回。キーを変えたら送り直す | `{"v":1,"type":"ff-config","enabled":true,"keys":{"trigger":{"mods":["alt","shift"],"key":","},"adopt":{"mods":["alt","shift"],"key":"."},"close":{"mods":[],"key":"escape"}},"scopes":{"trigger":"global","adopt":"overlay-only","close":"overlay-only"},"labels":{"trigger":"Option+Shift+,","adopt":"Option+Shift+.","close":"Escape"},"opacity":0.72}` |
+| `ff-line` | 1行出す | `{"v":1,"type":"ff-line","press":3,"seq":0,"kind":"move","text":"1  型エラーを直す  N=12","n":12}` |
+| `ff-hide` | 閉じる | `{"v":1,"type":"ff-hide"}` |
+
+- `keys.*.mods` は `ctrl` / `alt` / `shift` / `meta`（Mac の ⌘・Windows の Win・Linux の Super）。`key` は小文字1文字（US 配列の位置: `.` `,` `a`〜`z` `0`〜`9` など）か名前（`escape`・`space`・`f1`〜`f24`）。
+- `scopes` が `global` のキー（既定は `trigger` だけ）を**全体キー**として登録する（Mac: Carbon `RegisterEventHotKey`・Windows: `RegisterHotKey`・Linux X11: `XGrabKey`）。
+  `overlay-only` のキー（既定は `adopt` と `close`）は**行が出ている間だけ**登録し、隠したら外す（Esc や、VS Code / Cursor の Auto Fix の Alt+Shift+. を他のアプリから奪わない）。
+  `scopes` が無い古い Node からの ff-config は、この既定の割り当てで読む。
+- `enabled:false` なら全体キーを外す。
+- `ff-line`: 窓が出ていなければ出す。`reset:true` なら前の行を消してから足す。`kind` は `move`（手）・`none`（「記録なし」など）・`info`（「クリップボードに入れました」など）。
+- 行の窓: **常に前面・フォーカスを奪わない**（Mac: `NSPanel` の `.nonactivatingPanel`＋`orderFrontRegardless`、Windows: `WS_EX_NOACTIVATE | WS_EX_TOPMOST | WS_EX_TOOLWINDOW`＋`ShowWithoutActivation`、Linux: `Gtk.Window` の `POPUP`＋`set_accept_focus(False)`＋`set_keep_above(True)`）。
+  マウスを素通しにする。半透明（`opacity`）。置き場は主画面の下寄り中央。
+- **画面共有から隠す API は使わない**（FF-07: Mac の `sharingType = .none`、Windows の `SetWindowDisplayAffinity`、Electron の `setContentProtection`）。`src/ff/ff.test.ts` が静的に見張る。
+
+### ネイティブ → Node
+
+| type | いつ | 例 |
+|---|---|---|
+| `ff-key` | 全体キー（表示中は close も）を受けた | `{"v":1,"type":"ff-key","action":"trigger","press":3}` |
+| `ff-drawn` | その押下（press）の**最初の行**を描いた | `{"v":1,"type":"ff-drawn","press":3,"seq":0,"ms":41.7}` |
+| `ff-keys` | 全体キーの登録の結果（ff-config のたび） | `{"v":1,"type":"ff-keys","ok":false,"failed":["adopt"]}` |
+
+- `press` はネイティブが振る押下の番号（起動から1ずつ増える）。Node は答えの `ff-line` に同じ番号を付ける。
+- `ff-drawn.ms` は**キーを受けた時刻 → その行が画面に描かれた時刻**（単調時計・ミリ秒）。FF-08 の「0.8秒以内」はこの値で測る。
+  Mac は `CFAbsoluteTimeGetCurrent` ではなく `ProcessInfo.systemUptime`、Windows は `Stopwatch`、Linux は `time.monotonic()`。
+- 登録に失敗したキー（他のアプリが先に取っている）は `failed` に入れる。Node は設定の画面・`neurafusion overlay ff` に出す（お知らせは出さない）。
