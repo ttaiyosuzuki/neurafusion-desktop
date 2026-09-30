@@ -509,3 +509,82 @@ describe("CLI の --help と管理画面の名前・アイコン（NeuraFusion�
     expect(sh).toContain('no_brand_allowed "$name: --help に許可リスト以外の上流の名前が無い" "$d/help.out"');
   });
 });
+
+// 配布物の検査の1件ごとの時間の上限（2026-09-30: LC_ALL=C の検査で `channels --help` が 29 分止まり、外から止めた後の
+// 空の出力で ok になった）。run-capped.pl と、smoke の判定（smoke_call・smoke_cmd）を偽のコマンドで確かめる
+describe("配布物の検査の時間の上限と判定", () => {
+  const capped = path.join(ROOT, "scripts", "nf-dist", "run-capped.pl");
+  const run = (secs: string, ...cmd: string[]) => {
+    const diag = mkdtempSync(path.join(os.tmpdir(), "nf-capped-"));
+    return { diag, r: spawnSync("perl", [capped, secs, diag, ...cmd], { encoding: "utf8", timeout: 30_000 }) };
+  };
+
+  it("終了コードはそのまま、stdin は /dev/null", () => {
+    expect(run("5", "sh", "-c", "echo hi; exit 3").r.status).toBe(3);
+    expect(run("5", "sh", "-c", 'read x; echo "[$x]"').r.stdout).toBe("[]\n");
+    expect(run("5", "sh", "-c", "kill -9 $$").r.status).toBe(137);
+  });
+
+  it("時間切れは 124・様子を残し、孫まで止める", () => {
+    const marker = `sleep 29.${process.pid % 1000}`;
+    const { diag, r } = run("1", "sh", "-c", `${marker} & ${marker}`);
+    expect(r.status).toBe(124);
+    expect(r.stderr).toContain("1 秒を過ぎても終わらないので打ち切りました");
+    const hang = readdirSync(diag).find((f) => f.startsWith("hang-"));
+    expect(hang && readFileSync(path.join(diag, hang), "utf8")).toContain("cap: 1s");
+    expect(spawnSync("ps", ["-A", "-o", "command="], { encoding: "utf8" }).stdout).not.toContain(marker);
+  }, 30_000);
+
+  it("終わった後に残った孫のプロセスも止める", () => {
+    const marker = `sleep 28.${process.pid % 1000}`;
+    const { r } = run("5", "sh", "-c", `(${marker} &); echo bye`);
+    expect([r.status, r.stdout]).toEqual([0, "bye\n"]);
+    expect(r.stderr).toContain("残ったプロセスを止めました");
+    expect(spawnSync("ps", ["-A", "-o", "command="], { encoding: "utf8" }).stdout).not.toContain(marker);
+  });
+
+  it("smoke の判定: 時間切れ・終了コード・空の出力・要る行が無い、はどれも NG", () => {
+    const dir = mkdtempSync(path.join(os.tmpdir(), "nf-judge-"));
+    const fake = path.join(dir, "fake");
+    writeFileSync(
+      fake,
+      [
+        "#!/bin/sh",
+        'case "$1" in',
+        '  good) echo "Usage: neurafusion good" ;;',
+        "  empty) ;;",
+        '  rc2) echo "Usage: neurafusion rc2"; exit 2 ;;',
+        "  hang) sleep 20 ;;",
+        '  wrongline) echo "Usage: openclaw wrongline" ;;',
+        '  errok) echo "Did you mean neurafusion x" >&2; exit 1 ;;',
+        '  errzero) echo "Did you mean neurafusion x" >&2 ;;',
+        "esac",
+        "",
+      ].join("\n"),
+      { mode: 0o755 },
+    );
+    const script = [
+      "set -Eeuo pipefail",
+      `eval "$(sed -n '/^smoke_call() {/,/^}/p;/^smoke_cmd() {/,/^}/p' "$1/scripts/nf-dist/verify-installers.sh")"`,
+      'HERE="$1/scripts/nf-dist" CAP_CALL=2 DIAG_DIR="$2/diag" name=fake d="$2" entry="$2/fake" envs=(PATH=/usr/bin:/bin)',
+      'ok() { echo "ok $*"; }; ng() { echo "NG $*"; }; : > "$d/commands.out"',
+      "smoke_cmd 0 'Usage: neurafusion good' good; smoke_cmd 0 'Usage: neurafusion empty' empty",
+      "smoke_cmd 0 'Usage: neurafusion rc2' rc2; smoke_cmd 0 'Usage: neurafusion hang' hang",
+      "smoke_cmd 0 'Usage: neurafusion wrongline' wrongline",
+      "smoke_cmd x 'neurafusion x' errok; smoke_cmd x 'neurafusion x' errzero",
+    ].join("\n");
+    const r = spawnSync("bash", ["-c", script, "_", ROOT, dir], { encoding: "utf8", timeout: 60_000, env: { ...process.env, LC_ALL: "C" } });
+    expect(r.status).toBe(0);
+    const verdicts = r.stdout.trim().split("\n").map((l) => l.split(" ").slice(0, 3).join(" "));
+    expect(verdicts).toEqual([
+      "ok fake: good",
+      "NG fake: empty",
+      "NG fake: rc2",
+      "NG fake: hang",
+      "NG fake: wrongline",
+      "ok fake: errok",
+      "NG fake: errzero",
+    ]);
+    expect(r.stdout).toContain("2 秒で打ち切り");
+  }, 60_000);
+});
