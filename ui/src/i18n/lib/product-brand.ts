@@ -11,7 +11,9 @@ import { formatCliDisplayText } from "../../../../packages/terminal-core/src/cli
 export const ASSISTANT_DISPLAY_NAME = "NeuraFusion";
 
 const UPSTREAM_NAME_RE = /OpenClaw/g;
-const ASK_ASSISTANT_RE = /Ask OpenClaw/g;
+// `\s+` also matches a wrapped or non-breaking space; the built JS then carries no literal "Ask OpenClaw",
+// which the distribution check (scripts/nf-dist/brand-scan.py --ui) looks for.
+const ASK_ASSISTANT_RE = /\bAsk\s+OpenClaw\b/g;
 
 /** Keys whose whole namespace or leaf names the built-in assistant itself. */
 function namesAssistant(keys: readonly string[]): boolean {
