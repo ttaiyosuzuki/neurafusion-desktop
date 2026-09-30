@@ -1,6 +1,7 @@
 // Control UI component renders a copyable gateway connection command.
 import { html } from "lit";
 import { t } from "../i18n/index.ts";
+import { displayCliCommand } from "../i18n/lib/product-brand.ts";
 import { renderCopyButton } from "./copy-button.ts";
 import "./tooltip.ts";
 
@@ -8,7 +9,8 @@ function copyCommand(event: Event) {
   (event.currentTarget as HTMLElement).querySelector<HTMLButtonElement>(".chat-copy-btn")?.click();
 }
 
-export function renderConnectCommand(command: string, variant: "inline" | "hero" = "inline") {
+export function renderConnectCommand(rawCommand: string, variant: "inline" | "hero" = "inline") {
+  const command = displayCliCommand(rawCommand);
   const copyLabel = t("connection.help.copyCommand");
   return html`
     <openclaw-tooltip .content=${copyLabel}>

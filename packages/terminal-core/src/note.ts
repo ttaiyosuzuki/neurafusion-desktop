@@ -2,6 +2,7 @@ import { AsyncLocalStorage } from "node:async_hooks";
 import { note as clackNote } from "@clack/prompts";
 import { normalizeLowercaseStringOrEmpty } from "@openclaw/normalization-core/string-coerce";
 import { iterateGraphemes, visibleWidth } from "./ansi.js";
+import { formatCliDisplayText } from "./cli-display-name.js";
 import { stylePromptTitle } from "./prompt-style.js";
 
 const MIN_NOTE_COLUMNS = 80;
@@ -163,7 +164,7 @@ export function noteToStream(
     return;
   }
   const columns = resolveNoteColumns(output.columns);
-  const wrappedMessage = wrapNoteMessage(message, { columns });
+  const wrappedMessage = formatCliDisplayText(wrapNoteMessage(message, { columns }));
   clackNote(wrappedMessage, stylePromptTitle(title), {
     output: createNoteOutput(output, resolveNoteOutputColumns(wrappedMessage, columns)),
   });

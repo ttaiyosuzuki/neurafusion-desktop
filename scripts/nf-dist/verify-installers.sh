@@ -114,6 +114,30 @@ control_ui_is_ours() {
     ng "$name: 管理画面の題名が NeuraFusion Control でない（$(head -1 "$t/ui-title.txt")）"
   fi
   images_are_ours "$name: 管理画面のアイコン（favicon・apple-touch-icon）はどれも NeuraFusion の物" "$t/$ui"
+  ui_assets_are_ours "$tgz" "$name"
+}
+
+# $1=本体の tarball $2=名前。管理画面の組み立て済みの JS・CSS（翻訳 20 言語の chunk を含む）に「Ask OpenClaw」・ロブスターの
+# 絵文字・ロブスターのアイコンが無いか（scripts/nf-dist/brand-scan.py --ui。組み込みの相談役は NeuraFusion の名前で出す）
+ui_assets_are_ours() {
+  local tgz="$1" name="$2" t out n
+  make_tmp
+  t="$TMP_DIR"
+  if ! tar -xzf "$tgz" -C "$t" --include 'package/dist/control-ui/assets/*' 2> /dev/null; then
+    ng "$name: 管理画面の JS・CSS を本体の tarball から出せない"
+    return 0
+  fi
+  n="$(find "$t/package/dist/control-ui/assets" -type f \( -name '*.js' -o -name '*.css' \) | wc -l | tr -d ' ')"
+  if [ "$n" -lt 100 ]; then
+    ng "$name: 管理画面の JS・CSS が少なすぎる（${n} 個）"
+    return 0
+  fi
+  if out="$(find "$t/package/dist/control-ui/assets" -type f \( -name '*.js' -o -name '*.css' \) -print0 |
+    xargs -0 python3 "$HERE/brand-scan.py" --ui 2>&1 || exit $?)"; then
+    ok "$name: 管理画面の JS・CSS（${n} 個）に「Ask OpenClaw」・ロブスターの絵文字とアイコンが無い"
+  else
+    ng "$name: 管理画面に「Ask OpenClaw」かロブスターが残る（${out%%$'\n'*}）"
+  fi
 }
 
 # $1=フォルダ $2=名前。中身をほかの利用者も読める・動かせるか（組み立てた人の umask が 077 だと、写した先で本人しか開けない）
@@ -203,6 +227,23 @@ smoke() {
     no_brand_allowed "$name: --help に許可リスト以外の上流の名前が無い" "$d/help.out"
   else
     ng "$name: --help が何も出さない（$(tail -3 "$d/help.err" | tr '\n' ' ')）"
+  fi
+  # サブコマンドの --help（Usage・例）と、動いている最中の案内（打ち間違いの「Did you mean」「Try: … --help」・足りない引数の
+  # Usage）に、利用者が打つコマンドとしての openclaw が無いか（scripts/nf-dist/brand-scan.py --commands）
+  local c cmds=("channels --help" "gateway --help" "doctor --help" "channels lst" "plugins search")
+  : > "$d/commands.out"
+  for c in "${cmds[@]}"; do
+    # shellcheck disable=SC2086 # 語に分けて渡す
+    env -i "${envs[@]}" "$entry" $c >> "$d/commands.out" 2>&1 || true
+  done
+  if grep -q 'Usage: neurafusion channels' "$d/commands.out" && grep -q 'Usage: neurafusion plugins search' "$d/commands.out"; then
+    if out="$(python3 "$HERE/brand-scan.py" --commands "$d/commands.out" 2>&1 || exit $?)"; then
+      ok "$name: サブコマンドの --help と案内（${#cmds[@]} つ）のコマンド名が neurafusion"
+    else
+      ng "$name: サブコマンドの --help か案内に openclaw のコマンドが残る（${out%%$'\n'*}）"
+    fi
+  else
+    ng "$name: サブコマンドの --help か案内が出ない（$(head -3 "$d/commands.out" | tr '\n' ' ')）"
   fi
 }
 

@@ -4,6 +4,7 @@ import { handleCopyButton, renderCopyButton } from "../../components/copy-button
 import { icons } from "../../components/icons.ts";
 import "../../components/modal-dialog.ts";
 import { t } from "../../i18n/index.ts";
+import { displayCliCommand } from "../../i18n/lib/product-brand.ts";
 import type {
   DevicePairSetupAccess,
   DevicePairSetupLifecycle,
@@ -63,7 +64,9 @@ export function renderDevicePairSetup(props: DevicePairSetupProps) {
   const gatewayUrls = setup?.gatewayUrls ?? (setup ? [setup.gatewayUrl] : []);
   const isNodeSetup = lifecycle.access === "node";
   const pairingDocsUrl = isNodeSetup ? NODE_PAIRING_DOCS_URL : MOBILE_PAIRING_DOCS_URL;
-  const nodeCommand = setup ? `openclaw node run --pair "oc-pair://${setup.setupCode}"` : "";
+  const nodeCommand = setup
+    ? displayCliCommand(`openclaw node run --pair "oc-pair://${setup.setupCode}"`)
+    : "";
   const setupExpired = Boolean(setup && setup.expiresAtMs <= props.nowMs);
   const showAccessChoices =
     lifecycle.phase !== "success" &&

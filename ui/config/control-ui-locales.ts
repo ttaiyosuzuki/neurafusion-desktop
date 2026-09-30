@@ -2,6 +2,7 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { runnerImport, type Alias, type Plugin } from "vite";
+import { formatCliDisplayText } from "../../packages/terminal-core/src/cli-display-name.ts";
 import {
   loadControlUiTranslationMemory,
   materializeControlUiLocaleCatalog,
@@ -9,6 +10,7 @@ import {
 import { CONTROL_UI_LOCALE_ENTRIES } from "../../scripts/lib/control-ui-i18n-config.ts";
 import { flattenTranslations } from "../../scripts/lib/control-ui-i18n-sync-plan.ts";
 import type { TranslationMap } from "../../scripts/lib/control-ui-i18n-sync-plan.ts";
+import { ASSISTANT_DISPLAY_NAME, brandAssistantMap } from "../src/i18n/lib/product-brand.ts";
 
 const localeModulePrefix = "virtual:openclaw-control-ui-locale/";
 const localeConfigHintsModulePrefix = "virtual:openclaw-control-ui-locale-config-hints/";
@@ -19,6 +21,7 @@ const i18nAssetsDir = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   "../src/i18n/.i18n",
 );
+const ENGLISH_LOCALE_SOURCE_RE = /[\\/]ui[\\/]src[\\/]i18n[\\/]locales[\\/]en(?:-[\w-]+)?\.ts$/;
 const locales = new Set(CONTROL_UI_LOCALE_ENTRIES.map(({ locale }) => locale));
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
 const sourceCatalogPath = path.join(repoRoot, "scripts/lib/control-ui-i18n-catalog.ts");
@@ -48,7 +51,8 @@ type ControlUiLocaleCatalogPartition = {
 };
 
 function partitionControlUiLocaleCatalog(catalog: TranslationMap): ControlUiLocaleCatalogPartition {
-  const { configHints, ...base } = catalog;
+  // NeuraFusion: write the built-in assistant's name as t() shows it, so chunks carry no "Ask OpenClaw".
+  const { configHints, ...base } = brandAssistantMap(catalog);
   return { base, configHints: configHints === undefined ? {} : { configHints } };
 }
 
@@ -104,6 +108,17 @@ export function controlUiLocaleModulesPlugin(): Plugin {
     },
     watchChange() {
       invalidateCatalogs();
+    },
+    transform(code, id) {
+      // en.ts is imported as source (not through the virtual modules); give its "Ask OpenClaw" and
+      // `openclaw …` commands the names t() shows.
+      if (!ENGLISH_LOCALE_SOURCE_RE.test(id.split("?")[0] ?? id)) {
+        return null;
+      }
+      const branded = formatCliDisplayText(
+        code.replaceAll("Ask OpenClaw", `Ask ${ASSISTANT_DISPLAY_NAME}`),
+      );
+      return branded === code ? null : { code: branded, map: null };
     },
     resolveId(id) {
       for (const prefix of [localeModulePrefix, localeConfigHintsModulePrefix]) {

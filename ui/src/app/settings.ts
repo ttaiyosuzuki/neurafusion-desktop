@@ -173,7 +173,8 @@ export const UI_APPEARANCE_DEFAULTS = {
   chatSendShortcut: "enter",
   catalogOpenTarget: "viewer",
   composerHoldToRecord: true,
-  lobsterPetVisits: true,
+  // NeuraFusion: the lobster (upstream mascot) does not visit unless someone turns it on.
+  lobsterPetVisits: false,
   lobsterPetSounds: false,
   sessionDeleteConfirm: true,
 } as const;
@@ -591,7 +592,7 @@ export function loadUiPreferences(
           : undefined,
       customTheme: customTheme ?? undefined,
       locale: isSupportedLocale(parsed.locale) ? parsed.locale : undefined,
-      ...(parsed.lobsterPetVisits === false ? { lobsterPetVisits: false } : {}),
+      ...(parsed.lobsterPetVisits === true ? { lobsterPetVisits: true } : {}),
       ...(parsed.lobsterPetSounds === true ? { lobsterPetSounds: true } : {}),
       ...(parsed.sessionDeleteConfirm === false ? { sessionDeleteConfirm: false } : {}),
       ...(parsed.openLinksInControlUiBrowser === true ? { openLinksInControlUiBrowser: true } : {}),
@@ -751,9 +752,8 @@ function persistSettings(next: UiSettings, options: { selectGateway?: boolean } 
     ...(next.customTheme ? { customTheme: next.customTheme } : {}),
     sessionsByGateway,
     ...(next.locale ? { locale: next.locale } : {}),
-    // Visits default on; only an explicit opt-out persists. Sounds default
-    // off; only an explicit opt-in persists.
-    ...(next.lobsterPetVisits === false ? { lobsterPetVisits: false } : {}),
+    // Visits and sounds default off; only an explicit opt-in persists.
+    ...(next.lobsterPetVisits === true ? { lobsterPetVisits: true } : {}),
     ...(next.lobsterPetSounds === true ? { lobsterPetSounds: true } : {}),
     // Only the opted-out value is persisted; absence means the safe default.
     ...(next.sessionDeleteConfirm === false ? { sessionDeleteConfirm: false } : {}),

@@ -461,6 +461,35 @@ describe("CLI の --help と管理画面の名前・アイコン（NeuraFusion�
     expect(brandScan(["--allow", noReason, allowedOnly]).status).toBe(2);
   });
 
+  it.skipIf(spawnSync("python3", ["--version"]).status !== 0)("--commands はコマンドとしての openclaw だけ、--ui は Ask OpenClaw とロブスターを見つける", () => {
+    const dir = mkdtempSync(path.join(os.tmpdir(), "nf-brand-cmd-"));
+    const file = (name: string, text: string) => {
+      writeFileSync(path.join(dir, name), text);
+      return path.join(dir, name);
+    };
+    const shown =
+      "Usage: neurafusion channels [options]\nDid you mean this?\n  neurafusion channels list\n" +
+      "[openclaw] Try: neurafusion doctor\nstate in ~/.openclaw, npx openclaw doctor, @openclaw/ai, https://docs.openclaw.ai/cli, openclaw/openclaw issue\n";
+    expect(brandScan(["--commands", file("shown.txt", shown)]).status).toBe(0);
+    for (const [name, text] of [
+      ["usage.txt", "Usage: openclaw channels [options]\n"],
+      ["example.txt", "Examples:\n  openclaw channels list\n"],
+      ["hint.txt", "Try: `openclaw doctor --fix`\n"],
+      ["color.txt", "run \u001b[36mopenclaw doctor\u001b[39m\n"],
+      ["lobster.txt", "NeuraFusion 🦞\n"],
+    ]) {
+      expect(brandScan(["--commands", file(name, text)]).status, name).toBe(1);
+    }
+    expect(brandScan(["--ui", file("ui-ok.js", 'const a="Ask NeuraFusion",b="OpenClaw Foundation";')]).status).toBe(0);
+    for (const [name, text] of [
+      ["ask.js", 'x={askOpenClaw:"Ask OpenClaw"}'],
+      ["emoji.js", "Cf=[`🦞`,`🚀`]"],
+      ["icon.js", '<path d="M60 10C30 10 15 35 15 55C15 75 30 95 45 100Z"/>'],
+    ]) {
+      expect(brandScan(["--ui", file(name, text)]).status, name).toBe(1);
+    }
+  });
+
   it("管理画面のアイコンは packaging/installer/icons の NeuraFusion の物と同じ・題名とアプリの名前は NeuraFusion", () => {
     for (const [ui, icon] of [
       ["favicon.svg", "neurafusion.svg"],

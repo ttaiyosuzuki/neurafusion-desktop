@@ -9,8 +9,9 @@ import { icons } from "./icons.ts";
 import { resolveSessionIconGraphic } from "./session-icon-glyph-registry.ts";
 import { renderSessionColorOptions } from "./session-menu-options.ts";
 
+// NeuraFusion: the first choice is 🧠, not the upstream mascot 🦞 (same count keeps the grid layout).
 const SESSION_ICON_EMOJI_CHOICES = [
-  "🦞",
+  "🧠",
   "🚀",
   "🐛",
   "✅",

@@ -133,7 +133,7 @@ describe("connection view rendering", () => {
     expect(control?.querySelector('[role="status"]')?.textContent).toContain(
       "device setup code for the OpenClaw mobile app",
     );
-    expect(control?.textContent).toContain("openclaw gateway auth-token --show");
+    expect(control?.textContent).toContain("neurafusion gateway auth-token --show");
     render(renderConnection(createConnectionProps()), container);
     expect(control?.querySelector('[role="status"]')).toBeNull();
   });

@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { GatewayClientRequestError } from "../../gateway/client.js";
 import { defaultRuntime } from "../../runtime.js";
+import { formatCliDisplayText } from "../cli-name.js";
 import {
   ExpectedCliError,
   formatCliFailureLines,
@@ -69,9 +70,9 @@ describe("handleCronCliError", () => {
           error: thrown,
           argv: process.argv,
         }).join("\n");
-        expect(stderr).toContain(message);
+        expect(stderr).toContain(formatCliDisplayText(message));
         expect(stderr).not.toContain("Could not start the CLI.");
-        expect(stderr).not.toContain("openclaw doctor");
+        expect(stderr).not.toContain("neurafusion doctor");
         expect(stderr).not.toContain("OPENCLAW_DEBUG");
       } finally {
         process.argv = argv;
@@ -148,7 +149,7 @@ describe("handleCronCliError", () => {
         error: thrown,
       }).join("\n");
       expect(stderr).toContain("The CLI command failed.");
-      expect(stderr).toContain("openclaw doctor");
+      expect(stderr).toContain("neurafusion doctor");
       expect(stderr.includes("Stack:")).toBe(debug);
       expect(formatCliJsonFailure(thrown).error.message.includes("Runtime load failed")).toBe(
         debug,

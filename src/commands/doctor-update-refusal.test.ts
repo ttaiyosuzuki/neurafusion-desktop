@@ -2,6 +2,7 @@ import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { formatCliDisplayText } from "../cli/cli-name.js";
 import { renderGatewayServiceStartHints } from "../cli/daemon-cli/shared.js";
 import { formatCliFailureLines } from "../cli/failure-output.js";
 import { quoteCliArg, quotePowerShellArg } from "../cli/quote-cli-arg.js";
@@ -248,7 +249,8 @@ async function warnings(): Promise<string> {
   return tail.lines.map((line) => line.message).join("\n");
 }
 
-function expectRecovery(output: string, root: string, previous: string) {
+// `shown`: the text went through the CLI failure output, where hints read as the `neurafusion` command.
+function expectRecovery(output: string, root: string, previous: string, shown = false) {
   const quotedRoot = quote(root);
   for (const fact of [
     "The previous source is intact in Git.",
@@ -259,7 +261,7 @@ function expectRecovery(output: string, root: string, previous: string) {
     "Once the upgrade succeeds, subsequent updates validate before activation.",
     ...renderGatewayServiceStartHints(),
   ]) {
-    expect(output).toContain(fact);
+    expect(output).toContain(shown ? formatCliDisplayText(fact) : fact);
   }
   expect(output).not.toContain("pnpm install --");
 }
@@ -290,7 +292,7 @@ describe("Doctor refusal recovery under the released Git update driver", () => {
         expect(message.indexOf(reason)).toBeLessThan(
           message.indexOf("The previous source is intact in Git."),
         );
-        expectRecovery(message, root, previous);
+        expectRecovery(message, root, previous, true);
         const logged = await warnings();
         expect(logged).toContain("Doctor refused update-time schema repair");
         expectRecovery(logged, root, previous);

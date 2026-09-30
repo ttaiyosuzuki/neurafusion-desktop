@@ -18,6 +18,7 @@ import {
   GATEWAY_CLIENT_MODES,
   GATEWAY_CLIENT_NAMES,
 } from "../../packages/gateway-protocol/src/client-info.js";
+import { CLI_DISPLAY_NAME } from "../cli/cli-name.js";
 import { getRuntimeConfig } from "../config/config.js";
 import { resolveGatewayClientBootstrap } from "../gateway/client-bootstrap.js";
 import { GatewayClient } from "../gateway/client.js";
@@ -407,7 +408,7 @@ function parseArgs(args: string[]): AcpServerOptions {
 }
 
 function printHelp(): void {
-  console.log(`Usage: openclaw acp [options]
+  console.log(`Usage: ${CLI_DISPLAY_NAME} acp [options]
 
 Gateway-backed ACP server for IDE integration.
 
