@@ -3,6 +3,7 @@ import { expectDefined } from "@openclaw/normalization-core";
 import { normalizeLowercaseStringOrEmpty } from "@openclaw/normalization-core/string-coerce";
 import { Chalk } from "chalk";
 import type { Logger as TsLogger } from "tslog";
+import { formatCliDisplayText } from "../../packages/terminal-core/src/cli-display-name.js";
 import { clearActiveProgressLine } from "../../packages/terminal-core/src/progress-line.js";
 import { isVerbose } from "../global-state.js";
 import { defaultRuntime, type OutputRuntimeEnv, type RuntimeEnv } from "../runtime.js";
@@ -283,7 +284,7 @@ function writeConsoleLine(level: LogLevel, line: string, opts: { redacted?: bool
   // ./console.ts to avoid recursion. Normal formatted messages are redacted
   // before colorization; keep this exit guard for raw writes and structured
   // lines that reach the sink already serialized (#73284).
-  const redacted = opts.redacted ? sanitized : redactSensitiveText(sanitized);
+  const redacted = formatCliDisplayText(opts.redacted ? sanitized : redactSensitiveText(sanitized));
   const sink = loggingState.rawConsole ?? console;
   if (loggingState.forceConsoleToStderr || level === "error" || level === "fatal") {
     (sink.error ?? console.error)(redacted);

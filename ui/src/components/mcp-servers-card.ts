@@ -4,6 +4,7 @@ import { property, state } from "lit/decorators.js";
 import { applicationContext, type ApplicationContext } from "../app/context.ts";
 import { hasOperatorAdminAccess } from "../app/operator-access.ts";
 import { t } from "../i18n/index.ts";
+import { displayCliCommand } from "../i18n/lib/product-brand.ts";
 import { resolveEditableSnapshotConfig } from "../lib/config/config-state-model.ts";
 import {
   buildAddMcpServerPatch,
@@ -186,9 +187,9 @@ class McpServersCard extends OpenClawLightDomElement {
   }
 
   private renderRow(server: McpServerSummary): TemplateResult {
-    const command = `openclaw mcp ${server.auth === "oauth" ? "login" : "probe"} ${quoteShellArg(
-      server.name,
-    )}`;
+    const command = displayCliCommand(
+      `openclaw mcp ${server.auth === "oauth" ? "login" : "probe"} ${quoteShellArg(server.name)}`,
+    );
     const meta = [
       server.transport,
       server.auth,

@@ -1,5 +1,5 @@
 // Root Commander help, global options, banner, version, and example formatting.
-import type { Command } from "commander";
+import { Help, type Command } from "commander";
 import { formatDocsLink } from "../../../packages/terminal-core/src/links.js";
 import { isRich, theme } from "../../../packages/terminal-core/src/theme.js";
 import { resolveCommitHash } from "../../infra/git-commit.js";
@@ -7,7 +7,7 @@ import { formatConsoleDiagnosticBlock } from "../../logging/json-console-line.js
 import { escapeRegExp } from "../../utils.js";
 import { isRootVersionInvocation } from "../argv.js";
 import { formatCliBannerLine, hasEmittedCliBanner } from "../banner.js";
-import { CLI_DISPLAY_NAME, CLI_NAME } from "../cli-name.js";
+import { CLI_DISPLAY_NAME, CLI_NAME, formatCliDisplayText } from "../cli-name.js";
 import { CLI_LOG_LEVEL_VALUES, parseCliLogLevelOption } from "../log-level-option.js";
 import {
   getCommanderErrorCommandNames,
@@ -17,10 +17,7 @@ import { getCoreCliCommandsWithSubcommands } from "./core-command-descriptors.js
 import { formatCliParseErrorOutput } from "./error-output.js";
 import { getSubCliCommandsWithSubcommands } from "./subcli-descriptors.js";
 
-const CLI_NAME_PATTERN = escapeRegExp(CLI_NAME);
 const CLI_DISPLAY_NAME_PATTERN = escapeRegExp(CLI_DISPLAY_NAME);
-// Commander builds `Usage:` from program.name(), which stays CLI_NAME for completion; show the NeuraFusion command.
-const USAGE_CLI_NAME = new RegExp(`^(Usage:\\s+)${CLI_NAME_PATTERN}(?=\\s|$)`, "gm");
 const ROOT_COMMANDS_WITH_SUBCOMMANDS = new Set([
   ...getCoreCliCommandsWithSubcommands(),
   ...getSubCliCommandsWithSubcommands(),
@@ -51,8 +48,9 @@ const EXAMPLES = [
 ] as const;
 
 export function formatProgramHelpOutput(str: string): string {
-  // Commander emits plain section labels; decorate them after command-specific help renders.
-  let output = str.replace(USAGE_CLI_NAME, `$1${CLI_DISPLAY_NAME}`);
+  // Commander builds `Usage:` from program.name(), which stays CLI_NAME for completion; examples and
+  // descriptions also say `openclaw …`. Show the NeuraFusion command, then decorate section labels.
+  let output = formatCliDisplayText(str);
   const isRootHelp = new RegExp(
     `^Usage:\\s+${CLI_DISPLAY_NAME_PATTERN}\\s+\\[options\\]\\s+\\[command\\]\\s*$`,
     "m",
@@ -104,6 +102,10 @@ export function configureProgramHelp(
   program.helpCommand("help [command]", "Display help for command");
 
   program.configureHelp({
+    // Subcommands inherit this, so help text is already NeuraFusion when a caller takes Commander's
+    // output directly (in-process help, custom writeOut).
+    formatHelp: (cmd, helper) =>
+      formatCliDisplayText(Help.prototype.formatHelp.call(helper, cmd, helper)),
     // sort options and subcommands alphabetically
     sortSubcommands: true,
     sortOptions: true,

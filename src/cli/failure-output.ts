@@ -6,6 +6,7 @@ import {
   UpdateSchemaRefusalError,
   type UpdateSchemaRefusalDatabase,
 } from "../state/openclaw-update-schema-refusal.js";
+import { formatCliDisplayText } from "./cli-name.js";
 import { formatCliCommand } from "./command-format.js";
 
 type FormatCliFailureOptions = {
@@ -201,6 +202,11 @@ function pushPrefixed(out: string[], value: string): void {
 }
 
 export function formatCliFailureLines(options: FormatCliFailureOptions): string[] {
+  // Printed with console.error by the entry points, so hints are shown as `neurafusion …` here.
+  return formatCliFailureLinesRaw(options).map(formatCliDisplayText);
+}
+
+function formatCliFailureLinesRaw(options: FormatCliFailureOptions): string[] {
   if (isExpectedCliError(options.error)) {
     const output = resolveExpectedCliOutput(options.error);
     return output.humanOutputWritten ? [] : output.humanOutput.trimEnd().split("\n");

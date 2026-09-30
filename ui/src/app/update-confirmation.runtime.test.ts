@@ -265,7 +265,7 @@ it("keeps the dialog open and narrates the install, the disconnect, and the fail
   // precisely so it can keep reporting through the disconnect.
   await stream.push({ run: null, busy: true, connected: false, failure: null });
   expect(modal.textContent).toContain("The Gateway disconnected during the update");
-  expect(modal.textContent).toContain("openclaw triage");
+  expect(modal.textContent).toContain("neurafusion triage");
   expect(modal.textContent).toContain("on the Gateway host");
   expect(modal.textContent).toContain("local coding agent");
   expect(document.body.querySelector("openclaw-modal-dialog")).not.toBeNull();

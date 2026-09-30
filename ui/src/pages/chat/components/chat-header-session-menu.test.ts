@@ -339,7 +339,7 @@ describe("chat header session menu", () => {
     expect(onAction.mock.calls).toEqual([
       [{ kind: "toggle-pin" }],
       [{ kind: "toggle-unread" }],
-      [{ kind: "set-icon", icon: "🦞" }],
+      [{ kind: "set-icon", icon: "🧠" }],
       [{ kind: "set-color", color: "purple" }],
       [{ kind: "reset-appearance" }],
       [{ kind: "copy-session-link" }],

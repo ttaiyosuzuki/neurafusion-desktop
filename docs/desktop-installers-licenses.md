@@ -129,9 +129,16 @@ THIRD_PARTY_NOTICES.md.
 - `ClawHub`・文書のサイト `docs.openclaw.ai`: 上流の外部サービスを指す名前（NeuraFusion の物と書くと事実と違う）
 
 同じ許可リストで `src/cli/program/root-help.brand.test.ts` が、最上位の `--help` の許可リスト以外の上流の名前を 0 件に保つ。
-**残っている所（今回の範囲の外）**: サブコマンドの `--help` と実行中の案内（`openclaw doctor` などの修理の案内・補完の対象の名前は
-互換のため `openclaw` のまま）、管理画面の中の文言（「Ask OpenClaw」・ロブスターのペットなど。翻訳の記録つきで 20 以上の言語に
-またがる）。`--version` は `NeuraFusion <版> (<commit>)`。
+**サブコマンドと実行中の案内・管理画面（2026-09-30 dk-brand-3）**: コマンドとしての `openclaw`（サブコマンドの `Usage:`・例・
+`openclaw doctor` などの修理の案内）は、表示の出口で `neurafusion` にそろえる（`packages/terminal-core/src/cli-display-name.ts` の
+`formatCliDisplayText`。help・runtime の log と error・端末へのログの行・note・CLI の失敗の行が通す）。`openclaw` の bin・補完の対象の名前・
+ログファイルの中身・パス・パッケージ名・URL・環境変数は変えない。管理画面は、組み込みの相談役（「Ask OpenClaw」・custodian）を
+NeuraFusion の名前で、文言と画面のコマンドを `neurafusion …` で出す（`ui/src/i18n/lib/product-brand.ts`。t() と組み立て時の翻訳の chunk が通す）。
+ロブスターのアイコン（アイコン表と環境の色つき favicon）は NeuraFusion の丸に、絵文字の選択肢の 🦞 は 🧠 に、ペットの訪問は既定で切った。
+verify は smoke でサブコマンドの `--help` と案内 5 つを `brand-scan.py --commands` に、管理画面の JS・CSS を `--ui` にかける（許可リストは増やしていない）。
+**まだ残る所**: 説明文の中の製品名としての OpenClaw（サブコマンドの `--help` の説明・管理画面のほかの文言。上流の事実を書いた文と
+分けて直す要がある）、CLI の失敗の行の `[openclaw]` の印と「OpenClaw hit an unexpected runtime error.」、打ち間違いの「OpenClaw channels has no command …」、ランチャ `openclaw.mjs` の
+Node の版の案内、ペットのコードと Lobsterdex の画面（既定では出ない）。`--version` は `NeuraFusion <版> (<commit>)`。
 
 ## 5. 法務確認待ち（作業は止めていない）
 

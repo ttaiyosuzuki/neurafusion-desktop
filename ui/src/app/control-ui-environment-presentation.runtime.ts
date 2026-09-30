@@ -84,7 +84,7 @@ function syncControlUiFavicon(): void {
     ? style.getPropertyValue(`--control-ui-environment-${environment.color}`).trim()
     : "";
   const environmentSvg = environmentColor
-    ? `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120"><path fill="${environmentColor}" d="M60 10C30 10 15 35 15 55c0 20 15 40 30 45v10h10v-10h10v10h10v-10c15-5 30-25 30-45 0-20-15-45-45-45Z"/></svg>`)}`
+    ? `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256"><circle cx="128" cy="128" r="110" fill="${environmentColor}"/><ellipse cx="108.5" cy="78.5" rx="32" ry="28" fill="#fff" fill-opacity="0.35"/></svg>`)}`
     : null;
   const light = root.dataset.themeMode === "light";
   const token = {

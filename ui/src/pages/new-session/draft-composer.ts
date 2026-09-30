@@ -297,7 +297,7 @@ export function renderNewSessionDraftComposer(options: {
       .seed=${lobsterPetSeed(`${options.textareaController.critterVisit}:${options.draftOwnerKey}`)}
       .mode=${resolveLobsterPetMode(!gateway?.snapshot.offlineStable, options.context?.sessions.state.result?.sessions)}
       .runOutcome=${resolveLobsterRunOutcome(options.context?.sessions.state.result?.sessions)}
-      .visitsEnabled=${options.context?.theme.settings.lobsterPetVisits !== false}
+      .visitsEnabled=${options.context?.theme.settings.lobsterPetVisits === true}
       .soundsEnabled=${options.context?.theme.settings.lobsterPetSounds === true}
       .gatewayVersion=${options.context?.config.current.serverVersion ?? gateway?.snapshot.hello?.server?.version ?? null}
       .onVisitsDisabled=${() => options.context?.theme.refresh()}

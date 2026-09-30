@@ -401,7 +401,8 @@ describe("lobster pet element", () => {
         return {};
       }
     });
-    expect(persistedSettings).toContainEqual(expect.objectContaining({ lobsterPetVisits: false }));
+    // NeuraFusion: visits default off, so a dismissal leaves no opt-in behind.
+    expect(persistedSettings.some((settings) => settings.lobsterPetVisits === true)).toBe(false);
     expect(await advanceUntil(element, () => !spritePresent(element), 5_000)).toBe(true);
   });
 

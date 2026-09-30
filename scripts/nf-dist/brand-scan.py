@@ -5,6 +5,12 @@
 #   python3 scripts/nf-dist/brand-scan.py <ファイル>...          # UTF-8（ASCII を含む）と UTF-16LE（Windows の版情報など）で探す
 #   python3 scripts/nf-dist/brand-scan.py --nsis <Setup.exe>     # NSIS の圧縮された見出し（画面の文言・「アプリと機能」の
 #                                                               # 表示名と発行元・ショートカット名）を展開して探す
+#   python3 scripts/nf-dist/brand-scan.py --commands <ファイル>...  # CLI の出力（サブコマンドの --help・案内）に、利用者が打つ
+#                                                               # コマンドとしての `openclaw …`（Usage・例・「openclaw doctor を」）と
+#                                                               # ロブスターが無いか。パス・パッケージ名・URL・環境変数は数えない
+#                                                               # （packages/terminal-core/src/cli-display-name.ts と同じ決まり）
+#   python3 scripts/nf-dist/brand-scan.py --ui <ファイル>...        # 管理画面の組み立て済みの JS・CSS に「Ask OpenClaw」・ロブスターの
+#                                                               # 絵文字・ロブスターのアイコン（SVG の形）が無いか
 #   python3 scripts/nf-dist/brand-scan.py --allow <許可リスト.json> <ファイル>...
 #                                                               # UTF-8 の文字として読み、許可リストの名前（理由つき。
 #                                                               # brand-allow-help.json）を除いてから探す（CLI の --help 用）
@@ -36,6 +42,35 @@ def bytes_pattern(encoding: str) -> "re.Pattern[bytes]":
 
 
 BYTE_PATTERNS = [(enc, bytes_pattern(enc)) for enc in ("utf-8", "utf-16-le")]
+
+# --commands: コマンドとしての `openclaw`。前は行頭・空白・引用符や括弧・色の指定、後ろは空白＋語・オプション・<…>・[…]、
+# 閉じのバッククォート、色の指定。npx・pnpm などの後ろ（別のパッケージを取りに行く書き方）は数えない
+COMMAND_BEFORE = re.compile(r"(?:^|[\s`'\"(\[{<>:=,;|&]|\x1b\[[0-9;]*m)$")
+COMMAND_RUNNER = re.compile(r"(?:\bnpx|\bbunx|\bdlx|\bexec|\bpnpm|\bnpm|\byarn)[ \t]+$")
+COMMAND_AFTER = re.compile(r"[ \t]+(?:--?[A-Za-z]|[a-z<\[])|`|\x1b\[")
+# --ui: 管理画面に出る「Ask OpenClaw」・ロブスターの絵文字・ロブスターのアイコン（icons.lobster と環境の色つき favicon の胴の形）。
+# 文言の中の `openclaw …` は数えない（Gateway から来る値との比較 new-session/discovery.ts が同じ形で残るため）
+UI_PATTERN = re.compile(r"Ask OpenClaw|" + LOBSTER + r"|M60 10C30 10 15 35 15 55")
+
+
+def command_hits(text: str):
+    """コマンドとしての openclaw（と ロブスター）の行を返す。"""
+    for m in re.finditer("openclaw|" + LOBSTER, text):
+        if m.group(0) == "openclaw":
+            before = text[max(0, m.start() - 40) : m.start()]
+            if not COMMAND_BEFORE.search(before) or COMMAND_RUNNER.search(before):
+                continue
+            if not COMMAND_AFTER.match(text, m.end()):
+                continue
+        start = text.rfind("\n", 0, m.start()) + 1
+        end = text.find("\n", m.end())
+        yield text[start : end if end >= 0 else len(text)].strip()[:120]
+
+
+def ui_hits(text: str):
+    """管理画面の JS・CSS で見つかった所の前後 50 文字を返す（1 行が長いので行ではなく前後）。"""
+    for m in UI_PATTERN.finditer(text):
+        yield text[max(0, m.start() - 50) : m.end() + 50].replace("\n", " ")
 
 
 def nsis_header_text(data: bytes) -> str:
@@ -115,13 +150,15 @@ def hit_lines(data: bytes, nsis: bool, allow: list, counts: dict):
 
 
 def main(argv: list) -> int:
-    nsis, allow_path = False, None
-    if argv and argv[0] == "--nsis":
+    nsis, allow_path, mode = False, None, None
+    if argv and argv[0] in ("--commands", "--ui"):
+        mode, argv = argv[0], argv[1:]
+    elif argv and argv[0] == "--nsis":
         nsis, argv = True, argv[1:]
     elif len(argv) >= 2 and argv[0] == "--allow":
         allow_path, argv = argv[1], argv[2:]
     if not argv:
-        print("使い方: brand-scan.py [--nsis | --allow <許可リスト.json>] <ファイル>...", file=sys.stderr)
+        print("使い方: brand-scan.py [--nsis | --commands | --ui | --allow <許可リスト.json>] <ファイル>...", file=sys.stderr)
         return 2
     try:
         allow = load_allow(allow_path) if allow_path else []
@@ -132,7 +169,12 @@ def main(argv: list) -> int:
     for path in argv:
         try:
             with open(path, "rb") as f:
-                hits = list(hit_lines(f.read(), nsis, allow, counts))
+                data = f.read()
+            if mode:
+                text = data.decode("utf-8", errors="replace")
+                hits = list(command_hits(text) if mode == "--commands" else ui_hits(text))
+            else:
+                hits = list(hit_lines(data, nsis, allow, counts))
         except (OSError, ValueError, lzma.LZMAError, struct.error) as e:
             print(f"読めない {path}: {e}")
             return 2

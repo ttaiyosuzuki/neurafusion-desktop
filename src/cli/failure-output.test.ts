@@ -8,6 +8,7 @@ import {
   GatewayTransportError,
 } from "../gateway/call.js";
 import { UpdateSchemaRefusalError } from "../state/openclaw-update-schema-refusal.js";
+import { formatCliDisplayText } from "./cli-name.js";
 import {
   ExpectedCliError,
   formatCliFailureLines,
@@ -195,8 +196,8 @@ describe("formatCliFailureLines", () => {
       "[openclaw] Could not start the CLI.",
       "[openclaw] Reason: config file is invalid",
       "[openclaw] Debug: set OPENCLAW_DEBUG=1 to include the stack trace.",
-      "[openclaw] Try: openclaw doctor",
-      "[openclaw] Help: openclaw --help",
+      "[openclaw] Try: neurafusion doctor",
+      "[openclaw] Help: neurafusion --help",
     ]);
   });
 
@@ -264,7 +265,8 @@ describe("formatCliFailureLines", () => {
         env: { OPENCLAW_DEBUG: "1" },
       });
 
-      expect(lines).toEqual(error.message.split("\n"));
+      // People see the hints as the `neurafusion` command they type.
+      expect(lines).toEqual(formatCliDisplayText(error.message).split("\n"));
       const output = lines.join("\n");
       expect(output).not.toContain("[openclaw] The CLI command failed.");
       expect(output).not.toContain("[openclaw] Reason:");

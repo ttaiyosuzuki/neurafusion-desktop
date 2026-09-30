@@ -1,6 +1,7 @@
 // Control UI i18n module implements translate behavior.
 import { getSafeLocalStorage } from "../../local-storage.ts";
 import { en } from "../locales/en.ts";
+import { brandAssistantText } from "./product-brand.ts";
 import {
   DEFAULT_LOCALE,
   SUPPORTED_LOCALES,
@@ -245,8 +246,9 @@ class I18nManager {
   }
 
   public translateActive(key: string): string | undefined {
-    const value = lookupTranslation(this.translations[this.locale], key.split("."));
-    return typeof value === "string" ? value : undefined;
+    const keys = key.split(".");
+    const value = lookupTranslation(this.translations[this.locale], keys);
+    return typeof value === "string" ? brandAssistantText(keys, value) : undefined;
   }
 
   public t(key: string, params?: Record<string, string>): string {
@@ -262,14 +264,15 @@ class I18nManager {
     if (typeof value !== "string") {
       return key;
     }
+    const text = brandAssistantText(keys, value);
 
     if (params) {
       // ?? not ||: an empty-string param is a provided value (render empty),
       // while a missing param keeps the visible {placeholder} for debugging.
-      return value.replace(/\{(\w+)\}/g, (_, k) => params[k] ?? `{${k}}`);
+      return text.replace(/\{(\w+)\}/g, (_, k) => params[k] ?? `{${k}}`);
     }
 
-    return value;
+    return text;
   }
 }
 

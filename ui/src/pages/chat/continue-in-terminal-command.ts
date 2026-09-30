@@ -1,4 +1,5 @@
 import { encodeResumeHandoff } from "../../../../src/shared/resume-handoff.js";
+import { displayCliCommand } from "../../i18n/lib/product-brand.ts";
 import { parseAgentSessionKey } from "../../lib/sessions/session-key.ts";
 
 type ContinueInTerminalCommandResult =
@@ -38,7 +39,9 @@ export function buildContinueInTerminalCommand(params: {
   try {
     return {
       ok: true,
-      command: `openclaw resume --handoff ${encodeResumeHandoff({ sessionKey: qualifiedKey, gatewayUrl })}`,
+      command: displayCliCommand(
+        `openclaw resume --handoff ${encodeResumeHandoff({ sessionKey: qualifiedKey, gatewayUrl })}`,
+      ),
       qualifiedSessionKey: qualifiedKey,
     };
   } catch {

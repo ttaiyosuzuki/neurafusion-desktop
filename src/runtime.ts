@@ -1,4 +1,5 @@
 // Re-exports terminal runtime helpers used by CLI command implementations.
+import { formatCliDisplayText } from "../packages/terminal-core/src/cli-display-name.js";
 import { clearActiveProgressLine } from "../packages/terminal-core/src/progress-line.js";
 import { restoreTerminalState } from "../packages/terminal-core/src/restore.js";
 import { loggingState } from "./logging/state.js";
@@ -77,6 +78,11 @@ function writeStdout(value: string): void {
   }
 }
 
+/** Human-facing lines show hints as `neurafusion …` (writeStdout/writeJson carry data and stay raw). */
+function displayArgs(args: unknown[]): unknown[] {
+  return args.map((arg) => (typeof arg === "string" ? formatCliDisplayText(arg) : arg));
+}
+
 function createRuntimeIo(): Pick<OutputRuntimeEnv, "log" | "error" | "writeStdout" | "writeJson"> {
   return {
     log: (...args: Parameters<typeof console.log>) => {
@@ -84,11 +90,11 @@ function createRuntimeIo(): Pick<OutputRuntimeEnv, "log" | "error" | "writeStdou
         return;
       }
       clearActiveProgressLine();
-      console.log(...args);
+      console.log(...displayArgs(args));
     },
     error: (...args: Parameters<typeof console.error>) => {
       clearActiveProgressLine();
-      console.error(...args);
+      console.error(...displayArgs(args));
     },
     writeStdout,
     writeJson: (value: unknown, space = 2) => {

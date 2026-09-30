@@ -743,7 +743,7 @@ describe("sidebar attention refresh ownership", () => {
       const alertAction = panel.querySelector<HTMLButtonElement>(
         '[data-attention-kind="modelAuthExpired"] .sidebar-issues-panel__action:not(.sidebar-issues-panel__action--primary)',
       )!;
-      expect(alertAction.textContent?.trim()).toBe("Ask OpenClaw");
+      expect(alertAction.textContent?.trim()).toBe("Ask NeuraFusion");
       alertAction.click();
       await waitForFast(() =>
         expect(dispatch).toHaveBeenCalledWith(

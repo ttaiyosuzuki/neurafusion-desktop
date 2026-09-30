@@ -173,8 +173,8 @@ describe("configureProgramHelp", () => {
     }
     expect(rootHelp.error.code).toBe("commander.helpDisplayed");
     expect(shortHelp.stdout).toBe(rootHelp.stdout);
-    expect(groupHelp.stdout).toContain("Usage: openclaw plugins [options] [command]");
-    expect(subcommandHelp.stdout).toContain("Usage: openclaw plugins list [options]");
+    expect(groupHelp.stdout).toContain("Usage: neurafusion plugins [options] [command]");
+    expect(subcommandHelp.stdout).toContain("Usage: neurafusion plugins list [options]");
     expect(helpCommand.stdout).toBe(groupHelp.stdout);
   });
 
