@@ -297,10 +297,15 @@ smoke_cmd() {
 verify_one_dmg() {
   local dmg="$1" name mnt app res arch archs ft vol iconf t
   name="$(basename "$dmg")"
-  if hdiutil verify -quiet "$dmg"; then ok "$name: hdiutil verify"; else ng "$name: hdiutil verify"; fi
+  # hdiutil はシステムのデーモン越しなので止まりうる。smoke と同じ上限をつける
+  if perl "$HERE/run-capped.pl" "$CAP_CALL" "$DIAG_DIR" hdiutil verify -quiet "$dmg"; then
+    ok "$name: hdiutil verify"
+  else
+    ng "$name: hdiutil verify"
+  fi
   mnt="$(mktemp -d "${TMPDIR:-/tmp}/nf-verify-mnt.XXXXXX")"
   MOUNTS+=("$mnt")
-  if ! hdiutil attach -quiet -nobrowse -readonly -noautoopen -mountpoint "$mnt" "$dmg"; then
+  if ! perl "$HERE/run-capped.pl" "$CAP_CALL" "$DIAG_DIR" hdiutil attach -quiet -nobrowse -readonly -noautoopen -mountpoint "$mnt" "$dmg"; then
     ng "$name: マウントできない"
     unmount "$mnt"
     return 0
