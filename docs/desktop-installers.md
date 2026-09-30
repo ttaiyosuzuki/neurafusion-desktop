@@ -42,6 +42,10 @@ bash scripts/nf-dist/build-linux-packages.sh          # 丸の本体は apps/nf-
 NF_DIST_SMOKE=1 bash scripts/nf-dist/verify-installers.sh            # Mac: dmg と exe、Linux: deb と appimage
 ```
 
+smoke の呼び出しは1件ずつ時間の上限つき（`scripts/nf-dist/run-capped.pl`。本体を入れる1回目は 900 秒、ほかは 120 秒。
+`NF_VERIFY_CAP_INSTALL`・`NF_VERIFY_CAP_CALL` で変えられる）。時間切れ・終了コードの違い・空の出力はその件の NG で、
+時間切れの様子（プロセスの一覧・Mac は `sample` のスタック・`lsof`）は `.artifacts/verify-diag/`（`NF_VERIFY_DIAG_DIR`）に残る。
+
 出力は `.artifacts/installers/`（ignore 下）と `SHA256SUMS.txt`。リリースへの上げは取りまとめ役・本人の確認のあと。
 
 **本体の tarball は自動で選ぶ。** 2〜4 の組み立ては、候補（`.artifacts/*/neurafusion-<版>.tgz` のすべて）を中まで調べ、

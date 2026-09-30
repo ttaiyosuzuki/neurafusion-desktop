@@ -57,11 +57,11 @@ sub diagnose {
     print $fh "command: @cmd\ncap: ${secs}s\nstdin: /dev/null\n\n# pid ppid stat etime command\n", map { "$_\n" } @lines;
     close($fh);
   }
-  for my $l (@lines) {
-    my ($p) = split(' ', $l);
-    system("lsof -n -P -p $p >> '$f' 2>/dev/null");
-    # Mac: 2 秒ぶんのスタック（どのスレッドが何を待っているか）
-    system("/usr/bin/sample $p 2 -file '$diag/sample-$p.txt' > /dev/null 2>&1") if -x '/usr/bin/sample';
+  my @pids = map { (split(' ', $_))[0] } @lines;
+  system("lsof -n -P -p $_ >> '$f' 2>/dev/null") for @pids;
+  # Mac: 2 秒ぶんのスタック（どのスレッドが何を待っているか）。どのプロセスも同じ時に取る
+  if (-x '/usr/bin/sample' && @pids) {
+    system(join(' ', map { "/usr/bin/sample $_ 2 -file '$diag/sample-$_.txt' > /dev/null 2>&1 &" } @pids) . ' wait');
   }
   print STDERR "!! ${secs} 秒を過ぎても終わらないので打ち切りました（様子: $f）\n";
 }
