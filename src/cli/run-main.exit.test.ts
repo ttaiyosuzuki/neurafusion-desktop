@@ -19,6 +19,7 @@ import { withSecureTestNodeExecPath } from "../secrets/test-node-command.test-su
 import { createDeferredCore } from "../shared/deferred.js";
 import type { LocalOnboardingState } from "../state/local-onboarding-state.js";
 import { captureEnv, withEnvAsync } from "../test-utils/env.js";
+import { formatCliDisplayText } from "./cli-name.js";
 import { ExpectedCliError } from "./failure-output.js";
 import { getGatewayRunRuntimeHooks } from "./gateway-cli/runtime-hooks.js";
 import type { RootHelpRenderOptions } from "./program/root-help.js";
@@ -711,7 +712,10 @@ describe("runCli exit behavior", () => {
 
         expect(parkCurrentLaunchAgentForMaintenanceMock).toHaveBeenCalledOnce();
         expect(exitSpy).toHaveBeenCalledWith(78);
-        expect(errorSpy.mock.calls.flat().join("\n")).toContain(error.message);
+        // The failure lines show the repair hints as the `neurafusion` command.
+        expect(errorSpy.mock.calls.flat().join("\n")).toContain(
+          formatCliDisplayText(error.message),
+        );
         expect(addGatewayRunCommandMock).not.toHaveBeenCalled();
         if (phase === "environment selection") {
           expect(buildProgramMock).not.toHaveBeenCalled();
