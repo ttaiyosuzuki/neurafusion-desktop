@@ -3,6 +3,8 @@
 #
 #   bash scripts/nf-dist/verify-installers.sh [dmg] [exe] [deb] [appimage]   # 既定はこの OS で確かめられる物すべて
 #   NF_DIST_SMOKE=1 …   # さらに、同梱の Node で本体を実際に入れて --version・--help を動かす（インターネットが要る・数分）
+#                         1件ごとに時間の上限（NF_VERIFY_CAP_INSTALL=900・NF_VERIFY_CAP_CALL=120 秒）。時間切れ・終了コード・
+#                         空の出力はその件の NG。時間切れの様子は NF_VERIFY_DIAG_DIR（既定 .artifacts/verify-diag）に残る
 #
 # .dmg は Mac、.deb・AppImage は Linux で確かめる。Windows のインストーラは実行できないので、形・同梱物・文言だけ。
 # 見る物: 形と同梱物／本体の tarball に @openclaw/ai が入っているか／ライセンス文書が入っているか／利用者に見える所
@@ -49,6 +51,12 @@ trap 'echo "!! 予期しない失敗で止まります（${LINENO} 行目: ${BAS
 trap 'cleanup; trap - INT; kill -INT $$' INT
 trap 'cleanup; trap - TERM; kill -TERM $$' TERM
 trap 'cleanup; trap - HUP; kill -HUP $$' HUP
+
+# smoke の1呼び出しの時間の上限（秒）。1回目の --version は本体を入れるので長め。時間切れの様子（ps・sample・lsof）の置き場は
+# 片付けの対象にしない
+CAP_INSTALL="${NF_VERIFY_CAP_INSTALL:-900}"
+CAP_CALL="${NF_VERIFY_CAP_CALL:-120}"
+DIAG_DIR="${NF_VERIFY_DIAG_DIR:-$ROOT_DIR/.artifacts/verify-diag}"
 
 # 一時フォルダを作って TMP_DIR に入れる（$(...) の中で呼ぶと覚えた物が消えるので、変数で返す）
 make_tmp() {
@@ -198,6 +206,9 @@ readme_is_current() {
 
 # ---- 同梱の Node で本体を入れて --version・--help を動かす（NF_DIST_SMOKE=1 のときだけ）。$1=入口 $2=名前
 # 本人の HOME・npm のキャッシュ・設定の置き場・通知に触れないよう、環境を空にし、使い捨ての HOME とデータの置き場で動かす。
+# どの呼び出しも1件ずつ時間の上限つき（run-capped.pl。stdin は /dev/null）で、終了コード・時間切れ・空の出力・期待する行を
+# 1件ずつ見る。rc を捨てて出力を1つにまとめていた頃は、LC_ALL=C で 29 分止まった `channels --help` を外から止めた後の
+# 空の出力でも、ほかの呼び出しの Usage で ok になっていた（2026-09-30）。時間切れの様子は $DIAG_DIR に残る。
 smoke() {
   [ "${NF_DIST_SMOKE:-}" = 1 ] || return 0
   local entry="$1" name="$2" d v again
@@ -210,41 +221,77 @@ smoke() {
     LC_ALL="$NF_CALLER_LC_ALL" LANG="$NF_CALLER_LANG" NF_DIST_DATA_DIR="$d/data" npm_config_update_notifier=false)
   if [ -n "${APPIMAGE_EXTRACT_AND_RUN:-}" ]; then envs+=(APPIMAGE_EXTRACT_AND_RUN=1); fi
 
-  env -i "${envs[@]}" "$entry" --version > "$d/version.out" 2> "$d/version.err" || true
-  v="$(tail -1 "$d/version.out")"
-  if contains "$v" "$VERSION"; then
+  # 1回目は本体を入れる（インターネットから依存を取る）ので上限を長く
+  if smoke_call "$CAP_INSTALL" version --version && contains "$(tail -1 "$d/version.out")" "$VERSION"; then
+    v="$(tail -1 "$d/version.out")"
     ok "$name: 同梱の Node で本体を入れ、--version が動く（${v}）"
   else
-    ng "$name: --version が動かない（$(tail -3 "$d/version.err" | tr '\n' ' ')）"
+    ng "$name: --version が動かない（${CALL_WHY}・$(tail -3 "$d/version.err" | tr '\n' ' ')）"
   fi
   tail -1 "$d/version.out" > "$d/version.line"
   no_brand "$name: --version に上流の名前が無い" "$d/version.line"
-  env -i "${envs[@]}" "$entry" --version > /dev/null 2> "$d/again.err" || true
-  again="$(grep -c '初回の準備' "$d/again.err" || true)"
-  if [ "$again" = 0 ]; then ok "$name: 2回目は入れ直さない"; else ng "$name: 2回目も入れ直した"; fi
-  env -i "${envs[@]}" "$entry" --help > "$d/help.out" 2> "$d/help.err" || true
-  if [ -s "$d/help.out" ]; then
+  if smoke_call "$CAP_CALL" again --version; then
+    again="$(grep -c '初回の準備' "$d/again.err" || true)"
+    if [ "$again" = 0 ]; then ok "$name: 2回目は入れ直さない"; else ng "$name: 2回目も入れ直した"; fi
+  else
+    ng "$name: 2回目の --version が動かない（${CALL_WHY}）"
+  fi
+  if smoke_call "$CAP_CALL" help --help; then
     no_brand_allowed "$name: --help に許可リスト以外の上流の名前が無い" "$d/help.out"
   else
-    ng "$name: --help が何も出さない（$(tail -3 "$d/help.err" | tr '\n' ' ')）"
+    ng "$name: --help が動かない（${CALL_WHY}・$(tail -3 "$d/help.err" | tr '\n' ' ')）"
   fi
   # サブコマンドの --help（Usage・例）と、動いている最中の案内（打ち間違いの「Did you mean」「Try: … --help」・足りない引数の
-  # Usage）に、利用者が打つコマンドとしての openclaw が無いか（scripts/nf-dist/brand-scan.py --commands）
-  local c cmds=("channels --help" "gateway --help" "doctor --help" "channels lst" "plugins search")
+  # Usage）。1件ずつ「終了コード（--help は 0、案内は 0 以外）・期待する行」を見てから、まとめて利用者が打つコマンドとしての
+  # openclaw が無いか（scripts/nf-dist/brand-scan.py --commands）
   : > "$d/commands.out"
-  for c in "${cmds[@]}"; do
-    # shellcheck disable=SC2086 # 語に分けて渡す
-    env -i "${envs[@]}" "$entry" $c >> "$d/commands.out" 2>&1 || true
-  done
-  if grep -q 'Usage: neurafusion channels' "$d/commands.out" && grep -q 'Usage: neurafusion plugins search' "$d/commands.out"; then
-    if out="$(python3 "$HERE/brand-scan.py" --commands "$d/commands.out" 2>&1 || exit $?)"; then
-      ok "$name: サブコマンドの --help と案内（${#cmds[@]} つ）のコマンド名が neurafusion"
-    else
-      ng "$name: サブコマンドの --help か案内に openclaw のコマンドが残る（${out%%$'\n'*}）"
-    fi
+  smoke_cmd 0 'Usage: neurafusion channels' channels --help
+  smoke_cmd 0 'Usage: neurafusion gateway' gateway --help
+  smoke_cmd 0 'Usage: neurafusion doctor' doctor --help
+  smoke_cmd x 'neurafusion channels list' channels lst
+  smoke_cmd x 'Usage: neurafusion plugins search' plugins search
+  if out="$(python3 "$HERE/brand-scan.py" --commands "$d/commands.out" 2>&1 || exit $?)"; then
+    ok "$name: サブコマンドの --help と案内（5 つ）のコマンド名が neurafusion"
   else
-    ng "$name: サブコマンドの --help か案内が出ない（$(head -3 "$d/commands.out" | tr '\n' ' ')）"
+    ng "$name: サブコマンドの --help か案内に openclaw のコマンドが残る（${out%%$'\n'*}）"
   fi
+}
+
+# smoke の1呼び出し（smoke の d・envs・entry を使う）。$1=上限秒 $2=名前（$d/<名前>.out・.err に書く） 残り=引数。
+# 終了コード 0・時間内・標準出力が空でない、のときだけ 0 を返す。そうでなければ理由を CALL_WHY に入れて 1 を返す
+smoke_call() {
+  local secs="$1" tag="$2" rc=0
+  shift 2
+  perl "$HERE/run-capped.pl" "$secs" "$DIAG_DIR" env -i "${envs[@]}" "$entry" "$@" > "$d/$tag.out" 2> "$d/$tag.err" || rc=$?
+  CALL_RC="$rc"
+  CALL_WHY=""
+  if [ "$rc" -eq 124 ]; then CALL_WHY="${secs} 秒で打ち切り・様子は ${DIAG_DIR}"; return 1; fi
+  if [ "$rc" -ne 0 ]; then CALL_WHY="終了コード ${rc}"; return 1; fi
+  if [ ! -s "$d/$tag.out" ]; then CALL_WHY="出力が空"; return 1; fi
+  return 0
+}
+
+# サブコマンド1つ。$1=期待する終了コード（0、または x=0 以外） $2=出力（標準出力と標準エラー）に要る行 残り=引数。
+# 時間切れ・期待と違う終了コード・出力が空・要る行が無い、のどれでも NG
+smoke_cmd() {
+  local want="$1" line="$2" tag why=""
+  shift 2
+  tag="cmd-$(printf '%s' "$*" | tr -c 'a-zA-Z0-9' '-')"
+  smoke_call "$CAP_CALL" "$tag" "$@" || true
+  cat "$d/$tag.out" "$d/$tag.err" > "$d/$tag.all"
+  cat "$d/$tag.all" >> "$d/commands.out"
+  if [ "$CALL_RC" -eq 124 ]; then
+    why="$CALL_WHY"
+  elif [ "$want" = 0 ] && [ "$CALL_RC" -ne 0 ]; then
+    why="終了コード ${CALL_RC}"
+  elif [ "$want" = x ] && [ "$CALL_RC" -eq 0 ]; then
+    why="終了コードが 0（失敗の案内のはず）"
+  elif [ ! -s "$d/$tag.all" ]; then
+    why="出力が空"
+  elif ! grep -q -F "$line" "$d/$tag.all"; then
+    why="「${line}」が無い: $(head -2 "$d/$tag.all" | tr '\n' ' ')"
+  fi
+  if [ -z "$why" ]; then ok "$name: ${*} が動く（${line}）"; else ng "$name: ${*} が期待どおりでない（${why}）"; fi
 }
 
 verify_one_dmg() {
