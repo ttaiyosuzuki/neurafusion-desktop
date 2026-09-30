@@ -23,7 +23,7 @@ Windows のインストーラに原文を表示して「同意する」を押し
 
 ## 配布の担当への作業（この文書の外。台本・NOTICE・verify を持つ担当へ）
 
-1. 済（dk-license-2）: NOTICE を案の形にした（【連絡先】= info@taiyosuzuki.com）。
+1. 済（dk-license-2）: NOTICE を案の形にした（【連絡先】= `info@taiyosuzuki.com`）。
 2. 済（dk-license-2）: `licenses/` に .NET Library License の原文（`packaging/installer/licenses/dotnet-library-license.txt`）を足した。
    Windows SDK License は、その対象の `D3DCompiler_47_cor3.dll` を配布物から外したので足さない（`components.md` 4.4）。
    Windows のインストーラに .NET Library License の同意の画面を足した（`components.md` 4.4）。

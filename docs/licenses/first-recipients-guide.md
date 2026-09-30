@@ -75,9 +75,9 @@ NeuraFusion Desktop の試用版をお送りします。
   Mac: ターミナルで  shasum -a 256 ファイル名
   Windows: PowerShell で  Get-FileHash ファイル名
   次の値と同じなら、こちらで作った物のままです。
-  Windows  9d1594d9925e7f4dd412b650e00f4ce45f2b4f9f485fe333a9770c047d0560c6
-  Mac arm64 5212a95be8a1acc48f48cd0ce069191773fa6d22c4192c74e807bce0d7bb5747
-  Mac x64   c6b3bb39d267d8667431beb4ac2c420f265a7ec60ac6f5b7913c57e9c2611441
+  Windows  cf9e19096881a0c0eee7287ae5f8e9651e23fb22247dcd89b4bfa923f2e4d841
+  Mac arm64 4dbd96d4308b206116c86238dc6ad5122a0ce72be32db9d3b7aff4ea824750d8
+  Mac x64   04e046a5f7c466ac4b7acd1298ed39451ec757ad0570fbc0ed0295ef0e2cfdd5
 
 ライセンスの表示は、Mac はディスクイメージの「ライセンス.txt」、Windows は入れた先のフォルダの
 LICENSE・NOTICE・licenses フォルダにあります。
@@ -87,7 +87,8 @@ LICENSE・NOTICE・licenses フォルダにあります。
 
 ## 送る前にオーナーが確かめること
 
-- 値（SHA-256）は `.artifacts/installers/SHA256SUMS.txt` の物（2026-09-30 dk-dist-3 が b025592bb から作り直した物）。
-  **この 3 つは直す前の物**（はじめにお読みくださいの「署名について」が古く、Windows の同意の画面も無い）。dk-license-2 のあとに作り直した物を配り、値を差し替える。
-- Windows の 3 の「使用許諾契約」の画面は dk-license-2 で足す物（作り直した Setup.exe から出る）。
+- 値（SHA-256）は `.artifacts/installers/SHA256SUMS.txt` の物（2026-09-30 dk-license-2 が main `8459ffe88` から作り直した物。verify は ja_JP.UTF-8・C とも ok 81 / NG 0）。
+  この 3 つには、直したはじめにお読みください（Windows は今は無署名・Mac は「このまま開く」）と、Windows の「使用許諾契約」の画面（.NET Library License）が入っている。
+  作り直したら値を差し替える（この文書は本体の tarball の docs/ にも入るので、値を直す commit は配布物より後になる）。
 - arm64 の .dmg はこの Mac（Intel）では動かしていない（cloud-build の担当）。arm64 を配るなら、その実行の確認のあとに。
+- Windows 版の丸（`nf-overlay.exe`）は Windows の実機で一度も動かしていない（`apps/nf-overlay-windows/README.md`）。
