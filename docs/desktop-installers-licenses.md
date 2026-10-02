@@ -110,7 +110,7 @@ THIRD_PARTY_NOTICES.md.
 
 `verify-installers.sh` が配布物の中身で確かめる（`scripts/nf-dist/brand-scan.py` で OpenClaw・Clawdbot・Moltbot・Clawd・ClawHub・
 🦞 を UTF-8 と UTF-16LE で探す。Windows のインストーラは NSIS の圧縮された見出しを展開して文言・レジストリの値・ショートカット名を見る。
-アイコンは `packaging/installer/icons` の物（青い丸）とバイト単位で比べる）。
+アイコンは `packaging/installer/icons` の物（NF の丸・2026-10-02 に青から左下 黄 → 右上 紫の4色へ）とバイト単位で比べる）。
 
 | 配布物 | 見る所 |
 |---|---|

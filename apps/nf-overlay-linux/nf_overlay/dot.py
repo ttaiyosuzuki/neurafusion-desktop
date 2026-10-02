@@ -1,4 +1,5 @@
-"""丸の窓（GTK 3）。ブラウザ拡張・Mac 版と同じ絵柄（青い球・つや・白い目）を cairo で描く。
+"""丸の窓（GTK 3）。NF の丸（Mac 版・Web と同じ。左下 黄 → 右上 紫の4色・中心が濃く外へ白・白ふち・白い目）を cairo で描く。
+2026-10-02 見た目③ icon-apps-main で青い球・つや・影から替えた（原画 neurafusion-repo design/icon-gradient/nf-mark-gradient.svg）。
 
 - 枠なし・透明な背景・タスクバーに出さない・フォーカスを取らない（押しても AI アプリの入力欄から外れない）
 - X11 では override-redirect（POPUP）で出す。ウィンドウマネージャーを通さずに指定の位置に置け、通常の窓より上に出る
@@ -17,7 +18,17 @@ gi.require_version("Gtk", "3.0")
 gi.require_version("Gdk", "3.0")
 from gi.repository import Gdk, Gtk  # noqa: E402
 
-LM_BLUE = (0x3B / 255, 0x82 / 255, 0xF6 / 255)
+# hsl(45 97% 54%)・hsl(24 97% 54%)・hsl(335 90% 57%)・hsl(275 80% 56%)（Web の COMPLETE_STOPS）を sRGB に
+MARK_STOPS = (
+    (0.0, (0xFB / 255, 0xC3 / 255, 0x18 / 255)),
+    (0.36, (0xFB / 255, 0x73 / 255, 0x18 / 255)),
+    (0.68, (0xF4 / 255, 0x2F / 255, 0x81 / 255)),
+    (1.0, (0x9E / 255, 0x35 / 255, 0xE9 / 255)),
+)
+# 光の輪の色（桃 hsl(335 90% 57%)＝Web の COMPLETE_HALO）
+HALO = (0xF4 / 255, 0x2F / 255, 0x81 / 255)
+# 原画の白の重ね（中心が濃く外へ白）
+WHITE_STOPS = ((0, 0), (0.2, 0.04), (0.4, 0.10), (0.55, 0.15), (0.65, 0.19), (0.75, 0.27), (0.85, 0.37), (1, 0.45))
 
 
 def _mix(a, b, t):
@@ -87,16 +98,8 @@ class DotWindow(Gtk.Window):
         s = min(alloc.width, alloc.height) / 24
         ctx.save()
         ctx.scale(s, s)
-        # 影
-        ctx.save()
-        ctx.translate(12, 22.4)
-        ctx.scale(5.4, 1.1)
-        ctx.arc(0, 0, 1, 0, 2 * math.pi)
-        ctx.restore()
-        ctx.set_source_rgba(0, 0, 0, 0.1)
-        ctx.fill()
-        # 白いぼかしの輪
-        gc = _mix(LM_BLUE, (1, 1, 1), 0.75)
+        # 光の輪
+        gc = _mix(HALO, (1, 1, 1), 0.75)
         glow = cairo.RadialGradient(12, 12, 0, 12, 12, 11.6)
         glow.add_color_stop_rgba(0, *gc, 0)
         glow.add_color_stop_rgba(0.62, *gc, 0)
@@ -105,30 +108,36 @@ class DotWindow(Gtk.Window):
         ctx.set_source(glow)
         ctx.arc(12, 12, 11.6, 0, 2 * math.pi)
         ctx.fill()
-        # 本体（左上から光が当たる球）
-        cx, cy = 3 + 18 * 0.42, 3 + 18 * 0.36
-        body = cairo.RadialGradient(cx, cy, 0, cx, cy, 18 * 0.72)
-        body.add_color_stop_rgb(0, *_mix(LM_BLUE, (1, 1, 1), 0.6))
-        body.add_color_stop_rgb(0.5, *LM_BLUE)
-        body.add_color_stop_rgb(1, *_mix(LM_BLUE, (0, 0, 0), 0.4))
+        # 本体（左下 黄 → 右上 紫）。原画の objectBoundingBox を 3..21 の座標に直した
+        body = cairo.LinearGradient(3 + 18 * 0.18, 3 + 18 * 0.82, 3 + 18 * 0.82, 3 + 18 * 0.18)
+        for off, rgb in MARK_STOPS:
+            body.add_color_stop_rgb(off, *rgb)
         body.set_extend(cairo.EXTEND_PAD)
         ctx.set_source(body)
         ctx.arc(12, 12, 9, 0, 2 * math.pi)
         ctx.fill()
-        # つや
-        ctx.save()
-        ctx.translate(9, 7.6)
-        ctx.rotate(-24 * math.pi / 180)
-        ctx.scale(3.4, 2.2)
-        ctx.arc(0, 0, 1, 0, 2 * math.pi)
-        ctx.restore()
-        ctx.set_source_rgba(1, 1, 1, 0.55)
+        # 白の重ね（中心が濃く外へ白）
+        white = cairo.RadialGradient(12, 3 + 18 * 0.44, 0, 12, 3 + 18 * 0.44, 18 * 0.56)
+        for off, a in WHITE_STOPS:
+            white.add_color_stop_rgba(off, 1, 1, 1, a)
+        white.set_extend(cairo.EXTEND_PAD)
+        ctx.set_source(white)
+        ctx.arc(12, 12, 9, 0, 2 * math.pi)
+        ctx.fill()
+        # 白ふち
+        rim = cairo.RadialGradient(12, 12, 0, 12, 12, 9)
+        rim.add_color_stop_rgba(0, 1, 1, 1, 0)
+        rim.add_color_stop_rgba(0.93, 1, 1, 1, 0)
+        rim.add_color_stop_rgba(0.97, 1, 1, 1, 0.42)
+        rim.add_color_stop_rgba(1, 1, 1, 1, 0.85)
+        ctx.set_source(rim)
+        ctx.arc(12, 12, 9, 0, 2 * math.pi)
         ctx.fill()
         # 目（押している間は少し下を見る）
         dy = 1.3 if self._pressed else 0
         ctx.set_source_rgb(1, 1, 1)
-        for x in (8.1, 13.3):
-            _rounded(ctx, x, 9.9 + dy, 2.6, 5.2, 1.3)
+        for x in (8.37, 13.66):
+            _rounded(ctx, x, 7.98 + dy, 1.97, 3.7, 0.985)
             ctx.fill()
         ctx.restore()
         return True

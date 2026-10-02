@@ -22,7 +22,7 @@
   データベースは引いていない。
 - こちらの使い方（2026-09-29 に作り直した配布物で検査済み）:
   - 利用者に見える所（アプリ名・アイコン・インストーラの文言・「アプリと機能」の表示名と発行元・デスクトップ項目・`--version`）には
-    「OpenClaw」もロブスターも無い。アプリ名は「NeuraFusion」、アイコンは青い丸。
+    「OpenClaw」もロブスターも無い。アプリ名は「NeuraFusion」、アイコンは NF の丸（2026-10-02 に青から左下 黄 → 右上 紫の4色へ替えた）。
   - ライセンス文書（LICENSE・NOTICE・THIRD_PARTY_NOTICES.md）には上流の著作権表示 `Copyright (c) 2026 OpenClaw Foundation` と、
     NOTICE の由来の文「このソフトウェアは OpenClaw を基に作られています。 / This software is derived from OpenClaw.」がある。
     公開のリポジトリの README 75 行目にも「このソフトウェアは OpenClaw（MIT License）を基に作られています。」がある。

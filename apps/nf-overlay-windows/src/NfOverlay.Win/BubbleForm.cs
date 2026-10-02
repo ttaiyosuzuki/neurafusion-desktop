@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
@@ -110,11 +111,19 @@ internal sealed class BubbleForm : Form
 
 /// <summary>
 /// NeuraFusion の「生きてる丸」（ブラウザ拡張 extension-kensan の makeLivingMark と同じ絵柄・24 の座標系）。
-/// 青くつやのある丸・白い縦長の目2つ・外側にうっすら白い光の輪・左上にハイライト。動き（まばたき等）は付けない。
+/// NF の丸（2026-10-02 見た目③ icon-apps-main・原画 neurafusion-repo design/icon-gradient/nf-mark-gradient.svg）:
+/// 左下 黄 → 右上 紫の4色・中心が濃く外へ白・白ふち・白い縦長の目2つ・外側にうっすら光の輪。動き（まばたき等）は付けない。
+/// 以前の青い球・ハイライト・影はやめた。色は Web の LivingMark の COMPLETE_STOPS（hsl）を sRGB にした値。
 /// </summary>
 internal static class LivingMark
 {
-    private static readonly Color Blue = Color.FromArgb(0x3b, 0x82, 0xf6); // 本体 markColor.ts の既定の青
+    // hsl(45 97% 54%)・hsl(24 97% 54%)・hsl(335 90% 57%)・hsl(275 80% 56%)
+    private static readonly float[] StopPos = { 0f, 0.36f, 0.68f, 1f };
+    private static readonly Color[] StopColors =
+    {
+        Color.FromArgb(0xfb, 0xc3, 0x18), Color.FromArgb(0xfb, 0x73, 0x18), Color.FromArgb(0xf4, 0x2f, 0x81), Color.FromArgb(0x9e, 0x35, 0xe9),
+    };
+    private static readonly Color Halo = Color.FromArgb(0xf4, 0x2f, 0x81); // 桃＝Web の COMPLETE_HALO
 
     private static Color Mix(Color a, Color b, double tb) => Color.FromArgb(
         (int)Math.Round(a.R * (1 - tb) + b.R * tb),
@@ -130,8 +139,8 @@ internal static class LivingMark
         var k = px / 24f;
         g.ScaleTransform(k, k);
 
-        // 光の輪: 半径 11.6、62%〜100% の間で 0 → 0.45 → 0 の白っぽい青。
-        var glow = Mix(Blue, Color.White, 0.75);
+        // 光の輪: 半径 11.6、62%〜100% の間で 0 → 0.45 → 0 の白っぽい桃。
+        var glow = Mix(Halo, Color.White, 0.75);
         using (var path = new GraphicsPath())
         {
             path.AddEllipse(12 - 11.6f, 12 - 11.6f, 23.2f, 23.2f);
@@ -151,38 +160,67 @@ internal static class LivingMark
             g.FillPath(br, path);
         }
 
-        // 影
-        using (var shadow = new SolidBrush(Color.FromArgb(26, 0, 0, 0)))
-            g.FillEllipse(shadow, 12 - 5.4f, 22.4f - 1.1f, 10.8f, 2.2f);
-
-        // 体: 左上寄りに明るい放射グラデーション。
         using (var body = new GraphicsPath())
         {
             body.AddEllipse(3, 3, 18, 18);
-            using var br = new PathGradientBrush(body)
+            var clip = g.Save();
+            g.SetClip(body);
+
+            // 本体: 左下 黄 → 右上 紫。原画の線（objectBoundingBox 0.18,0.82 → 0.82,0.18）を丸の外まで伸ばし、
+            // 端の色をそのまま延ばす（GDI+ の線形は繰り返すので、端に同じ色の止まりを足す）。
+            const float half = 18 * 0.64f * 0.70710678f; // 中心から原画の線の端まで（≒8.15）
+            const float ext = 9.5f; // 丸（半径 9）より外まで
+            var pos = new float[StopPos.Length + 2];
+            var cols = new Color[StopColors.Length + 2];
+            pos[0] = 0f; cols[0] = StopColors[0];
+            for (var i = 0; i < StopPos.Length; i++)
             {
-                CenterPoint = new PointF(24 * 0.42f, 24 * 0.36f),
+                pos[i + 1] = (ext - half + StopPos[i] * 2 * half) / (2 * ext);
+                cols[i + 1] = StopColors[i];
+            }
+            pos[^1] = 1f; cols[^1] = StopColors[^1];
+            var d = ext * 0.70710678f;
+            using (var lin = new LinearGradientBrush(new PointF(12 - d, 12 + d), new PointF(12 + d, 12 - d), StopColors[0], StopColors[^1])
+            {
+                InterpolationColors = new ColorBlend { Positions = pos, Colors = cols },
+            })
+                g.FillPath(lin, body);
+
+            // 白の重ね: 中心 (12, 10.92)・半径 10.08 で、中心が濃く外へ白（丸はこの円の中に収まる）。位置は「縁=0 → 中心=1」。
+            using (var wp = new GraphicsPath())
+            {
+                wp.AddEllipse(12 - 10.08f, 10.92f - 10.08f, 20.16f, 20.16f);
+                using var wb = new PathGradientBrush(wp)
+                {
+                    CenterPoint = new PointF(12, 10.92f),
+                    InterpolationColors = new ColorBlend
+                    {
+                        Positions = new[] { 0f, 0.15f, 0.25f, 0.35f, 0.45f, 0.6f, 0.8f, 1f },
+                        Colors = new[] { 115, 94, 69, 48, 38, 26, 10, 0 }.Select(a => Color.FromArgb(a, 255, 255, 255)).ToArray(),
+                    },
+                };
+                g.FillPath(wb, wp);
+            }
+
+            // 白ふち（93%〜100% だけ白）
+            using (var rb = new PathGradientBrush(body)
+            {
+                CenterPoint = new PointF(12, 12),
                 InterpolationColors = new ColorBlend
                 {
-                    Positions = new[] { 0f, 0.5f, 1f },
-                    Colors = new[] { Mix(Blue, Color.Black, 0.4), Blue, Mix(Blue, Color.White, 0.6) },
+                    Positions = new[] { 0f, 0.03f, 0.07f, 1f },
+                    Colors = new[] { Color.FromArgb(217, 255, 255, 255), Color.FromArgb(107, 255, 255, 255), Color.FromArgb(0, 255, 255, 255), Color.FromArgb(0, 255, 255, 255) },
                 },
-            };
-            g.FillPath(br, body);
-        }
+            })
+                g.FillPath(rb, body);
 
-        // ハイライト
-        var state = g.Save();
-        g.TranslateTransform(9, 7.6f);
-        g.RotateTransform(-24);
-        using (var hi = new SolidBrush(Color.FromArgb(140, 255, 255, 255)))
-            g.FillEllipse(hi, -3.4f, -2.2f, 6.8f, 4.4f);
-        g.Restore(state);
+            g.Restore(clip);
+        }
 
         // 目（白い縦長の角丸）
         using (var eye = new SolidBrush(Color.White))
-            foreach (var x in new[] { 8.1f, 13.3f })
-                using (var p = RoundRect(x, 9.9f, 2.6f, 5.2f, 1.3f))
+            foreach (var x in new[] { 8.37f, 13.66f })
+                using (var p = RoundRect(x, 7.98f, 1.97f, 3.7f, 0.985f))
                     g.FillPath(eye, p);
 
         return bmp;

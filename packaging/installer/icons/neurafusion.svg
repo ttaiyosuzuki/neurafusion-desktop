@@ -1,5 +1,33 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-  <!-- NeuraFusion icon: same shape and colors as packaging/installer/icons/neurafusion-256.png -->
-  <circle cx="128" cy="128" r="110" fill="#3b82f6"/>
-  <ellipse cx="108.5" cy="78.5" rx="32" ry="28" fill="#fff" fill-opacity="0.35"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="1.5 1.5 21 21" fill="none">
+  <title>NeuraFusion</title>
+  <!-- NeuraFusion icon: same shape and colors as packaging/installer/icons/neurafusion-256.png (NF circle, bottom-left yellow to top-right purple; source neurafusion-repo design/icon-gradient/nf-mark-gradient.svg) -->
+  <defs>
+    <linearGradient id="g" x1="0.18" y1="0.82" x2="0.82" y2="0.18">
+      <stop offset="0%" stop-color="hsl(45 97% 54%)"/>
+      <stop offset="36%" stop-color="hsl(24 97% 54%)"/>
+      <stop offset="68%" stop-color="hsl(335 90% 57%)"/>
+      <stop offset="100%" stop-color="hsl(275 80% 56%)"/>
+    </linearGradient>
+    <radialGradient id="w" cx="50%" cy="44%" r="56%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.00"/>
+      <stop offset="20%" stop-color="#ffffff" stop-opacity="0.04"/>
+      <stop offset="40%" stop-color="#ffffff" stop-opacity="0.10"/>
+      <stop offset="55%" stop-color="#ffffff" stop-opacity="0.15"/>
+      <stop offset="65%" stop-color="#ffffff" stop-opacity="0.19"/>
+      <stop offset="75%" stop-color="#ffffff" stop-opacity="0.27"/>
+      <stop offset="85%" stop-color="#ffffff" stop-opacity="0.37"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.45"/>
+    </radialGradient>
+    <radialGradient id="r" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0"/>
+      <stop offset="93%" stop-color="#ffffff" stop-opacity="0"/>
+      <stop offset="97%" stop-color="#ffffff" stop-opacity="0.42"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.85"/>
+    </radialGradient>
+  </defs>
+  <circle cx="12" cy="12" r="9" fill="url(#g)"/>
+  <circle cx="12" cy="12" r="9" fill="url(#w)"/>
+  <circle cx="12" cy="12" r="9" fill="url(#r)"/>
+  <rect x="8.37" y="7.98" width="1.97" height="3.7" rx="0.985" fill="#ffffff"/>
+  <rect x="13.66" y="7.98" width="1.97" height="3.7" rx="0.985" fill="#ffffff"/>
 </svg>
