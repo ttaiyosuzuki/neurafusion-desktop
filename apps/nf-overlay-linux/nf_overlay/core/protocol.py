@@ -229,6 +229,53 @@ def read(app: str, method: str, ok: bool, text: str | None, reason: str | None, 
     )
 
 
+# FY-16 (4): 対象の窓の AT-SPI の木の写し（docs/overlay-protocol.md の elements）。手がかり（役割・id・class・書き込めるか）と文を写すだけで、
+# 出どころ（self_input／ai_output）は付けない（決めるのは Node の src/overlay/origin.ts）。まだどこからも送らない。
+HOVER_UNKNOWN = object()
+_SNAP_KEYS = ("role", "id", "classes", "editable", "text")
+ELEMENTS_TEXT_LIMIT = 16000
+
+
+def limit_snap(root: dict[str, Any], max_depth: int = 80, max_nodes: int = 20000) -> dict[str, Any]:
+    """写しの上限（深さ・要素の数・文の合計）。知らないキー（origin など）は写さない。"""
+    state = {"nodes": 0, "chars": 0}
+
+    def go(n: Any, depth: int) -> dict[str, Any] | None:
+        if not isinstance(n, dict) or not isinstance(n.get("role"), str):
+            return None
+        if depth > max_depth or state["nodes"] >= max_nodes:
+            return None
+        state["nodes"] += 1
+        out: dict[str, Any] = {"role": n["role"]}
+        if isinstance(n.get("id"), str) and n["id"]:
+            out["id"] = n["id"]
+        cls = n.get("classes")
+        if isinstance(cls, (list, tuple)) and cls:
+            out["classes"] = [c for c in cls if isinstance(c, str)]
+        if n.get("editable") is True:
+            out["editable"] = True
+        t = n.get("text")
+        if isinstance(t, str) and t:
+            room = max(0, ELEMENTS_TEXT_LIMIT - state["chars"])
+            cut = t[:room]
+            state["chars"] += len(cut)
+            if cut:
+                out["text"] = cut
+        kids = [k for k in (go(c, depth + 1) for c in (n.get("children") or [])) if k is not None]
+        if kids:
+            out["children"] = kids
+        return out
+
+    return go(root, 0) or {"role": str(root.get("role", "unknown")) if isinstance(root, dict) else "unknown"}
+
+
+def elements(app: str, root: dict[str, Any], hover: Any = HOVER_UNKNOWN) -> str:
+    body: dict[str, Any] = {"v": VERSION, "type": "elements", "app": app, "method": "atspi", "root": limit_snap(root)}
+    if hover is not HOVER_UNKNOWN:
+        body["hover"] = None if hover is None else [int(i) for i in hover]
+    return json.dumps(body, ensure_ascii=False, separators=(",", ":"))
+
+
 def panel(open_: bool, mode: str) -> str:
     return _line("panel", open=open_, mode=mode)
 

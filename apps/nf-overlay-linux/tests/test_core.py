@@ -296,3 +296,43 @@ class ProtocolTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ElementsLineTest(unittest.TestCase):
+    """FY-16 (4): elements の行は手がかりと文を写すだけ（出どころは付けない・上限つき）。"""
+
+    def test_hints_without_origin(self) -> None:
+        root = {
+            "role": "frame",
+            "children": [
+                {"role": "section", "classes": ["nf-synth-user-turn"], "children": [{"role": "static", "text": "〔本〕発話"}]},
+                {"role": "entry", "editable": True, "text": "〔他〕下書き", "origin": "self_input"},
+            ],
+        }
+        d = json.loads(protocol.elements("claude", root, hover=[0, 0]))
+        self.assertEqual(d["type"], "elements")
+        self.assertEqual(d["method"], "atspi")
+        self.assertEqual(d["hover"], [0, 0])
+        self.assertEqual(d["root"]["children"][0]["classes"], ["nf-synth-user-turn"])
+        self.assertTrue(d["root"]["children"][1]["editable"])
+        # ネイティブが付けようとした origin は写さない
+        self.assertNotIn("origin", json.dumps(d))
+
+    def test_hover_absent_null_or_path(self) -> None:
+        self.assertNotIn("hover", json.loads(protocol.elements("claude", {"role": "frame"})))
+        self.assertIsNone(json.loads(protocol.elements("claude", {"role": "frame"}, hover=None))["hover"])
+
+    def test_limits(self) -> None:
+        deep: dict = {"role": "static", "text": "x"}
+        for _ in range(100):
+            deep = {"role": "section", "children": [deep]}
+        d = json.loads(protocol.elements("claude", deep))["root"]
+        depth = 0
+        while d.get("children"):
+            d = d["children"][0]
+            depth += 1
+        self.assertEqual(depth, 80)
+        long = {"role": "frame", "children": [{"role": "static", "text": "a" * protocol.ELEMENTS_TEXT_LIMIT}, {"role": "static", "text": "b"}]}
+        kids = json.loads(protocol.elements("claude", long))["root"]["children"]
+        self.assertEqual(len(kids[0]["text"]), protocol.ELEMENTS_TEXT_LIMIT)
+        self.assertNotIn("text", kids[1])
