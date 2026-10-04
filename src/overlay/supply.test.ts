@@ -125,6 +125,19 @@ describe("出どころの規則（合成の要素の木）", () => {
     expect(classifyTree(fx.root, { app: "claude", platform: "macos", hints: empty }).elements).toHaveLength(0);
   });
 
+  it("ネイティブが要素に origin を書いてきても見ない（決めるのはここだけ）", () => {
+    const root = {
+      role: "AXWindow",
+      children: [
+        { role: "AXStaticText", text: "〔他〕横の一覧", origin: "self_input" },
+        { role: "AXGroup", classes: ["nf-synth-ai-turn"], children: [{ role: "AXStaticText", text: "〔AI〕返事", origin: "third_party" }] },
+      ],
+    };
+    const res = classifyTree(root, { app: "claude", platform: "macos", hints: SYNTH, allowUnverified: true });
+    expect(res.elements.map((e) => [e.origin, e.raw_text])).toEqual([["ai_output", "〔AI〕返事"]]);
+    expect(res.not_read).toBe(1);
+  });
+
   it("壊れた木・深すぎる木でも落ちない", () => {
     expect(classifyTree(null, { app: "claude", platform: "macos", hints: SYNTH, allowUnverified: true }).elements).toHaveLength(0);
     let deep: AxSnapNode = { role: "AXStaticText", text: "〔本〕深い" };
