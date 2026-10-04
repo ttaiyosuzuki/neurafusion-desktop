@@ -5,6 +5,7 @@
 //   - 受け手は同じプロセスの中で subscribe した関数だけ。送信の口（ネットワーク・ファイル・ネイティブへの行・ログ）には繋がない。
 //   - 受け手が居ないあいだは何もしない（木を分けもしない）。
 //   - 返す数・stats は数だけ（文・id・種別は残さない）。
+//   - 常時の読み取り（settings.ts の passiveAlwaysOn）がオフなら何もしない（既定オフ・本人 2026-10-04）。
 
 import type { OverlayPlatform } from "./apps.js";
 import type { HoverEvent, UiEvent } from "./engine/supply-contract.js";
@@ -15,7 +16,7 @@ export type SupplyEvent = { to: "passive"; event: UiEvent } | { to: "hover"; eve
 
 export type ElementsMsg = Extract<NativeMessage, { type: "elements" }>;
 
-export type SupplyOutcome = { supplied: number; not_read: number; whole?: WholeDrop; idle?: true };
+export type SupplyOutcome = { supplied: number; not_read: number; whole?: WholeDrop; idle?: true; off?: true };
 
 export type OverlaySupply = {
   /** 受け手を足す（戻り値で外す） */
@@ -33,6 +34,8 @@ export function createOverlaySupply(opts: {
   hints?: readonly AppOriginHints[];
   /** 確かめていない手がかりも使う（合成の見本のテストだけ） */
   allowUnverified?: boolean;
+  /** 常時の読み取り（settings.ts の passiveAlwaysOn をそのまま渡す）。無ければオフ */
+  alwaysOn?: boolean;
   now?: () => Date;
 }): OverlaySupply {
   const subs = new Set<(e: SupplyEvent) => void>();
@@ -59,6 +62,7 @@ export function createOverlaySupply(opts: {
       };
     },
     onElements(msg) {
+      if (opts.alwaysOn !== true) return { supplied: 0, not_read: 0, off: true };
       if (subs.size === 0) return { supplied: 0, not_read: 0, idle: true };
       const res: OriginResult = classifyTree(msg.root, {
         app: msg.app,
@@ -83,7 +87,7 @@ export function createOverlaySupply(opts: {
       return { supplied: res.elements.length, not_read: res.not_read, ...(res.whole ? { whole: res.whole } : {}) };
     },
     tick(ts) {
-      if (subs.size === 0 || hovering === null) return;
+      if (opts.alwaysOn !== true || subs.size === 0 || hovering === null) return;
       emit({ to: "hover", event: { type: "tick", ts } });
     },
     stats: () => ({ supplied, not_read: notRead }),

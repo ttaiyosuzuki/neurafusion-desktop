@@ -20,6 +20,12 @@ export type OverlaySettings = {
   checkUpdates: boolean;
   /** 読み取った本文をパネルへ渡すこと（SB-01 の同意）。既定オフ＝文字数だけ示す */
   sendTextToPanel: boolean;
+  /**
+   * 受け身の記録・ホバー（FX-31・FX-34）のための常時の読み取り。既定オフ（本人 2026-10-04: 本番では何も渡さない）。
+   * docs/overlay-protocol.md の守ること 1（丸を押す前に読まない・常時の監視をしない）とぶつかるので、オンにするのは本人が決めた後だけ。
+   * オフの間、取り先の供給（supply.ts）は要素の木を分けもせず何も渡さない。
+   */
+  passiveAlwaysOn: boolean;
   /** FF 先読み（全体キー・宛先など。src/ff/settings.ts） */
   ff: FfSettings;
 };
@@ -30,6 +36,7 @@ export const DEFAULT_SETTINGS: OverlaySettings = {
   read: {},
   checkUpdates: true,
   sendTextToPanel: false,
+  passiveAlwaysOn: false,
   ff: FF_DEFAULT_SETTINGS,
 };
 
@@ -56,6 +63,7 @@ export function normalizeSettings(raw: unknown): OverlaySettings {
   if (typeof r.panelUrl === "string" && isAllowedPanelUrl(r.panelUrl)) s.panelUrl = r.panelUrl;
   if (typeof r.checkUpdates === "boolean") s.checkUpdates = r.checkUpdates;
   if (typeof r.sendTextToPanel === "boolean") s.sendTextToPanel = r.sendTextToPanel;
+  if (typeof r.passiveAlwaysOn === "boolean") s.passiveAlwaysOn = r.passiveAlwaysOn;
   s.ff = normalizeFfSettings(r.ff);
   return s;
 }

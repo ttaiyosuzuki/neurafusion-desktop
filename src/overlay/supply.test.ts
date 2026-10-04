@@ -188,8 +188,25 @@ describe("供給（受け手は同じプロセスの中だけ・外への送信 
   });
   afterEach(() => vi.restoreAllMocks());
 
+  it("常時の読み取りは既定オフ（本人 2026-10-04）: 設定の既定が false・オフの間は受け手が居ても木を分けず何も渡さない", () => {
+    expect(DEFAULT_SETTINGS.passiveAlwaysOn).toBe(false);
+    const got: SupplyEvent[] = [];
+    const s = createOverlaySupply({ platform: "macos", hints: SYNTH, allowUnverified: true, alwaysOn: DEFAULT_SETTINGS.passiveAlwaysOn });
+    s.subscribe((e) => got.push(e));
+    const fx = load("supply-mac-ax");
+    expect(s.onElements({ v: 1, type: "elements", app: "claude", method: "ax", root: fx.root })).toEqual({ supplied: 0, not_read: 0, off: true });
+    s.tick(1);
+    expect(got).toEqual([]);
+    expect(s.stats()).toEqual({ supplied: 0, not_read: 0 });
+    // alwaysOn を渡さない呼び方もオフ
+    const t = createOverlaySupply({ platform: "macos", hints: SYNTH, allowUnverified: true });
+    t.subscribe((e) => got.push(e));
+    expect(t.onElements({ v: 1, type: "elements", app: "claude", method: "ax", root: fx.root }).off).toBe(true);
+    expect(got).toEqual([]);
+  });
+
   it("受け手が居ないあいだは何もしない", () => {
-    const s = createOverlaySupply({ platform: "macos", hints: SYNTH, allowUnverified: true });
+    const s = createOverlaySupply({ platform: "macos", hints: SYNTH, allowUnverified: true, alwaysOn: true });
     const fx = load("supply-mac-ax");
     expect(s.onElements({ v: 1, type: "elements", app: "claude", method: "ax", root: fx.root })).toEqual({ supplied: 0, not_read: 0, idle: true });
     expect(s.stats()).toEqual({ supplied: 0, not_read: 0 });
@@ -197,7 +214,7 @@ describe("供給（受け手は同じプロセスの中だけ・外への送信 
 
   it("exposed（文なし）と hover の enter／tick／leave を渡し、〔他〕は事件のどこにも入らない", () => {
     const fx = load("supply-mac-ax");
-    const s = createOverlaySupply({ platform: "macos", hints: SYNTH, allowUnverified: true, now: () => new Date("2026-10-04T06:00:00Z") });
+    const s = createOverlaySupply({ platform: "macos", hints: SYNTH, allowUnverified: true, alwaysOn: true, now: () => new Date("2026-10-04T06:00:00Z") });
     const got: SupplyEvent[] = [];
     const off = s.subscribe((e) => got.push(e));
     const para = pathOf(fx.root, (n) => n.text === "〔AI〕月ごとに合計します。");
@@ -233,7 +250,7 @@ describe("供給（受け手は同じプロセスの中だけ・外への送信 
     ee.stdin.on("data", (b: Buffer) => written.push(b.toString("utf8")));
     const records: unknown[] = [];
     const logs: string[] = [];
-    const supply = createOverlaySupply({ platform: "macos", hints: SYNTH, allowUnverified: true });
+    const supply = createOverlaySupply({ platform: "macos", hints: SYNTH, allowUnverified: true, alwaysOn: true });
     const got: SupplyEvent[] = [];
     supply.subscribe((e) => got.push(e));
     const h = startOverlayHost({
