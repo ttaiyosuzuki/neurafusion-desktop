@@ -1,0 +1,208 @@
+{
+ "note": "合成の見本（実際のアプリの窓ではない）。〔本〕本人の発話・〔AI〕AI の返事・〔他〕渡してはいけない文",
+ "platform": "windows",
+ "method": "uia",
+ "root": {
+  "role": "Window",
+  "children": [
+   {
+    "role": "Group",
+    "children": [
+     {
+      "role": "Text",
+      "text": "〔他〕他人と共有された会話: 週末の予定"
+     },
+     {
+      "role": "Hyperlink",
+      "children": [
+       {
+        "role": "Text",
+        "text": "〔他〕最近の会話 2"
+       }
+      ]
+     }
+    ],
+    "classes": [
+     "sidebar"
+    ]
+   },
+   {
+    "role": "Document",
+    "children": [
+     {
+      "role": "Group",
+      "children": [
+       {
+        "role": "Group",
+        "children": [
+         {
+          "role": "Text",
+          "text": "〔本〕請求書の集計を Python で書きたい"
+         }
+        ]
+       }
+      ],
+      "classes": [
+       "nf-synth-user-turn"
+      ]
+     },
+     {
+      "role": "Group",
+      "children": [
+       {
+        "role": "Group",
+        "children": [
+         {
+          "role": "Text",
+          "text": "〔AI〕やり方"
+         }
+        ]
+       },
+       {
+        "role": "Group",
+        "children": [
+         {
+          "role": "Text",
+          "text": "〔AI〕pandas で読み込み、"
+         },
+         {
+          "role": "Hyperlink",
+          "children": [
+           {
+            "role": "Text",
+            "text": "〔他〕pandas の公式文書（取ってきたページ）"
+           }
+          ]
+         },
+         {
+          "role": "Text",
+          "text": "〔AI〕月ごとに合計します。"
+         }
+        ]
+       },
+       {
+        "role": "Group",
+        "children": [
+         {
+          "role": "Text",
+          "text": "〔AI〕df.groupby('month').sum()"
+         }
+        ],
+        "classes": [
+         "code-block"
+        ]
+       },
+       {
+        "role": "Group",
+        "children": [
+         {
+          "role": "Text",
+          "text": "〔他〕出典: example.com の記事の本文"
+         }
+        ],
+        "classes": [
+         "citation-list"
+        ]
+       },
+       {
+        "role": "Group",
+        "children": [
+         {
+          "role": "Text",
+          "text": "〔他〕引用された他人のメール"
+         }
+        ],
+        "classes": [
+         "nf-quote"
+        ]
+       },
+       {
+        "role": "Group",
+        "children": [
+         {
+          "role": "Text",
+          "text": "〔他〕添付された他人の文書"
+         }
+        ],
+        "id": "attachment-1"
+       },
+       {
+        "role": "Image",
+        "children": [],
+        "text": "〔他〕画像の説明"
+       },
+       {
+        "role": "Group",
+        "children": [
+         {
+          "role": "Text",
+          "text": "〔AI〕境目は月末の 0 時です。"
+         }
+        ]
+       }
+      ],
+      "classes": [
+       "nf-synth-ai-turn"
+      ]
+     },
+     {
+      "role": "Group",
+      "children": [
+       {
+        "role": "Text",
+        "text": "〔本〕ありがとう、月の境目は？"
+       },
+       {
+        "role": "Edit",
+        "children": [],
+        "text": "〔他〕編集中の発話の下書き",
+        "editable": true
+       }
+      ],
+      "classes": [
+       "nf-synth-user-turn"
+      ]
+     },
+     {
+      "role": "Group",
+      "children": [
+       {
+        "role": "Group",
+        "children": [
+         {
+          "role": "Text",
+          "text": "〔他〕発話と返事の入れ子の文"
+         }
+        ],
+        "classes": [
+         "nf-synth-ai-turn"
+        ]
+       }
+      ],
+      "classes": [
+       "nf-synth-user-turn"
+      ]
+     },
+     {
+      "role": "Group",
+      "children": [
+       {
+        "role": "Edit",
+        "children": [],
+        "text": "〔他〕まだ送っていない下書き",
+        "editable": true
+       }
+      ],
+      "classes": [
+       "composer"
+      ]
+     }
+    ]
+   },
+   {
+    "role": "Text",
+    "text": "〔他〕サイトの飾り: 利用規約"
+   }
+  ]
+ }
+}

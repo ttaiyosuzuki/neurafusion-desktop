@@ -11,6 +11,7 @@ import type { OverlayPlatform } from "./apps.js";
 import { encodeInbound, parseNativeLine, redactForLog, type NativeMessage, type OverlayConfigMessage } from "./protocol.js";
 import { appendReadRecord, decidePanelText, toReadRecord } from "./reads.js";
 import { buildConfigMessage, type OverlaySettings } from "./settings.js";
+import type { OverlaySupply } from "./supply.js";
 import { parseFfLine } from "../ff/protocol.js";
 import { startFf, type FfWire } from "../ff/wire.js";
 import type { FfSessionDeps } from "../ff/session.js";
@@ -86,6 +87,8 @@ export function startOverlayHost(opts: {
   deps: OverlayHostDeps;
   /** FF 先読み。false で使わない。overrides はテスト用 */
   ff?: false | { overrides?: Partial<FfSessionDeps> & { engine?: FfEngine } };
+  /** FY-16 (4) 取り先の供給（elements の行の受け手）。無ければ elements の行は捨てる */
+  supply?: OverlaySupply;
 }): OverlayHostHandle {
   const { deps, platform } = opts;
   let settings = opts.settings;
@@ -123,6 +126,10 @@ export function startOverlayHost(opts: {
         deps.log(`読み取り: ${msg.app} ${msg.method} ${msg.ok ? "読めた" : `読めない（${msg.reason ?? "不明"}）`} ${msg.chars}字`);
         break;
       }
+      case "elements":
+        // 要素の木は端末の中の受け手（engine の passive・hover）にだけ渡す。記録・ログ・パネルには流さない
+        opts.supply?.onElements(msg);
+        break;
       case "error":
         deps.log(`丸のエラー: ${msg.code}`);
         break;

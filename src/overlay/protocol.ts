@@ -2,6 +2,7 @@
 // Mac（apps/nf-overlay-macos）と Windows（dk-win）の両方がこの形で話す。
 
 import type { OverlayReadMode } from "./apps.js";
+import type { AxSnapNode } from "./origin.js";
 
 export const OVERLAY_PROTOCOL_VERSION = 1;
 
@@ -88,9 +89,18 @@ export type NativeMessage =
       text?: string;
     }
   | { v: number; type: "panel"; open: boolean; mode: "url" | "disconnected" }
-  | { v: number; type: "error"; code: string; message: string };
+  | { v: number; type: "error"; code: string; message: string }
+  // FY-16 (4): 対象の窓の要素の木の写し（出どころは付けない。決めるのは origin.ts）。hover はカーソルの下の要素の位置（子の番号の列）
+  | {
+      v: number;
+      type: "elements";
+      app: string;
+      method: "ax" | "uia" | "atspi";
+      root: AxSnapNode;
+      hover?: number[] | null;
+    };
 
-const NATIVE_TYPES = new Set(["ready", "geometry", "hidden", "clicked", "read", "panel", "error"]);
+const NATIVE_TYPES = new Set(["ready", "geometry", "hidden", "clicked", "read", "panel", "error", "elements"]);
 
 /** ネイティブからの1行を読む。知らない type・壊れた行は null（読み飛ばす）。 */
 export function parseNativeLine(line: string): NativeMessage | null {
@@ -113,11 +123,15 @@ export function encodeInbound(msg: OverlayInbound): string {
   return `${JSON.stringify(msg)}\n`;
 }
 
-/** ログに書いてよい形（read の本文を落とす） */
+/** ログに書いてよい形（read の本文・elements の木を落とす） */
 export function redactForLog(msg: NativeMessage): NativeMessage {
   if (msg.type === "read" && "text" in msg) {
     const { text: _text, ...rest } = msg;
     return rest;
+  }
+  if (msg.type === "elements") {
+    const { root: _root, hover: _hover, ...rest } = msg;
+    return { ...rest, root: { role: "redacted" } };
   }
   return msg;
 }
