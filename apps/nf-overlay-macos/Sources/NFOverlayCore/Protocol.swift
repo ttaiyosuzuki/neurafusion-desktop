@@ -131,6 +131,71 @@ public enum OutboundMessage: Equatable, Sendable {
     case ffKey(action: FfAction, press: Int)
     case ffDrawn(press: Int, seq: Int, ms: Double)
     case ffKeys(ok: Bool, failed: [FfAction])
+    /// FY-16 (4): 対象の窓の AX の木の写し（出どころは付けない。決めるのは Node の src/overlay/origin.ts）
+    case elements(app: String, root: AxSnapNode, hover: ElementsHover)
+}
+
+/// FY-16 (4): AX の要素 1 つの写し（手がかり＝役割・識別子・クラス・書き込めるか、と見えている文）。
+/// 出どころ（self_input／ai_output）はここでは決めない。
+public struct AxSnapNode: Equatable, Sendable {
+    public var role: String
+    public var subrole: String?
+    /// AXIdentifier（無ければ AXDOMIdentifier）
+    public var id: String?
+    /// AXDOMClassList
+    public var classes: [String]
+    /// 書き込める要素（AXTextArea・AXTextField・contenteditable）。入力中の下書きは Node 側で読まない
+    public var editable: Bool
+    public var text: String?
+    public var children: [AxSnapNode]
+
+    public init(role: String, subrole: String? = nil, id: String? = nil, classes: [String] = [], editable: Bool = false, text: String? = nil, children: [AxSnapNode] = []) {
+        self.role = role
+        self.subrole = subrole
+        self.id = id
+        self.classes = classes
+        self.editable = editable
+        self.text = text
+        self.children = children
+    }
+
+    func dict() -> [String: Any] {
+        var d: [String: Any] = ["role": role]
+        if let subrole { d["subrole"] = subrole }
+        if let id { d["id"] = id }
+        if !classes.isEmpty { d["classes"] = classes }
+        if editable { d["editable"] = true }
+        if let text, !text.isEmpty { d["text"] = text }
+        if !children.isEmpty { d["children"] = children.map { $0.dict() } }
+        return d
+    }
+}
+
+/// カーソルの下の要素: 知らせない（キーなし）／どこにも乗っていない（null）／位置（子の番号の列）
+public enum ElementsHover: Equatable, Sendable {
+    case unknown
+    case off
+    case at([Int])
+}
+
+/// 写しの上限（読み取りと同じ: 深さ 80・要素 20000・文の合計 overlayTextLimit）。超えた分は落とす。
+public func limitSnap(_ root: AxSnapNode, maxDepth: Int = 80, maxNodes: Int = 20000) -> AxSnapNode {
+    var nodes = 0
+    var chars = 0
+    func go(_ n: AxSnapNode, _ depth: Int) -> AxSnapNode? {
+        guard depth <= maxDepth, nodes < maxNodes else { return nil }
+        nodes += 1
+        var out = n
+        if let t = n.text {
+            let room = max(0, overlayTextLimit - chars)
+            let cut = t.count <= room ? t : String(t.prefix(room))
+            chars += cut.count
+            out.text = cut.isEmpty ? nil : cut
+        }
+        out.children = n.children.compactMap { go($0, depth + 1) }
+        return out
+    }
+    return go(root, 0) ?? AxSnapNode(role: root.role)
 }
 
 private func rectDict(_ r: Rect) -> [String: Any] {
@@ -162,6 +227,13 @@ public func encodeOutbound(_ msg: OutboundMessage) -> String {
         d["type"] = "ff-drawn"; d["press"] = press; d["seq"] = seq; d["ms"] = (ms * 100).rounded() / 100
     case let .ffKeys(ok, failed):
         d["type"] = "ff-keys"; d["ok"] = ok; d["failed"] = failed.map(\.rawValue)
+    case let .elements(app, root, hover):
+        d["type"] = "elements"; d["app"] = app; d["method"] = "ax"; d["root"] = limitSnap(root).dict()
+        switch hover {
+        case .unknown: break
+        case .off: d["hover"] = NSNull()
+        case let .at(path): d["hover"] = path
+        }
     }
     guard let data = try? JSONSerialization.data(withJSONObject: d, options: [.sortedKeys]),
           let s = String(data: data, encoding: .utf8)

@@ -61,6 +61,25 @@ AI アプリ（Claude・ChatGPT のデスクトップ版、Cursor など）の�
 - `read.text` は `ok:true` のときだけ。Node はこれを**ログに書かない**。記録（`~/.neurafusion/overlay/reads.json`）に残すのは
   `app`・`method`・`ok`・`reason`・`chars`・時刻だけ（DK-02「読めた・読めない」の記録）。
 
+### `elements`（FY-16 (4)・FX-31／FX-34 の取り先。2026-10-04 時点、どのネイティブもまだ送らない）
+
+対象の窓の要素の木の写し。ネイティブは手がかり（役割・識別子・クラス・書き込めるか）と見えている文を写すだけで、
+**出どころ（self_input／ai_output）は付けない**。決めるのは Node の `src/overlay/origin.ts` の 1 か所。
+
+```json
+{"v":1,"type":"elements","app":"claude","method":"ax",
+ "root":{"role":"AXWindow","children":[{"role":"AXGroup","classes":["…"],"children":[{"role":"AXStaticText","text":"…"}]}]},
+ "hover":[0,0]}
+```
+
+- `role`: Mac は AXRole、Windows は ControlType の名前、Linux は AT-SPI の役割の名前。`subrole`（Mac）・`id`（AXIdentifier／AXDOMIdentifier・AutomationId・AT-SPI の id）・
+  `classes`（AXDOMClassList・ClassName・AT-SPI の class）・`editable`（入力欄）・`text`・`children`。上限は深さ 80・要素 20000・文の合計 16000 字。
+- `hover`: カーソルの下の要素の位置（`root` からの子の番号の列）。`null` はどこにも乗っていない、キーが無ければ知らせない。
+- Node は本人の発話＝`self_input`・AI の返事＝`ai_output` の段落だけを engine の passive（`UiEvent` の `exposed`）・hover（`HoverEvent`）の形にして、
+  同じプロセスの中で subscribe した受け手にだけ渡す（`src/overlay/supply.ts`）。記録・ログ・パネル・ネイティブには流さない。
+  アプリごとの手がかり（`ORIGIN_HINTS`）は実機で確かめた物だけ使う＝今はどのアプリも未実測で、届いても何も渡さない。
+- 下の「守ること」1 により、送るのは丸が押されたあとの読み取りのときだけ。受け身の記録・ホバーのための常時の写しは、本人の決め事と同意が要る（未決）。
+
 ## 守ること（指示書 §8）
 
 1. 丸が押される前に他のアプリの中身を読まない。常時の監視をしない（`geometry` のための AX の位置・大きさの通知だけ受ける。本文は読まない）。
