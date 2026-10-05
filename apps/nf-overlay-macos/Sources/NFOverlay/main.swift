@@ -21,6 +21,8 @@ final class AppController {
     private var ffKeyAt: [Int: TimeInterval] = [:]
     private var reading = false
     private var currentPid: pid_t = 0
+    // v6 UX-01: ビビビ（体験モード）を開く口（ux-settings.json が無ければ何もしない）
+    private let bibibi = BibibiLauncher()
 
     func start() {
         dot.dotView.onClick = { [weak self] in
@@ -47,6 +49,7 @@ final class AppController {
             if self.ffKeyAt.count > 64, let oldest = self.ffKeyAt.keys.min() { self.ffKeyAt[oldest] = nil }
             self.io.send(.ffKey(action: action, press: press))
         }
+        bibibi.start()
         io.start()
     }
 
