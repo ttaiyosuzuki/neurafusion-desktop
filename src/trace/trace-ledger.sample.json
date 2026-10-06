@@ -1,0 +1,1817 @@
+{
+ "version": 1,
+ "source": "fable/expert@02abd36a9",
+ "provisional": true,
+ "note": "道筋の欄（OP-09b）の台帳だけの段。Fable v8.1 の座標系・レンズ・前提の題の抜き出し＋NAICS の仮の見本。v10 が届いたら置き換える",
+ "verbs": [
+  {
+   "id": "V01",
+   "name": "計画する・決める",
+   "examples": [
+    "事業計画",
+    "資金計画",
+    "工程表"
+   ],
+   "critical_layers": [
+    "L01",
+    "L18",
+    "L12"
+   ],
+   "questions": [
+    {
+     "q": "やめる条件は先に決めてある？",
+     "layer": "L12"
+    },
+    {
+     "q": "この計画が当たったと、何の数字で分かる？",
+     "layer": "L02"
+    },
+    {
+     "q": "一番大きい前提が外れたら、計画のどこが崩れる？",
+     "layer": "L11"
+    }
+   ]
+  },
+  {
+   "id": "V02",
+   "name": "見つける・発明する",
+   "examples": [
+    "新規事業の探索",
+    "研究テーマ選び",
+    "商品企画"
+   ],
+   "critical_layers": [
+    "L20",
+    "L19",
+    "L21"
+   ],
+   "questions": [
+    {
+     "q": "それ、もう誰かがやって失敗していない？",
+     "layer": "L20"
+    },
+    {
+     "q": "誰のどんな困りごとが、いくら払ってでも消したいもの？",
+     "layer": "L03"
+    },
+    {
+     "q": "今できていない理由は、技術・お金・制度・習慣のどれ？",
+     "layer": "L20"
+    }
+   ]
+  },
+  {
+   "id": "V03",
+   "name": "判断する",
+   "examples": [
+    "投資判断",
+    "融資審査",
+    "採用",
+    "不動産の購入"
+   ],
+   "critical_layers": [
+    "L09",
+    "L12",
+    "L15"
+   ],
+   "questions": [
+    {
+     "q": "最悪の場合、いくら失う？それは耐えられる額？",
+     "layer": "L15"
+    },
+    {
+     "q": "この判断は後で戻せる？戻せないなら、何を先に確かめる？",
+     "layer": "L12"
+    },
+    {
+     "q": "相手が隠したがる数字はどれ？",
+     "layer": "L09"
+    }
+   ]
+  },
+  {
+   "id": "V04",
+   "name": "集める",
+   "examples": [
+    "市場調査",
+    "データ収集",
+    "資金調達",
+    "仕入れ"
+   ],
+   "critical_layers": [
+    "L07",
+    "L14",
+    "L10"
+   ],
+   "questions": [
+    {
+     "q": "その集め方は規約的に大丈夫？偏っていない？",
+     "layer": "L14"
+    },
+    {
+     "q": "何件あれば足りる？多すぎて困ることは？",
+     "layer": "L13"
+    },
+    {
+     "q": "集めたものの質は、何で確かめる？",
+     "layer": "L10"
+    }
+   ]
+  },
+  {
+   "id": "V05",
+   "name": "確かめる",
+   "examples": [
+    "コードの点検",
+    "会計の監査",
+    "契約書の確認",
+    "品質検査"
+   ],
+   "critical_layers": [
+    "L10",
+    "L11",
+    "L09"
+   ],
+   "questions": [
+    {
+     "q": "どこが一番間違いやすい所？そこから見た？",
+     "layer": "L11"
+    },
+    {
+     "q": "正しいと言える根拠は何？誰かの言葉か、自分で見たか？",
+     "layer": "L10"
+    },
+    {
+     "q": "見ていない所はどこ？見なくてよい理由はある？",
+     "layer": "L10"
+    }
+   ]
+  },
+  {
+   "id": "V06",
+   "name": "伝える・説得する",
+   "examples": [
+    "マーケティング",
+    "営業",
+    "投資家への説明",
+    "広報"
+   ],
+   "critical_layers": [
+    "L03",
+    "L02",
+    "L09"
+   ],
+   "questions": [
+    {
+     "q": "相手は誰で、何を見て決める？",
+     "layer": "L03"
+    },
+    {
+     "q": "相手が今いちばん困っていることは何？",
+     "layer": "L03"
+    },
+    {
+     "q": "一文で言うと何？それは相手の言葉になっている？",
+     "layer": "L02"
+    }
+   ]
+  },
+  {
+   "id": "V07",
+   "name": "作る",
+   "examples": [
+    "ソフトウェア開発",
+    "料理",
+    "動画制作",
+    "建築"
+   ],
+   "critical_layers": [
+    "L06",
+    "L08",
+    "L19"
+   ],
+   "questions": [
+    {
+     "q": "全部自分で作る？既製品の組み合わせで済まない？",
+     "layer": "L19"
+    },
+    {
+     "q": "最初の「動く最小のもの」は何？いつ見られる？",
+     "layer": "L08"
+    },
+    {
+     "q": "道具と環境は揃っている？何が無い？",
+     "layer": "L06"
+    }
+   ]
+  },
+  {
+   "id": "V08",
+   "name": "管理する・まとめる",
+   "examples": [
+    "プロジェクト管理",
+    "チーム運営",
+    "在庫管理",
+    "経理"
+   ],
+   "critical_layers": [
+    "L17",
+    "L13",
+    "L12"
+   ],
+   "questions": [
+    {
+     "q": "誰が何を決める？詰まったら誰に上げる？",
+     "layer": "L17"
+    },
+    {
+     "q": "遅れていると、何日目に分かる？",
+     "layer": "L12"
+    },
+    {
+     "q": "一番忙しい人・一番詰まる所はどこ？",
+     "layer": "L11"
+    }
+   ]
+  },
+  {
+   "id": "V09",
+   "name": "教える・育てる",
+   "examples": [
+    "新人教育",
+    "子どもの学習",
+    "コーチング",
+    "講座づくり"
+   ],
+   "critical_layers": [
+    "L04",
+    "L02",
+    "L11"
+   ],
+   "questions": [
+    {
+     "q": "相手は今どこまで分かっている？",
+     "layer": "L04"
+    },
+    {
+     "q": "できるようになったと、何で分かる？",
+     "layer": "L02"
+    },
+    {
+     "q": "相手がつまずく所はどこ？そこに時間を取った？",
+     "layer": "L11"
+    }
+   ]
+  },
+  {
+   "id": "V10",
+   "name": "計算する",
+   "examples": [
+    "税務",
+    "会計",
+    "見積もり",
+    "保険の計算"
+   ],
+   "critical_layers": [
+    "L14",
+    "L10",
+    "L11"
+   ],
+   "questions": [
+    {
+     "q": "その数字はどの決まり（税率・制度）の何年版？",
+     "layer": "L14"
+    },
+    {
+     "q": "検算した？別の方法で同じ答えが出る？",
+     "layer": "L10"
+    },
+    {
+     "q": "桁・単位・税込税抜・期間の取り違えはない？",
+     "layer": "L11"
+    }
+   ]
+  },
+  {
+   "id": "V11",
+   "name": "見張る",
+   "examples": [
+    "サーバーの監視",
+    "相場の監視",
+    "設備の点検",
+    "評判の監視"
+   ],
+   "critical_layers": [
+    "L12",
+    "L10",
+    "L06"
+   ],
+   "questions": [
+    {
+     "q": "どの数字がどこまで動いたら知らせる？",
+     "layer": "L12"
+    },
+    {
+     "q": "知らせが来た時、誰が何をする？",
+     "layer": "L17"
+    },
+    {
+     "q": "見張りが止まっていることに、どうやって気づく？",
+     "layer": "L10"
+    }
+   ]
+  },
+  {
+   "id": "V12",
+   "name": "直す・保守する",
+   "examples": [
+    "バグの修正",
+    "機械の修理",
+    "家の修繕",
+    "クレームの対応"
+   ],
+   "critical_layers": [
+    "L11",
+    "L08",
+    "L10"
+   ],
+   "questions": [
+    {
+     "q": "直したことで、別の所を壊していない？",
+     "layer": "L11"
+    },
+    {
+     "q": "原因は本当にそれ？症状だけ消していない？",
+     "layer": "L18"
+    },
+    {
+     "q": "直す前の状態に戻せる？控えは取った？",
+     "layer": "L12"
+    }
+   ]
+  },
+  {
+   "id": "V13",
+   "name": "世話する・対応する",
+   "examples": [
+    "接客",
+    "介護",
+    "カスタマーサポート",
+    "ペットの世話"
+   ],
+   "critical_layers": [
+    "L03",
+    "L12",
+    "L21"
+   ],
+   "questions": [
+    {
+     "q": "一番困っているのは本当はどこ？",
+     "layer": "L03"
+    },
+    {
+     "q": "これが出たら専門家（医師・救急・上席）に渡す、という合図は？",
+     "layer": "L12"
+    },
+    {
+     "q": "相手が言わないこと（言えないこと）は何？",
+     "layer": "L21"
+    }
+   ]
+  },
+  {
+   "id": "V14",
+   "name": "動かす・運ぶ",
+   "examples": [
+    "物流",
+    "引っ越し",
+    "運転",
+    "ドローン"
+   ],
+   "critical_layers": [
+    "L16",
+    "L12",
+    "L14"
+   ],
+   "questions": [
+    {
+     "q": "途中で止まった時の逃げ道は？",
+     "layer": "L12"
+    },
+    {
+     "q": "許可・免許・保険は要る？どこで取る？",
+     "layer": "L14"
+    },
+    {
+     "q": "時間の見積もりに、待ち時間・積み降ろしは入っている？",
+     "layer": "L16"
+    }
+   ]
+  }
+ ],
+ "layers": [
+  {
+   "id": "L01",
+   "name": "目的",
+   "looks_at": "本当に得たい結果は何か",
+   "beginner_gap": "手段を目的だと思い込む"
+  },
+  {
+   "id": "L02",
+   "name": "成功の基準",
+   "looks_at": "何ができたら成功か、どう測るか",
+   "beginner_gap": "「できた」の線を引かずに始める"
+  },
+  {
+   "id": "L03",
+   "name": "相手・対象",
+   "looks_at": "誰に／何に対してやるか",
+   "beginner_gap": "相手を「みんな」にしてしまう"
+  },
+  {
+   "id": "L04",
+   "name": "現在地",
+   "looks_at": "今ある物・技能・時間・お金",
+   "beginner_gap": "持っていない物を数えず、持っている物を使わない"
+  },
+  {
+   "id": "L05",
+   "name": "前提知識",
+   "looks_at": "知らないと詰まる言葉・考え方",
+   "beginner_gap": "知らない言葉を知らないまま進む"
+  },
+  {
+   "id": "L06",
+   "name": "道具・環境",
+   "looks_at": "ソフト・機械・場所・アカウント",
+   "beginner_gap": "道具が無いことに作業の途中で気づく"
+  },
+  {
+   "id": "L07",
+   "name": "材料・入力",
+   "looks_at": "データ・素材・情報",
+   "beginner_gap": "質と出所を見ない"
+  },
+  {
+   "id": "L08",
+   "name": "手順",
+   "looks_at": "順番、どこから手を付けるか",
+   "beginner_gap": "一番難しい所を最後に回す"
+  },
+  {
+   "id": "L09",
+   "name": "判断の目",
+   "looks_at": "良し悪しを見分ける経験則",
+   "beginner_gap": "見分ける目が無いので全部同じに見える"
+  },
+  {
+   "id": "L10",
+   "name": "確かめ方",
+   "looks_at": "検査・テスト・答え合わせ",
+   "beginner_gap": "確かめずに「できた」と言う"
+  },
+  {
+   "id": "L11",
+   "name": "失敗の型",
+   "looks_at": "初心者がやらかすこと、よくある事故",
+   "beginner_gap": "前の人が全員踏んだ穴を踏む"
+  },
+  {
+   "id": "L12",
+   "name": "危険の兆し",
+   "looks_at": "これが見えたら止まる、という合図",
+   "beginner_gap": "止まる合図を決めていないので止まれない"
+  },
+  {
+   "id": "L13",
+   "name": "制約",
+   "looks_at": "期限・予算・規模",
+   "beginner_gap": "制約を「あとで何とかなる」と思う"
+  },
+  {
+   "id": "L14",
+   "name": "法・許可・規約",
+   "looks_at": "守るべき決まり、要る許可",
+   "beginner_gap": "決まりがあること自体を知らない"
+  },
+  {
+   "id": "L15",
+   "name": "お金",
+   "looks_at": "費用、相場、誰が払うか",
+   "beginner_gap": "相場を知らず、見積もりが一桁違う"
+  },
+  {
+   "id": "L16",
+   "name": "時間",
+   "looks_at": "かかる時間、待ち時間",
+   "beginner_gap": "待ち時間（審査・配送・承認）を数えない"
+  },
+  {
+   "id": "L17",
+   "name": "人",
+   "looks_at": "誰が要るか、誰に聞くか、役割",
+   "beginner_gap": "一人でやれると思う／聞く相手を間違える"
+  },
+  {
+   "id": "L18",
+   "name": "本質",
+   "looks_at": "その手段は目的に本当に要るか",
+   "beginner_gap": "聞いた手段をそのまま採る"
+  },
+  {
+   "id": "L19",
+   "name": "別の道",
+   "looks_at": "安い・早い・簡単な代わりの手段",
+   "beginner_gap": "最初に思いついた道しか見ない"
+  },
+  {
+   "id": "L20",
+   "name": "最前線",
+   "looks_at": "今どこまでできるか、最新の動き",
+   "beginner_gap": "数年前の常識で判断する"
+  },
+  {
+   "id": "L21",
+   "name": "現場の知恵",
+   "looks_at": "経験者しか知らない勘所",
+   "beginner_gap": "本に書いていないので存在に気づけない"
+  },
+  {
+   "id": "L22",
+   "name": "次の一手",
+   "looks_at": "終わった後に続くこと",
+   "beginner_gap": "終わった後のこと（保守・申告・更新）を考えない"
+  }
+ ],
+ "lenses": [
+  {
+   "id": "V01-1_business_plan",
+   "verb": "V01",
+   "verbs": [
+    "V01",
+    "V06"
+   ],
+   "name": "新規事業の事業計画（起業家）",
+   "regulated": [
+    "お金"
+   ]
+  },
+  {
+   "id": "V01-2_cash_flow_plan",
+   "verb": "V01",
+   "verbs": [
+    "V01",
+    "V10"
+   ],
+   "name": "資金計画・資金繰り（中小企業の財務）",
+   "regulated": [
+    "お金"
+   ]
+  },
+  {
+   "id": "V01-3_construction_schedule",
+   "verb": "V01",
+   "verbs": [
+    "V01",
+    "V08"
+   ],
+   "name": "建設工事の工程表（施工管理）",
+   "regulated": [
+    "安全",
+    "法律"
+   ]
+  },
+  {
+   "id": "V01-4_tax_planning",
+   "verb": "V01",
+   "verbs": [
+    "V01",
+    "V10"
+   ],
+   "name": "法人の税務計画（税理士）",
+   "regulated": [
+    "お金",
+    "法律"
+   ]
+  },
+  {
+   "id": "V02-1_new_business_search",
+   "verb": "V02",
+   "verbs": [
+    "V02",
+    "V04"
+   ],
+   "name": "新規事業の探索（既存企業の新規事業担当）",
+   "regulated": []
+  },
+  {
+   "id": "V02-2_research_topic",
+   "verb": "V02",
+   "verbs": [
+    "V02",
+    "V04"
+   ],
+   "name": "研究テーマ選び（研究者）",
+   "regulated": []
+  },
+  {
+   "id": "V02-3_product_planning",
+   "verb": "V02",
+   "verbs": [
+    "V02",
+    "V06"
+   ],
+   "name": "商品企画（メーカー）",
+   "regulated": [
+    "法律"
+   ]
+  },
+  {
+   "id": "V02-4_patent_invention",
+   "verb": "V02",
+   "verbs": [
+    "V02",
+    "V05"
+   ],
+   "name": "発明と特許（知財）",
+   "regulated": [
+    "法律"
+   ]
+  },
+  {
+   "id": "V03-1_investment_decision",
+   "verb": "V03",
+   "verbs": [
+    "V03",
+    "V04"
+   ],
+   "name": "スタートアップへの投資判断（投資家・VC）",
+   "regulated": [
+    "お金",
+    "法律"
+   ]
+  },
+  {
+   "id": "V03-2_bank_loan_review",
+   "verb": "V03",
+   "verbs": [
+    "V03",
+    "V05"
+   ],
+   "name": "銀行の融資審査（銀行員）",
+   "regulated": [
+    "お金",
+    "法律"
+   ]
+  },
+  {
+   "id": "V03-3_hiring_decision",
+   "verb": "V03",
+   "verbs": [
+    "V03",
+    "V08"
+   ],
+   "name": "採用の判断（人事・経営者）",
+   "regulated": [
+    "法律"
+   ]
+  },
+  {
+   "id": "V03-4_real_estate_purchase",
+   "verb": "V03",
+   "verbs": [
+    "V03",
+    "V10"
+   ],
+   "name": "不動産の購入判断（買い手側の専門家）",
+   "regulated": [
+    "お金",
+    "法律"
+   ]
+  },
+  {
+   "id": "V04-1_market_research",
+   "verb": "V04",
+   "verbs": [
+    "V04",
+    "V02"
+   ],
+   "name": "市場調査（リサーチャー）",
+   "regulated": [
+    "法律"
+   ]
+  },
+  {
+   "id": "V04-2_data_collection",
+   "verb": "V04",
+   "verbs": [
+    "V04",
+    "V05"
+   ],
+   "name": "データ収集（データエンジニア・分析者）",
+   "regulated": [
+    "法律"
+   ]
+  },
+  {
+   "id": "V04-3_fundraising",
+   "verb": "V04",
+   "verbs": [
+    "V04",
+    "V06"
+   ],
+   "name": "資金調達（起業家側・投資家から集める）",
+   "regulated": [
+    "お金",
+    "法律"
+   ]
+  },
+  {
+   "id": "V04-4_procurement_buying",
+   "verb": "V04",
+   "verbs": [
+    "V04",
+    "V08"
+   ],
+   "name": "仕入れ（小売・飲食のバイヤー）",
+   "regulated": [
+    "安全"
+   ]
+  },
+  {
+   "id": "V05-1_code_review",
+   "verb": "V05",
+   "verbs": [
+    "V05",
+    "V07"
+   ],
+   "name": "コードの点検・レビュー（ソフトウェアエンジニア）",
+   "regulated": []
+  },
+  {
+   "id": "V05-2_financial_audit",
+   "verb": "V05",
+   "verbs": [
+    "V05",
+    "V10"
+   ],
+   "name": "会計の監査（公認会計士・監査人）",
+   "regulated": [
+    "お金",
+    "法律"
+   ]
+  },
+  {
+   "id": "V05-3_contract_review",
+   "verb": "V05",
+   "verbs": [
+    "V05",
+    "V03"
+   ],
+   "name": "契約書の確認（企業法務）",
+   "regulated": [
+    "法律"
+   ]
+  },
+  {
+   "id": "V05-4_quality_inspection",
+   "verb": "V05",
+   "verbs": [
+    "V05",
+    "V12"
+   ],
+   "name": "品質検査（製造の品質保証）",
+   "regulated": [
+    "安全"
+   ]
+  },
+  {
+   "id": "V06-1_marketing",
+   "verb": "V06",
+   "verbs": [
+    "V06",
+    "V04"
+   ],
+   "name": "マーケティング（小さな会社の集客）",
+   "regulated": [
+    "法律"
+   ]
+  },
+  {
+   "id": "V06-2_b2b_sales",
+   "verb": "V06",
+   "verbs": [
+    "V06",
+    "V03"
+   ],
+   "name": "法人営業（B2B）",
+   "regulated": []
+  },
+  {
+   "id": "V06-3_investor_pitch",
+   "verb": "V06",
+   "verbs": [
+    "V06",
+    "V04"
+   ],
+   "name": "投資家への説明（ピッチ）",
+   "regulated": [
+    "お金",
+    "法律"
+   ]
+  },
+  {
+   "id": "V06-4_public_relations",
+   "verb": "V06",
+   "verbs": [
+    "V06",
+    "V11"
+   ],
+   "name": "広報・PR",
+   "regulated": [
+    "法律"
+   ]
+  },
+  {
+   "id": "V07-1_software_development",
+   "verb": "V07",
+   "verbs": [
+    "V07",
+    "V11",
+    "V12"
+   ],
+   "name": "ソフトウェア開発（小さな Web/AI サービス）",
+   "regulated": [
+    "法律"
+   ]
+  },
+  {
+   "id": "V07-2_cooking",
+   "verb": "V07",
+   "verbs": [
+    "V07",
+    "V13"
+   ],
+   "name": "料理（プロの調理）",
+   "regulated": [
+    "安全"
+   ]
+  },
+  {
+   "id": "V07-3_video_production",
+   "verb": "V07",
+   "verbs": [
+    "V07",
+    "V06"
+   ],
+   "name": "動画制作",
+   "regulated": [
+    "法律"
+   ]
+  },
+  {
+   "id": "V07-4_architecture",
+   "verb": "V07",
+   "verbs": [
+    "V07",
+    "V01"
+   ],
+   "name": "建築（住宅の設計・建築）",
+   "regulated": [
+    "安全",
+    "法律"
+   ]
+  },
+  {
+   "id": "V08-1_project_management",
+   "verb": "V08",
+   "verbs": [
+    "V08",
+    "V01"
+   ],
+   "name": "プロジェクト管理",
+   "regulated": []
+  },
+  {
+   "id": "V08-2_team_management",
+   "verb": "V08",
+   "verbs": [
+    "V08",
+    "V09"
+   ],
+   "name": "チーム運営（小さな組織のマネジャー）",
+   "regulated": [
+    "法律"
+   ]
+  },
+  {
+   "id": "V08-3_inventory_management",
+   "verb": "V08",
+   "verbs": [
+    "V08",
+    "V04"
+   ],
+   "name": "在庫管理",
+   "regulated": []
+  },
+  {
+   "id": "V08-4_bookkeeping",
+   "verb": "V08",
+   "verbs": [
+    "V08",
+    "V10"
+   ],
+   "name": "経理（中小企業の月次）",
+   "regulated": [
+    "お金",
+    "法律"
+   ]
+  },
+  {
+   "id": "V09-1_onboarding_training",
+   "verb": "V09",
+   "verbs": [
+    "V09",
+    "V08"
+   ],
+   "name": "新人教育（OJT）",
+   "regulated": []
+  },
+  {
+   "id": "V09-2_child_learning",
+   "verb": "V09",
+   "verbs": [
+    "V09",
+    "V13"
+   ],
+   "name": "子どもの学習（家庭・塾）",
+   "regulated": [
+    "安全"
+   ]
+  },
+  {
+   "id": "V09-3_coaching",
+   "verb": "V09",
+   "verbs": [
+    "V09",
+    "V06"
+   ],
+   "name": "コーチング（大人の目標達成）",
+   "regulated": []
+  },
+  {
+   "id": "V09-4_course_design",
+   "verb": "V09",
+   "verbs": [
+    "V09",
+    "V07"
+   ],
+   "name": "講座づくり（オンライン講座）",
+   "regulated": [
+    "法律"
+   ]
+  },
+  {
+   "id": "V10-1_tax_filing",
+   "verb": "V10",
+   "verbs": [
+    "V10",
+    "V05"
+   ],
+   "name": "税務（申告の計算・税理士）",
+   "regulated": [
+    "お金",
+    "法律"
+   ]
+  },
+  {
+   "id": "V10-2_accounting_closing",
+   "verb": "V10",
+   "verbs": [
+    "V10",
+    "V08"
+   ],
+   "name": "会計（決算）",
+   "regulated": [
+    "お金",
+    "法律"
+   ]
+  },
+  {
+   "id": "V10-3_cost_estimation",
+   "verb": "V10",
+   "verbs": [
+    "V10",
+    "V01"
+   ],
+   "name": "見積もり（建設・制作の積算）",
+   "regulated": [
+    "お金"
+   ]
+  },
+  {
+   "id": "V10-4_insurance_calculation",
+   "verb": "V10",
+   "verbs": [
+    "V10",
+    "V03"
+   ],
+   "name": "保険の計算（保険の設計・アクチュアリー）",
+   "regulated": [
+    "お金",
+    "法律"
+   ]
+  },
+  {
+   "id": "V11-1_server_monitoring",
+   "verb": "V11",
+   "verbs": [
+    "V11",
+    "V12"
+   ],
+   "name": "サーバーの監視（SRE・運用エンジニア）",
+   "regulated": []
+  },
+  {
+   "id": "V11-2_market_monitoring",
+   "verb": "V11",
+   "verbs": [
+    "V11",
+    "V03"
+   ],
+   "name": "相場の監視（トレーダー・運用）",
+   "regulated": [
+    "お金",
+    "法律"
+   ]
+  },
+  {
+   "id": "V11-3_equipment_inspection",
+   "verb": "V11",
+   "verbs": [
+    "V11",
+    "V12"
+   ],
+   "name": "設備の点検（保全）",
+   "regulated": [
+    "安全"
+   ]
+  },
+  {
+   "id": "V11-4_reputation_monitoring",
+   "verb": "V11",
+   "verbs": [
+    "V11",
+    "V06"
+   ],
+   "name": "評判の監視（SNS・レビュー）",
+   "regulated": [
+    "法律"
+   ]
+  },
+  {
+   "id": "V12-1_bug_fixing",
+   "verb": "V12",
+   "verbs": [
+    "V12",
+    "V05"
+   ],
+   "name": "バグの修正（ソフトウェアエンジニア）",
+   "regulated": []
+  },
+  {
+   "id": "V12-2_machine_repair",
+   "verb": "V12",
+   "verbs": [
+    "V12",
+    "V11"
+   ],
+   "name": "機械の修理（産業機械・設備）",
+   "regulated": [
+    "安全"
+   ]
+  },
+  {
+   "id": "V12-3_home_repair",
+   "verb": "V12",
+   "verbs": [
+    "V12",
+    "V10"
+   ],
+   "name": "家の修繕（リフォーム・補修）",
+   "regulated": [
+    "安全",
+    "法律"
+   ]
+  },
+  {
+   "id": "V12-4_complaint_handling",
+   "verb": "V12",
+   "verbs": [
+    "V12",
+    "V13"
+   ],
+   "name": "クレームの対応（顧客対応の改善）",
+   "regulated": [
+    "法律"
+   ]
+  },
+  {
+   "id": "V13-1_customer_service",
+   "verb": "V13",
+   "verbs": [
+    "V13",
+    "V06"
+   ],
+   "name": "接客（飲食・小売）",
+   "regulated": [
+    "安全"
+   ]
+  },
+  {
+   "id": "V13-2_elder_care",
+   "verb": "V13",
+   "verbs": [
+    "V13",
+    "V11"
+   ],
+   "name": "介護（家族の介護・在宅）",
+   "regulated": [
+    "医療",
+    "お金",
+    "法律"
+   ]
+  },
+  {
+   "id": "V13-3_customer_support",
+   "verb": "V13",
+   "verbs": [
+    "V13",
+    "V12"
+   ],
+   "name": "カスタマーサポート（問い合わせ対応）",
+   "regulated": [
+    "法律"
+   ]
+  },
+  {
+   "id": "V13-4_pet_care",
+   "verb": "V13",
+   "verbs": [
+    "V13",
+    "V11"
+   ],
+   "name": "ペットの世話（動物看護・飼い主）",
+   "regulated": [
+    "医療",
+    "安全"
+   ]
+  },
+  {
+   "id": "V14-1_logistics",
+   "verb": "V14",
+   "verbs": [
+    "V14",
+    "V08"
+   ],
+   "name": "物流（小口の発送・配送）",
+   "regulated": [
+    "法律"
+   ]
+  },
+  {
+   "id": "V14-2_moving",
+   "verb": "V14",
+   "verbs": [
+    "V14",
+    "V01"
+   ],
+   "name": "引っ越し（事業所・住まい）",
+   "regulated": [
+    "法律",
+    "安全"
+   ]
+  },
+  {
+   "id": "V14-3_commercial_driving",
+   "verb": "V14",
+   "verbs": [
+    "V14",
+    "V11"
+   ],
+   "name": "運転（商用・配送の運転）",
+   "regulated": [
+    "法律",
+    "安全"
+   ]
+  },
+  {
+   "id": "V14-4_drone_operation",
+   "verb": "V14",
+   "verbs": [
+    "V14",
+    "V04"
+   ],
+   "name": "ドローン（撮影・運搬の運用）",
+   "regulated": [
+    "法律",
+    "安全"
+   ]
+  }
+ ],
+ "prereq_topics": [
+  {
+   "id": "p01",
+   "target_action": "AIで動く小さなサービスの一部を、AIに見張らせる",
+   "domain": "ソフトウェア・AIサービス",
+   "lens_ids": [
+    "V07-1_software_development",
+    "V11-1_server_monitoring"
+   ],
+   "must_include_actions": [
+    "コードのこの行を直す",
+    "別のソフトを3つ挟む",
+    "ここだけAIに見張らせる",
+    "トークンを入れる"
+   ],
+   "must_include_paths": [
+    "GitHubの画面で直接直す",
+    "GitHub Desktop",
+    "Cursor",
+    "ターミナル"
+   ]
+  },
+  {
+   "id": "p02",
+   "target_action": "自社の決算書（損益計算書・貸借対照表）を自分で読んで、おかしい所に気づく",
+   "domain": "税務・会計",
+   "lens_ids": [
+    "V10-2_accounting_closing",
+    "V10-1_tax_filing"
+   ],
+   "must_include_actions": [
+    "損益計算書を読む",
+    "貸借対照表を読む",
+    "減価償却の行を確かめる"
+   ],
+   "must_include_paths": []
+  },
+  {
+   "id": "p03",
+   "target_action": "タームシートを読んで、自分の持ち株比率と権利に何が起きるかを理解する",
+   "domain": "投資・資金調達",
+   "lens_ids": [
+    "V04-3_fundraising",
+    "V03-1_investment_decision"
+   ],
+   "must_include_actions": [
+    "バリュエーションの欄を読む",
+    "優先株の条項を読む",
+    "希薄化を計算する"
+   ],
+   "must_include_paths": []
+  },
+  {
+   "id": "p04",
+   "target_action": "創業融資を申し込んで、面談を受ける",
+   "domain": "銀行・公庫の融資",
+   "lens_ids": [
+    "V03-2_bank_loan_review"
+   ],
+   "must_include_actions": [
+    "創業計画書を書く",
+    "自己資金を示す",
+    "資金使途を分ける（運転資金と設備資金）"
+   ],
+   "must_include_paths": []
+  },
+  {
+   "id": "p05",
+   "target_action": "広告の成果を CPA・CVR で読み、続けるか止めるかを決める",
+   "domain": "マーケティングの数字",
+   "lens_ids": [
+    "V06-1_marketing"
+   ],
+   "must_include_actions": [
+    "CPAを計算する",
+    "CVRを読む",
+    "LTVと比べる"
+   ],
+   "must_include_paths": []
+  },
+  {
+   "id": "p06",
+   "target_action": "店舗の内装工事を発注して、必要な届け出と検査を通す",
+   "domain": "建築の手続き",
+   "lens_ids": [
+    "V07-4_architecture",
+    "V01-3_construction_schedule"
+   ],
+   "must_include_actions": [
+    "建築確認が要るか確かめる",
+    "消防への届け出",
+    "工程表を読む"
+   ],
+   "must_include_paths": []
+  },
+  {
+   "id": "p07",
+   "target_action": "注文が入ったら、壊さず・遅れず・損せず全国に送る",
+   "domain": "物流の言葉",
+   "lens_ids": [
+    "V14-1_logistics"
+   ],
+   "must_include_actions": [
+    "サイズと重さで送料を決める",
+    "運送約款を読む（壊れた時の補償）",
+    "送り状を作る"
+   ],
+   "must_include_paths": []
+  },
+  {
+   "id": "p08",
+   "target_action": "親の要介護認定を申請して、ケアプランができるまで進める",
+   "domain": "介護",
+   "lens_ids": [
+    "V13-2_elder_care"
+   ],
+   "must_include_actions": [
+    "地域包括支援センターに相談する",
+    "認定調査を受ける",
+    "ケアマネジャーを決める"
+   ],
+   "must_include_paths": []
+  },
+  {
+   "id": "p09",
+   "target_action": "契約書に印紙が要るか判断し、要るなら正しく貼る（電子契約の道も含む）",
+   "domain": "契約・法務",
+   "lens_ids": [
+    "V05-3_contract_review"
+   ],
+   "must_include_actions": [
+    "契約書の種類（号）を見分ける",
+    "印紙税額を確かめる",
+    "電子契約にする"
+   ],
+   "must_include_paths": [
+    "紙で結んで印紙を貼る",
+    "電子契約で結ぶ"
+   ]
+  },
+  {
+   "id": "p10",
+   "target_action": "ドローンを飛ばして自分の畑を撮影し、生育の違いを見る",
+   "domain": "ドローンの運用",
+   "lens_ids": [
+    "V14-4_drone_operation"
+   ],
+   "must_include_actions": [
+    "機体を登録する",
+    "飛行の許可・承認が要るか確かめる",
+    "撮影した画像で生育を比べる"
+   ],
+   "must_include_paths": [
+    "自分で飛ばす",
+    "業者に頼む",
+    "衛星画像で代える"
+   ]
+  }
+ ],
+ "naics": [
+  {
+   "code": "541211",
+   "title": "Offices of Certified Public Accountants",
+   "title_ja": "公認会計士事務所",
+   "words": [
+    "会計士",
+    "監査",
+    "会計事務所"
+   ],
+   "lens_ids": [
+    "V05-2_financial_audit",
+    "V10-2_accounting_closing"
+   ],
+   "parents": [
+    "54",
+    "541",
+    "5412",
+    "54121"
+   ],
+   "source": {
+    "url": "https://www.census.gov/naics/?input=541211&year=2022&details=541211",
+    "title": "NAICS 2022 541211",
+    "kind": "公式資料"
+   },
+   "provisional": true
+  },
+  {
+   "code": "541213",
+   "title": "Tax Preparation Services",
+   "title_ja": "税務申告の代行",
+   "words": [
+    "税",
+    "申告",
+    "税理士",
+    "確定申告",
+    "相続"
+   ],
+   "lens_ids": [
+    "V10-1_tax_filing",
+    "V01-4_tax_planning"
+   ],
+   "parents": [
+    "54",
+    "541",
+    "5412",
+    "54121"
+   ],
+   "source": {
+    "url": "https://www.census.gov/naics/?input=541213&year=2022&details=541213",
+    "title": "NAICS 2022 541213",
+    "kind": "公式資料"
+   },
+   "provisional": true
+  },
+  {
+   "code": "541219",
+   "title": "Other Accounting Services",
+   "title_ja": "そのほかの会計サービス",
+   "words": [
+    "経理",
+    "記帳",
+    "月次",
+    "帳簿"
+   ],
+   "lens_ids": [
+    "V08-4_bookkeeping",
+    "V01-2_cash_flow_plan"
+   ],
+   "parents": [
+    "54",
+    "541",
+    "5412",
+    "54121"
+   ],
+   "source": {
+    "url": "https://www.census.gov/naics/?input=541219&year=2022&details=541219",
+    "title": "NAICS 2022 541219",
+    "kind": "公式資料"
+   },
+   "provisional": true
+  },
+  {
+   "code": "541511",
+   "title": "Custom Computer Programming Services",
+   "title_ja": "受託のソフトウェア開発",
+   "words": [
+    "アプリ",
+    "ソフト",
+    "開発",
+    "プログラム",
+    "コード",
+    "AI",
+    "サービスを作"
+   ],
+   "lens_ids": [
+    "V07-1_software_development",
+    "V05-1_code_review",
+    "V12-1_bug_fixing"
+   ],
+   "parents": [
+    "54",
+    "541",
+    "5415",
+    "54151"
+   ],
+   "source": {
+    "url": "https://www.census.gov/naics/?input=541511&year=2022&details=541511",
+    "title": "NAICS 2022 541511",
+    "kind": "公式資料"
+   },
+   "provisional": true
+  },
+  {
+   "code": "518210",
+   "title": "Computing Infrastructure Providers, Data Processing, Web Hosting, and Related Services",
+   "title_ja": "計算基盤・データ処理・ホスティング",
+   "words": [
+    "サーバー",
+    "監視",
+    "ホスティング",
+    "クラウド"
+   ],
+   "lens_ids": [
+    "V11-1_server_monitoring",
+    "V04-2_data_collection"
+   ],
+   "parents": [
+    "51",
+    "518",
+    "5182",
+    "51821"
+   ],
+   "source": {
+    "url": "https://www.census.gov/naics/?input=518210&year=2022&details=518210",
+    "title": "NAICS 2022 518210",
+    "kind": "公式資料"
+   },
+   "provisional": true
+  },
+  {
+   "code": "722511",
+   "title": "Full-Service Restaurants",
+   "title_ja": "レストラン（席で給仕する飲食店）",
+   "words": [
+    "飲食",
+    "レストラン",
+    "料理",
+    "店を開",
+    "カフェ"
+   ],
+   "lens_ids": [
+    "V07-2_cooking",
+    "V13-1_customer_service",
+    "V04-4_procurement_buying"
+   ],
+   "parents": [
+    "72",
+    "722",
+    "7225",
+    "72251"
+   ],
+   "source": {
+    "url": "https://www.census.gov/naics/?input=722511&year=2022&details=722511",
+    "title": "NAICS 2022 722511",
+    "kind": "公式資料"
+   },
+   "provisional": true
+  },
+  {
+   "code": "311811",
+   "title": "Retail Bakeries",
+   "title_ja": "パン屋（店で焼いて売る）",
+   "words": [
+    "パン",
+    "ベーカリー",
+    "焼き菓子"
+   ],
+   "lens_ids": [
+    "V07-2_cooking",
+    "V08-3_inventory_management"
+   ],
+   "parents": [
+    "31",
+    "311",
+    "3118",
+    "31181"
+   ],
+   "source": {
+    "url": "https://www.census.gov/naics/?input=311811&year=2022&details=311811",
+    "title": "NAICS 2022 311811",
+    "kind": "公式資料"
+   },
+   "provisional": true
+  },
+  {
+   "code": "541810",
+   "title": "Advertising Agencies",
+   "title_ja": "広告代理店",
+   "words": [
+    "広告",
+    "集客",
+    "宣伝"
+   ],
+   "lens_ids": [
+    "V06-1_marketing",
+    "V06-4_public_relations"
+   ],
+   "parents": [
+    "54",
+    "541",
+    "5418",
+    "54181"
+   ],
+   "source": {
+    "url": "https://www.census.gov/naics/?input=541810&year=2022&details=541810",
+    "title": "NAICS 2022 541810",
+    "kind": "公式資料"
+   },
+   "provisional": true
+  },
+  {
+   "code": "541613",
+   "title": "Marketing Consulting Services",
+   "title_ja": "マーケティングの相談",
+   "words": [
+    "マーケティング",
+    "市場",
+    "顧客を増や",
+    "売上を伸ば"
+   ],
+   "lens_ids": [
+    "V06-1_marketing",
+    "V04-1_market_research"
+   ],
+   "parents": [
+    "54",
+    "541",
+    "5416",
+    "54161"
+   ],
+   "source": {
+    "url": "https://www.census.gov/naics/?input=541613&year=2022&details=541613",
+    "title": "NAICS 2022 541613",
+    "kind": "公式資料"
+   },
+   "provisional": true
+  },
+  {
+   "code": "522110",
+   "title": "Commercial Banking",
+   "title_ja": "商業銀行",
+   "words": [
+    "融資",
+    "銀行",
+    "借入",
+    "借り"
+   ],
+   "lens_ids": [
+    "V03-2_bank_loan_review",
+    "V01-2_cash_flow_plan"
+   ],
+   "parents": [
+    "52",
+    "522",
+    "5221",
+    "52211"
+   ],
+   "source": {
+    "url": "https://www.census.gov/naics/?input=522110&year=2022&details=522110",
+    "title": "NAICS 2022 522110",
+    "kind": "公式資料"
+   },
+   "provisional": true
+  },
+  {
+   "code": "236115",
+   "title": "New Single-Family Housing Construction (except For-Sale Builders)",
+   "title_ja": "戸建て住宅の新築工事",
+   "words": [
+    "家を建て",
+    "住宅",
+    "建築",
+    "工務店"
+   ],
+   "lens_ids": [
+    "V07-4_architecture",
+    "V01-3_construction_schedule",
+    "V10-3_cost_estimation"
+   ],
+   "parents": [
+    "23",
+    "236",
+    "2361",
+    "23611"
+   ],
+   "source": {
+    "url": "https://www.census.gov/naics/?input=236115&year=2022&details=236115",
+    "title": "NAICS 2022 236115",
+    "kind": "公式資料"
+   },
+   "provisional": true
+  },
+  {
+   "code": "236118",
+   "title": "Residential Remodelers",
+   "title_ja": "住宅のリフォーム",
+   "words": [
+    "リフォーム",
+    "修繕",
+    "改装"
+   ],
+   "lens_ids": [
+    "V12-3_home_repair",
+    "V10-3_cost_estimation"
+   ],
+   "parents": [
+    "23",
+    "236",
+    "2361",
+    "23611"
+   ],
+   "source": {
+    "url": "https://www.census.gov/naics/?input=236118&year=2022&details=236118",
+    "title": "NAICS 2022 236118",
+    "kind": "公式資料"
+   },
+   "provisional": true
+  },
+  {
+   "code": "621610",
+   "title": "Home Health Care Services",
+   "title_ja": "在宅の医療・介護サービス",
+   "words": [
+    "介護",
+    "在宅",
+    "訪問"
+   ],
+   "lens_ids": [
+    "V13-2_elder_care"
+   ],
+   "parents": [
+    "62",
+    "621",
+    "6216",
+    "62161"
+   ],
+   "source": {
+    "url": "https://www.census.gov/naics/?input=621610&year=2022&details=621610",
+    "title": "NAICS 2022 621610",
+    "kind": "公式資料"
+   },
+   "provisional": true
+  },
+  {
+   "code": "611710",
+   "title": "Educational Support Services",
+   "title_ja": "教育の支援サービス",
+   "words": [
+    "教育",
+    "講座",
+    "研修",
+    "塾",
+    "コーチ"
+   ],
+   "lens_ids": [
+    "V09-4_course_design",
+    "V09-3_coaching",
+    "V09-1_onboarding_training"
+   ],
+   "parents": [
+    "61",
+    "611",
+    "6117",
+    "61171"
+   ],
+   "source": {
+    "url": "https://www.census.gov/naics/?input=611710&year=2022&details=611710",
+    "title": "NAICS 2022 611710",
+    "kind": "公式資料"
+   },
+   "provisional": true
+  },
+  {
+   "code": "492210",
+   "title": "Local Messengers and Local Delivery",
+   "title_ja": "地域の配達",
+   "words": [
+    "配達",
+    "配送",
+    "発送",
+    "物流"
+   ],
+   "lens_ids": [
+    "V14-1_logistics",
+    "V14-3_commercial_driving"
+   ],
+   "parents": [
+    "49",
+    "492",
+    "4922",
+    "49221"
+   ],
+   "source": {
+    "url": "https://www.census.gov/naics/?input=492210&year=2022&details=492210",
+    "title": "NAICS 2022 492210",
+    "kind": "公式資料"
+   },
+   "provisional": true
+  },
+  {
+   "code": "512110",
+   "title": "Motion Picture and Video Production",
+   "title_ja": "映画・動画の制作",
+   "words": [
+    "動画",
+    "映像",
+    "YouTube"
+   ],
+   "lens_ids": [
+    "V07-3_video_production"
+   ],
+   "parents": [
+    "51",
+    "512",
+    "5121",
+    "51211"
+   ],
+   "source": {
+    "url": "https://www.census.gov/naics/?input=512110&year=2022&details=512110",
+    "title": "NAICS 2022 512110",
+    "kind": "公式資料"
+   },
+   "provisional": true
+  }
+ ]
+}
