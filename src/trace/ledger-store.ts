@@ -3,8 +3,8 @@
 // 索引は「言葉の一致」（FTS5 の trigram）。近さの索引（埋め込み）は W4 の Embedder が来たら足す。
 // ネットにつながなくても全部動く（オフラインで 業種・マス・レンズ・前提の鎖 まで）。
 import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import type { DatabaseSync } from "node:sqlite";
-import { requireNodeSqlite } from "../infra/node-sqlite.js";
 import type { SourceRef } from "./types.js";
 
 export interface LedgerVerb {
@@ -102,7 +102,8 @@ export class LedgerStore {
 
   /** path は ":memory:" か sqlite のファイル（既定の置き場は呼ぶ側が決める・例 ~/.neurafusion/knowledge/knowledge.sqlite） */
   static open(path: string): LedgerStore {
-    const { DatabaseSync } = requireNodeSqlite();
+    // src/infra/node-sqlite.ts の requireNodeSqlite と同じ読み方（その import の連なりはこの小さな台帳に要らない）
+    const { DatabaseSync } = createRequire(import.meta.url)("node:sqlite") as typeof import("node:sqlite");
     const db = new DatabaseSync(path);
     db.exec(SCHEMA);
     return new LedgerStore(db);
@@ -189,7 +190,13 @@ export class LedgerStore {
   /** 言葉の一致（FTS5 trigram・3 字以上の語）。kinds で絞る */
   search(q: string, opts: { kinds?: ("naics" | "lens")[]; k: number }): { kind: string; id: string; score: number }[] {
     const v = this.version()?.version ?? 0;
-    const terms = Array.from(new Set(q.split(/[\s、。・「」（）()]+/).filter((t) => [...t].length >= 3)));
+    // 日本語は語の切れ目が無いので、文を 3 字ずつの窓に切って OR で引く（trigram の索引と同じ単位・上限 80）
+    const grams = new Set<string>();
+    for (const part of q.split(/[\s、。・「」（）()]+/)) {
+      const cs = [...part];
+      for (let i = 0; i + 3 <= cs.length && grams.size < 80; i += 1) grams.add(cs.slice(i, i + 3).join(""));
+    }
+    const terms = [...grams];
     if (!terms.length) return [];
     const match = terms.map((t) => `"${t.replaceAll('"', '""')}"`).join(" OR ");
     const rows = this.db
