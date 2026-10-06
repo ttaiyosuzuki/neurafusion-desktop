@@ -24,6 +24,7 @@ let package = Package(
             linkerSettings: [
                 .linkedFramework("AppKit"),
                 .linkedFramework("ApplicationServices"),
+                .linkedFramework("Security"),
                 .linkedFramework("ScreenCaptureKit"),
                 .linkedFramework("Vision"),
                 .linkedFramework("WebKit"),
