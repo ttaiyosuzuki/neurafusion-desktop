@@ -1,10 +1,12 @@
 // 右下の丸の窓（DK-01）。常に前面・フォーカスを奪わない・全スペースに出る小さな透明の窓。
 // 見た目は拡張の LivingMark（extension-kensan/content_script.js の makeLivingMark）と同じ
-// 24×24 の図形を Core Graphics で描く: 青い丸・白いぼかしの輪・つやの楕円・目2つ。
+// 24×24 の図形を Core Graphics で描く: 丸・白いぼかしの輪・つやの楕円・目2つ。
+// 色は本人の指示（2026-10-07）で、目立ちすぎない落ち着いた青灰（#5B6B7A）にした。
+// 元の明るい青（#3B82F6）は拡張の LivingMark と同じ色。戻す時はこの 1 行だけ戻す。
 
 import AppKit
 
-private let lmBlue = NSColor(srgbRed: 0x3B / 255.0, green: 0x82 / 255.0, blue: 0xF6 / 255.0, alpha: 1)
+private let lmBlue = NSColor(srgbRed: 0x5B / 255.0, green: 0x6B / 255.0, blue: 0x7A / 255.0, alpha: 1)
 
 private func mix(_ a: NSColor, _ b: NSColor, _ t: CGFloat) -> NSColor {
     let a = a.usingColorSpace(.sRGB)!, b = b.usingColorSpace(.sRGB)!
